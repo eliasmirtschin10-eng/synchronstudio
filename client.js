@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.2";
+const APP_VERSION = "2.3";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -51,6 +51,16 @@ const status = (id, msg, isErr) => { const el = $(id); el.textContent = msg; el.
 const randCode = () => String(Math.floor(1000 + Math.random() * 9000));
 const esc = (s) => String(s).replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]));
 
+
+
+function watchVideoErrors(vid, statusId) {
+  vid.addEventListener("error", () => {
+    status(statusId, "❌ Video konnte nicht geladen werden! Wenn du gerade erst hochgeladen hast: GitHub Pages braucht 2–5 Min zum Deployen — kurz warten, dann Strg+Shift+R.", true);
+    SFX.err();
+  });
+  // Schwarze erste Frames: Vorschaubild ein Stück ins Video setzen
+  vid.addEventListener("loadedmetadata", () => { if (vid.currentTime === 0 && vid.paused) try { vid.currentTime = 0.4; } catch {} });
+}
 
 function setBar(id, pct) {
   const el = $(id);
@@ -104,6 +114,11 @@ const SFX = (() => {
   };
 })();
 document.addEventListener("click", e => { if (e.target.closest("button:not(:disabled)")) SFX.click(); });
+window.addEventListener("DOMContentLoaded", () => {
+  watchVideoErrors($("preview"), "lobby-status");
+  watchVideoErrors($("booth-video"), "booth-status");
+  watchVideoErrors($("play-video"), "play-status");
+});
 document.body.insertAdjacentHTML("beforeend",
   `<div style="position:fixed;left:10px;bottom:8px;z-index:99;font-size:.68rem;color:#55556a;letter-spacing:.08em;pointer-events:none">v${APP_VERSION}</div>`);
 
@@ -670,11 +685,40 @@ function renderLine() {
   $("btn-line-play").disabled = !takes[l.idx] || takes[l.idx] === "SKIP";
   $("btn-line-next").disabled = !takes[l.idx];
   $("btn-line-skip").style.display = l.orig ? "" : "none";
+  $("btn-line-orig").style.display = l.orig ? "" : "none";
   $("rectime-fill").style.width = "0";
   status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
 }
 
 // Szenen-Ausschnitt zum Reinhören
+
+// Original-Voiceline anhören (Aussprache-Referenz, z. B. "Surprise Mothafucka")
+const origCache = new Map();
+let origSrc = null;
+$("btn-line-orig").onclick = async () => {
+  const l = myLines[curLine];
+  if (!l.orig) return;
+  if (origSrc) { try { origSrc.stop(); } catch {} origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; return; }
+  const ctx = getCtx();
+  try {
+    if (!origCache.has(l.orig)) {
+      $("btn-line-orig").textContent = "⏳ …";
+      const buf = await (await fetch(l.orig)).arrayBuffer();
+      origCache.set(l.orig, await ctx.decodeAudioData(buf));
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = origCache.get(l.orig);
+    src.connect(ctx.destination);
+    src.start();
+    origSrc = src;
+    $("btn-line-orig").textContent = "⏹ Stopp";
+    src.onended = () => { if (origSrc === src) { origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; } };
+  } catch (e) {
+    $("btn-line-orig").textContent = "🗣 Original anhören";
+    status("booth-status", "Original-Audio nicht ladbar — GitHub Pages noch am Deployen?", true);
+  }
+};
+
 let sceneStopHandler = null;
 $("btn-line-scene").onclick = () => {
   const l = myLines[curLine];
@@ -701,7 +745,7 @@ $("btn-line-rec").onclick = async () => {
   if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
   if (recBusy) return;                       // Spam-Schutz (Handy!)
   recBusy = true;
-  ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip"].forEach(id => $(id).disabled = true);
+  ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip","btn-line-orig"].forEach(id => $(id).disabled = true);
   if ($("rec-timer").checked) await recCountdown();
   const l = myLines[curLine];
   // Adaptiver Puffer: nicht in die nächste Line reinlaufen (fixt das "Doppel-Szenen"-Gefühl bei Doakes 14→16)
@@ -769,6 +813,7 @@ async function onLineRecorded() {
   recBusy = false;
   $("btn-line-scene").disabled = false;
   $("btn-line-skip").disabled = false;
+  $("btn-line-orig").disabled = false;
   const l = myLines[curLine];
   takes[l.idx] = await new Blob(lineChunks, { type: lineChunks[0]?.type }).arrayBuffer();
   $("btn-line-play").disabled = false;
