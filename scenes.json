@@ -301,5 +301,122 @@
         "gain": 1.0
       }
     ]
+  },
+  {
+    "id": "testplace",
+    "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
+    "videoUrl": "scenes/testplace.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Tester A (Pan links)",
+        "pan": -0.8,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Tester B (Pan rechts)",
+        "pan": 0.8,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Tester C (Funkgerät)",
+        "pan": 0.0,
+        "effect": "radio",
+        "gain": 1.0
+      },
+      {
+        "id": 4,
+        "name": "Tester D (Hall)",
+        "pan": 0.0,
+        "effect": "hall",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 2.0,
+        "end": 5.2,
+        "chars": [
+          1
+        ],
+        "who": "Tester A",
+        "text": "Test eins zwo — Tester A ist am Start!",
+        "de": "Test eins zwo — Tester A ist am Start!"
+      },
+      {
+        "t": 5.6,
+        "end": 8.8,
+        "chars": [
+          2
+        ],
+        "who": "Tester B",
+        "text": "Tester B hier, hört ihr mich klar und deutlich?",
+        "de": "Tester B hier, hört ihr mich klar und deutlich?"
+      },
+      {
+        "t": 9.2,
+        "end": 12.4,
+        "chars": [
+          3
+        ],
+        "who": "Tester C",
+        "text": "Tester C meldet sich aus dem Studio!",
+        "de": "Tester C meldet sich aus dem Studio!"
+      },
+      {
+        "t": 12.8,
+        "end": 16.0,
+        "chars": [
+          4
+        ],
+        "who": "Tester D",
+        "text": "Tester D — Mikrofon-Check läuft!",
+        "de": "Tester D — Mikrofon-Check läuft!"
+      },
+      {
+        "t": 16.4,
+        "end": 19.6,
+        "chars": [
+          1
+        ],
+        "who": "Tester A",
+        "text": "A nochmal — Panning links müsste man jetzt hören.",
+        "de": "A nochmal — Panning links müsste man jetzt hören."
+      },
+      {
+        "t": 20.0,
+        "end": 23.2,
+        "chars": [
+          2
+        ],
+        "who": "Tester B",
+        "text": "B rechts — sag was Lustiges für den Vibe-Check!",
+        "de": "B rechts — sag was Lustiges für den Vibe-Check!"
+      },
+      {
+        "t": 23.6,
+        "end": 26.8,
+        "chars": [
+          3
+        ],
+        "who": "Tester C",
+        "text": "C mit Funkgerät-Effekt, over und aus!",
+        "de": "C mit Funkgerät-Effekt, over und aus!"
+      },
+      {
+        "t": 27.2,
+        "end": 30.4,
+        "chars": [
+          4
+        ],
+        "who": "Tester D",
+        "text": "D macht den Abschluss — Premiere ab in drei, zwei, eins!",
+        "de": "D macht den Abschluss — Premiere ab in drei, zwei, eins!"
+      }
+    ]
   }
 ]

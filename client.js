@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "1.9";
+const APP_VERSION = "2.0";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -715,7 +715,7 @@ $("btn-line-play").onclick = async () => {
   if (!takes[l.idx]) return;
   if (previewSrc) { try { previewSrc.stop(); } catch {} previewSrc = null; }
   const ctx = getCtx();
-  const buf = await ctx.decodeAudioData(takes[l.idx].slice(0));
+  const buf = await ctx.decodeAudioData(await toArrayBuffer(takes[l.idx]));
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.connect(buildChain(ctx, roleOf(myRole()), ctx.destination));
@@ -859,17 +859,33 @@ function checkAllDone() { /* Fortschritt läuft über state-Broadcasts */ }
 // ═════════════════════════════════════════════════════════════
 // 9) PREMIERE — Web-Audio-Engine + Download
 // ═════════════════════════════════════════════════════════════
+
+// P2P-empfangene Binärdaten kommen je nach Browser als ArrayBuffer, TypedArray
+// oder Blob an — decodeAudioData will exakt einen ArrayBuffer. Normalisieren:
+async function toArrayBuffer(x) {
+  if (x instanceof ArrayBuffer) return x.slice(0);
+  if (ArrayBuffer.isView(x)) return x.buffer.slice(x.byteOffset, x.byteOffset + x.byteLength);
+  if (x instanceof Blob) return await x.arrayBuffer();
+  throw new Error("Unbekanntes Binärformat: " + Object.prototype.toString.call(x));
+}
+
 async function loadMix(data) {
   show("scr-playback");
   status("play-status", "Dekodiere Spuren …");
   const ctx = getCtx();
   mixItems = [];
+  let okCount = 0, failCount = 0;
   for (const track of data) {
     for (const item of track.items) {
-      try { mixItems.push({ role: track.role, startAt: item.startAt, buffer: await ctx.decodeAudioData(item.buf.slice(0)) }); }
-      catch { console.warn("Spur kaputt:", track.role); }
+      try {
+        const ab = await toArrayBuffer(item.buf);
+        mixItems.push({ role: track.role, startAt: item.startAt, buffer: await ctx.decodeAudioData(ab) });
+        okCount++;
+      } catch (e) { failCount++; console.warn("Spur kaputt:", track.role, e); }
     }
   }
+  console.log("Mix geladen:", okCount, "Spuren ok,", failCount, "fehlgeschlagen");
+  if (failCount) status("play-status", "⚠ " + failCount + " Spur(en) konnten nicht geladen werden — F12 → Console.", true);
   // Nicht besetzte Rollen: Original-Stimmen aus dem Pack einsetzen
   if (scene.lines) {
     const played = new Set(data.map(t => t.role));
