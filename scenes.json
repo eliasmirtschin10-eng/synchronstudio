@@ -268,37 +268,352 @@
     ]
   },
   {
-    "id": "beispiel1",
-    "title": "Beispiel: Retro Anime Szene",
-    "videoUrl": "scenes/retro_szene.mp4",
+    "id": "spongebob_krab",
+    "title": "Spongebob — Is this the Krusty Krab? (3 Rollen)",
+    "videoUrl": "scenes/spongebob.mp4",
+    "avatars": {
+      "1": "scenes/spongebob/spongebob.png",
+      "2": "scenes/spongebob/patrick.png",
+      "3": "scenes/spongebob/phone.png"
+    },
     "roles": [
       {
         "id": 1,
-        "name": "Charakter Links (90s Vibe)",
-        "pan": -0.8,
-        "effect": "vintage_1990",
+        "name": "Spongebob",
+        "pan": -0.6,
+        "effect": "none",
         "gain": 1.0
       },
       {
         "id": 2,
-        "name": "Charakter Rechts",
-        "pan": 0.8,
+        "name": "Patrick",
+        "pan": 0.5,
         "effect": "none",
         "gain": 1.0
       },
       {
         "id": 3,
-        "name": "Funkgerät-Stimme",
+        "name": "Anrufer (Telefon)",
+        "pan": 0.2,
+        "effect": "telefon",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.0,
+        "end": 1.79,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "All you have to do is answer the phone!",
+        "de": "Du musst nur ans Telefon gehen!",
+        "orig": "scenes/spongebob/lines/01.mp3"
+      },
+      {
+        "t": 1.79,
+        "end": 7.08,
+        "chars": [
+          2
+        ],
+        "who": "Patrick",
+        "text": "Aye aye, Cap-n!",
+        "de": "Aye aye, Käpt'n!",
+        "orig": "scenes/spongebob/lines/02.mp3"
+      },
+      {
+        "t": 7.08,
+        "end": 8.81,
+        "chars": [
+          3
+        ],
+        "who": "Phone",
+        "text": "Is this the Krusty Krab?",
+        "de": "Ist da die Krosse Krabbe?",
+        "orig": "scenes/spongebob/lines/03.mp3"
+      },
+      {
+        "t": 8.81,
+        "end": 13.17,
+        "chars": [
+          2
+        ],
+        "who": "Patrick",
+        "text": "No, this is Patrick",
+        "de": "Nein, hier ist Patrick",
+        "orig": "scenes/spongebob/lines/04.mp3"
+      },
+      {
+        "t": 13.17,
+        "end": 14.82,
+        "chars": [
+          3
+        ],
+        "who": "Phone",
+        "text": "Is this the Krusty Krab?",
+        "de": "Ist da die Krosse Krabbe?",
+        "orig": "scenes/spongebob/lines/05.mp3"
+      },
+      {
+        "t": 14.82,
+        "end": 21.66,
+        "chars": [
+          2
+        ],
+        "who": "Patrick",
+        "text": "Noo, this is Patrick!",
+        "de": "Neiin, hier ist Patrick!",
+        "orig": "scenes/spongebob/lines/06.mp3"
+      },
+      {
+        "t": 21.66,
+        "end": 23.33,
+        "chars": [
+          3
+        ],
+        "who": "Phone",
+        "text": "Is this the Krusty Krab?",
+        "de": "Ist da die Krosse Krabbe?",
+        "orig": "scenes/spongebob/lines/07.mp3"
+      },
+      {
+        "t": 23.33,
+        "end": 29.63,
+        "chars": [
+          2
+        ],
+        "who": "Patrick",
+        "text": "No! This is Patrick! [Grunt] I'm not a Krusty Krab.",
+        "de": "Nein! Hier ist Patrick! [Grunzen] Ich bin keine Krosse Krabbe.",
+        "orig": "scenes/spongebob/lines/08.mp3"
+      },
+      {
+        "t": 29.63,
+        "end": 32.3,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "Uhh, Patrick, that's the name of the restaurant.",
+        "de": "Ähh, Patrick... so heißt das Restaurant.",
+        "orig": "scenes/spongebob/lines/09.mp3"
+      },
+      {
+        "t": 32.3,
+        "end": 35.78,
+        "chars": [
+          2
+        ],
+        "who": "Patrick",
+        "text": "Huh? [Anger sound] Fish paste!",
+        "de": "Häh? [Wut-Geräusch] Fischpaste!",
+        "orig": "scenes/spongebob/lines/10.mp3"
+      }
+    ]
+  },
+  {
+    "id": "bigsmoke_order",
+    "title": "GTA — Big Smoke's Order (5 Rollen)",
+    "videoUrl": "scenes/bigsmoke.mp4",
+    "avatars": {
+      "1": "scenes/bigsmoke/big_smoke.png",
+      "2": "scenes/bigsmoke/cj.png",
+      "3": "scenes/bigsmoke/cashier.png",
+      "4": "scenes/bigsmoke/rider.png",
+      "5": "scenes/bigsmoke/sweet.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Big Smoke",
         "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "CJ",
+        "pan": -0.6,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Cashier (Sprechanlage)",
+        "pan": 0.3,
         "effect": "radio",
-        "gain": 0.9
+        "gain": 1.0
       },
       {
         "id": 4,
-        "name": "Erzähler (Hall)",
-        "pan": 0.0,
-        "effect": "hall",
+        "name": "Rider",
+        "pan": 0.5,
+        "effect": "none",
         "gain": 1.0
+      },
+      {
+        "id": 5,
+        "name": "Sweet",
+        "pan": -0.3,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 2.3,
+        "end": 4.3,
+        "chars": [
+          3
+        ],
+        "who": "Cashier",
+        "text": "Can I take your order, please?",
+        "de": "Kann ich Ihre Bestellung aufnehmen, bitte?",
+        "orig": "scenes/bigsmoke/lines/01.mp3"
+      },
+      {
+        "t": 4.3,
+        "end": 5.4,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "Carl, what do you want?",
+        "de": "Carl, was willst du?",
+        "orig": "scenes/bigsmoke/lines/02.mp3"
+      },
+      {
+        "t": 5.4,
+        "end": 8.2,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "You gotta eat to keep your strength up, man.",
+        "de": "Du musst essen, um bei Kräften zu bleiben, Mann.",
+        "orig": "scenes/bigsmoke/lines/03.mp3"
+      },
+      {
+        "t": 8.2,
+        "end": 10.1,
+        "chars": [
+          2
+        ],
+        "who": "CJ",
+        "text": "Aye, I'll take a number 9.",
+        "de": "Ey, ich nehm 'ne Nummer 9.",
+        "orig": "scenes/bigsmoke/lines/04.mp3"
+      },
+      {
+        "t": 10.1,
+        "end": 11.9,
+        "chars": [
+          2
+        ],
+        "who": "CJ",
+        "text": "Fat boy...",
+        "de": "Fettsack...",
+        "orig": "scenes/bigsmoke/lines/05.mp3"
+      },
+      {
+        "t": 11.9,
+        "end": 13.9,
+        "chars": [
+          4
+        ],
+        "who": "Rider",
+        "text": "Give me number 9, just like his.",
+        "de": "Gib mir Nummer 9, genau wie seine.",
+        "orig": "scenes/bigsmoke/lines/06.mp3"
+      },
+      {
+        "t": 13.9,
+        "end": 16.2,
+        "chars": [
+          5
+        ],
+        "who": "Sweet",
+        "text": "Uhh lemme get a number 6 with extra dip.",
+        "de": "Ähh, ich krieg 'ne Nummer 6 mit Extra-Dip.",
+        "orig": "scenes/bigsmoke/lines/07.mp3"
+      },
+      {
+        "t": 16.2,
+        "end": 19.14,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "I'll have 2 number 9's",
+        "de": "Ich nehme 2 Nummer 9",
+        "orig": "scenes/bigsmoke/lines/08.mp3"
+      },
+      {
+        "t": 19.14,
+        "end": 21.4,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "A number 9 large",
+        "de": "Eine Nummer 9, groß",
+        "orig": "scenes/bigsmoke/lines/09.mp3"
+      },
+      {
+        "t": 21.4,
+        "end": 24.5,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "A number 6 with extra dip",
+        "de": "Eine Nummer 6 mit Extra-Dip",
+        "orig": "scenes/bigsmoke/lines/10.mp3"
+      },
+      {
+        "t": 24.5,
+        "end": 26.0,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "A number 7",
+        "de": "Eine Nummer 7",
+        "orig": "scenes/bigsmoke/lines/11.mp3"
+      },
+      {
+        "t": 26.0,
+        "end": 28.53,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "2 number 45's",
+        "de": "2 Nummer 45",
+        "orig": "scenes/bigsmoke/lines/12.mp3"
+      },
+      {
+        "t": 28.53,
+        "end": 30.0,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "One with cheese",
+        "de": "Eine mit Käse",
+        "orig": "scenes/bigsmoke/lines/13.mp3"
+      },
+      {
+        "t": 30.0,
+        "end": 33.63,
+        "chars": [
+          1
+        ],
+        "who": "Big Smoke",
+        "text": "And a large soda",
+        "de": "Und eine große Cola",
+        "orig": "scenes/bigsmoke/lines/14.mp3"
       }
     ]
   },
