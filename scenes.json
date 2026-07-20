@@ -1193,6 +1193,86 @@
     ]
   },
   {
+    "id": "spongebobkasse",
+    "title": "Spongebob Kasse — Thaddäus & Mr. Krabs (3 Rollen)",
+    "videoUrl": "scenes/spongebobkasse.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "RandomAssFisch",
+        "pan": -0.6,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Thaddäus",
+        "pan": 0.5,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Mr. Krabs",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 1.31,
+        "chars": [
+          1
+        ],
+        "who": "RandomAssFisch",
+        "text": "Können Sie mir das einpacken?",
+        "de": "Original Text ist Deutsch!"
+      },
+      {
+        "t": 1.35,
+        "end": 3.8,
+        "chars": [
+          2
+        ],
+        "who": "Thaddäus",
+        "text": "Sie wissen gar nicht, wie gut es Ihnen geht...",
+        "de": "Original Text ist Deutsch!"
+      },
+      {
+        "t": 4.76,
+        "end": 7.38,
+        "chars": [
+          3
+        ],
+        "who": "Mr. Krabs",
+        "text": "Ich ging spazieren... und dachte mir nix Böses!",
+        "de": "Original Text ist Deutsch!"
+      },
+      {
+        "t": 7.4,
+        "end": 11.1,
+        "chars": [
+          2
+        ],
+        "who": "Thaddäus",
+        "text": "Ich würde ja gerne eines Ihrer aufregenden See-Abenteuer hören, aber...",
+        "de": "Original Text ist Deutsch!"
+      },
+      {
+        "t": 11.36,
+        "end": 15.64,
+        "chars": [
+          1
+        ],
+        "who": "RandomAssFisch",
+        "text": "Ich muss die Papierkörbe inspizieren! Ahja, mhm, oha, sehr schön!",
+        "de": "Original Text ist Deutsch!"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
