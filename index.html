@@ -9,16 +9,14 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
   :root{
-    --bg:#121216;
-    --panel:#1b1b22;
-    --panel-2:#222230;
-    --line:#2e2e3c;
-    --text:#ededf2;
-    --muted:#8f8fa0;
-    --rec:#e5484d;
-    --cue:#f0b429;
+    --bg:#0c0c10;
+    --panel-a:#1a1a21; --panel-b:#111116;
+    --line:#2b2b36;
+    --text:#f0f0f5; --muted:#8d8da0;
+    --amber:#ffc95c; --hot:#ff4d55; --violet:#c84bff;
+    --grad:linear-gradient(120deg,var(--amber),var(--hot) 55%,var(--violet));
     --ok:#3dd68c;
-    --radius:14px;
+    --radius:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -26,144 +24,176 @@
     background:var(--bg);
     color:var(--text);
     font-family:'Space Grotesk',system-ui,sans-serif;
-    font-size:16px;
-    line-height:1.5;
-    padding-bottom:60px;
+    font-size:16px;line-height:1.5;
+    padding-bottom:80px;
+    position:relative;
   }
-  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  /* Halftone-Layer über allem, ganz subtil */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(circle,rgba(255,255,255,.045) 1px,transparent 1.6px);
+    background-size:15px 15px;
+  }
+  /* Bühnenlicht-Glow */
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(900px 500px at 85% -10%,rgba(200,75,255,.14),transparent 60%),
+      radial-gradient(800px 480px at 0% 0%,rgba(255,77,85,.12),transparent 60%);
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 
-  /* ── ON AIR Schild (Signature) ─────────────────── */
-  header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:22px 0;border-bottom:1px solid var(--line);margin-bottom:28px;
-  }
-  .logo{font-family:'Archivo Black',sans-serif;font-size:1.35rem;letter-spacing:.02em;text-transform:uppercase}
-  .logo span{color:var(--muted);font-family:'Space Grotesk';font-weight:400;font-size:.8rem;display:block;letter-spacing:.14em;text-transform:uppercase}
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 0;margin-bottom:26px;border-bottom:1px solid var(--line)}
+  .logo{font-family:'Archivo Black',sans-serif;font-size:1.4rem;letter-spacing:.02em;text-transform:uppercase}
+  .logo em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo span{color:var(--muted);font-family:'Space Grotesk';font-weight:400;font-size:.78rem;display:block;letter-spacing:.16em;text-transform:uppercase}
+
   .onair{
-    font-family:'Archivo Black',sans-serif;
-    font-size:.95rem;letter-spacing:.22em;text-transform:uppercase;
-    border:2px solid var(--line);border-radius:8px;
-    padding:8px 18px;color:#55555f;
-    transition:all .3s;user-select:none;
+    font-family:'Archivo Black',sans-serif;font-size:1rem;letter-spacing:.24em;text-transform:uppercase;
+    border:2px solid var(--line);border-radius:10px;padding:10px 22px;color:#4c4c58;
+    position:relative;user-select:none;transition:.3s;
   }
   .onair.live{
-    color:#fff;border-color:var(--rec);background:var(--rec);
-    box-shadow:0 0 24px rgba(229,72,77,.55);
-    animation:pulse 1.2s ease-in-out infinite;
+    color:#fff;border-color:transparent;background:var(--grad);
+    box-shadow:0 0 30px rgba(255,77,85,.55),0 0 70px rgba(200,75,255,.3);
+    animation:pulse 1.1s ease-in-out infinite;
   }
-  @keyframes pulse{50%{box-shadow:0 0 46px rgba(229,72,77,.85)}}
+  @keyframes pulse{50%{box-shadow:0 0 55px rgba(255,77,85,.9),0 0 110px rgba(200,75,255,.45)}}
   @media (prefers-reduced-motion:reduce){.onair.live{animation:none}}
 
-  h2{font-family:'Archivo Black',sans-serif;font-size:1.1rem;letter-spacing:.03em;text-transform:uppercase;margin-bottom:14px}
-  .sub{color:var(--muted);font-size:.9rem;margin-bottom:18px}
+  h2{font-family:'Archivo Black',sans-serif;font-size:1.05rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:16px}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:20px}
+  /* Flightcase-Panel mit Nieten in den Ecken */
+  .card{
+    --stud:radial-gradient(circle at 35% 32%,#6a6a7c 0 1.5px,#31313e 3px,transparent 4.6px);
+    background-image:var(--stud),var(--stud),var(--stud),var(--stud),linear-gradient(180deg,var(--panel-a),var(--panel-b));
+    background-position:11px 11px,calc(100% - 20px) 11px,11px calc(100% - 20px),calc(100% - 20px) calc(100% - 20px),0 0;
+    background-repeat:no-repeat;
+    background-size:9px 9px,9px 9px,9px 9px,9px 9px,cover;
+    border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 30px rgba(0,0,0,.35);
+    padding:24px 26px;margin-bottom:20px;
+  }
   .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 
   input[type=text],select{
-    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    background:#0e0e13;border:1px solid var(--line);border-radius:10px;
     color:var(--text);padding:11px 14px;font:inherit;min-width:0;
   }
-  input[type=text]:focus,select:focus,button:focus-visible{outline:2px solid var(--cue);outline-offset:2px}
-  input.code{width:120px;text-align:center;font-family:'Archivo Black';letter-spacing:.2em;font-size:1.1rem}
+  input[type=text]:focus,select:focus,button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  input.code{width:130px;text-align:center;font-family:'Archivo Black';letter-spacing:.22em;font-size:1.15rem}
 
   button{
-    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    background:#1f1f28;border:1px solid var(--line);border-radius:10px;
     color:var(--text);padding:11px 18px;font:inherit;font-weight:700;cursor:pointer;
-    transition:background .15s,border-color .15s;
+    transition:transform .1s,border-color .15s,filter .15s;
   }
-  button:hover{border-color:var(--muted)}
-  button.primary{background:var(--rec);border-color:var(--rec)}
-  button.primary:hover{background:#f25b60}
-  button:disabled{opacity:.4;cursor:not-allowed}
+  button:hover{border-color:#4a4a5a;transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button.primary{background:var(--grad);border:none;color:#14060a;text-shadow:0 1px 0 rgba(255,255,255,.25)}
+  button.primary:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.35;cursor:not-allowed;transform:none}
   button.ghost{background:transparent}
+  button.big{font-size:1.05rem;padding:15px 26px;border-radius:12px}
 
   .screen{display:none}
   .screen.active{display:block}
 
-  /* Lobby */
+  .tag{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .roomcode-big{font-family:'Archivo Black';font-size:2.6rem;letter-spacing:.28em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
   .players{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:8px}
-  .player{
-    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
-    padding:12px 14px;display:flex;flex-direction:column;gap:2px;
-  }
+  .player{background:#14141b;border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:3px}
   .player .pname{font-weight:700}
-  .player .prole{font-size:.85rem;color:var(--cue)}
+  .player .prole{font-size:.85rem;color:var(--amber)}
   .player .prole.empty{color:var(--muted);font-style:italic}
   .player.ready{border-color:var(--ok)}
-  .tag{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .player .pbar{height:5px;background:#22222c;border-radius:99px;overflow:hidden;margin-top:5px}
+  .player .pbar i{display:block;height:100%;background:var(--grad);width:0;transition:width .3s}
 
   .roles{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-  .rolebtn{
-    display:flex;justify-content:space-between;align-items:center;text-align:left;
-    width:100%;padding:12px 16px;
-  }
+  .rolebtn{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;padding:13px 16px}
   .rolebtn .meta{font-size:.8rem;color:var(--muted);font-weight:400}
-  .rolebtn.mine{border-color:var(--cue);color:var(--cue)}
-  .rolebtn.taken{opacity:.5;cursor:not-allowed}
+  .rolebtn.mine{border-color:var(--amber);color:var(--amber);box-shadow:0 0 16px rgba(255,201,92,.15)}
+  .rolebtn.taken{opacity:.45;cursor:not-allowed}
 
-  video{width:100%;border-radius:var(--radius);background:#000;display:block}
+  video{width:100%;border-radius:12px;background:#000;display:block}
 
-  .countdown{
-    position:fixed;inset:0;background:rgba(10,10,14,.88);
-    display:none;align-items:center;justify-content:center;z-index:50;
-  }
+  .countdown{position:fixed;inset:0;background:rgba(8,8,12,.9);display:none;align-items:center;justify-content:center;z-index:50}
   .countdown.show{display:flex}
-  .countdown div{font-family:'Archivo Black';font-size:22vw;color:var(--rec)}
+  .countdown div{font-family:'Archivo Black';font-size:20vw;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 
-  .bar{height:8px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin-top:8px}
-  .bar i{display:block;height:100%;width:0;background:var(--cue);transition:width .2s}
+  .bar{height:8px;background:#1c1c25;border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar i{display:block;height:100%;width:0;background:var(--grad);transition:width .2s}
 
-  .hint{font-size:.85rem;color:var(--muted);border-left:3px solid var(--cue);padding:6px 12px;margin-top:14px}
+  .hint{font-size:.85rem;color:var(--muted);border-left:3px solid var(--amber);padding:6px 12px;margin-top:14px}
   .status{font-size:.9rem;color:var(--muted);margin-top:10px;min-height:1.4em}
-  .roomcode-big{font-family:'Archivo Black';font-size:2.4rem;letter-spacing:.25em;color:var(--cue)}
 
   label.small{font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px}
   .rolecfg{display:grid;grid-template-columns:1fr 110px 150px;gap:8px;margin-bottom:8px;align-items:center}
-  .rolecfg input[type=range]{width:100%;accent-color:var(--cue)}
+  .rolecfg input[type=range]{width:100%;accent-color:var(--amber)}
   @media(max-width:600px){.rolecfg{grid-template-columns:1fr}}
 
   .synccontrol{display:flex;align-items:center;gap:12px;margin-top:12px}
-  .synccontrol input{flex:1;accent-color:var(--cue)}
+  .synccontrol input{flex:1;accent-color:var(--amber)}
 
-  /* Teleprompter */
-  .prompter{margin-top:14px;min-height:96px}
-  .pline{
-    display:flex;gap:14px;align-items:center;
-    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
-    padding:12px 16px;transition:border-color .2s, box-shadow .2s;
+  /* ── LINE-RECORDING-BOOTH ─────────────────────── */
+  .booth-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .booth-role{display:flex;align-items:center;gap:12px}
+  .booth-role img{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
+  .booth-role .rname{font-family:'Archivo Black';font-size:1.15rem}
+  .linecount{font-family:'Archivo Black';font-size:2.2rem;line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .linecount small{display:block;-webkit-text-fill-color:var(--muted);font-family:'Space Grotesk';font-weight:400;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+
+  .lineplate{
+    position:relative;border:1px solid var(--line);border-radius:12px;
+    background:
+      radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1.5px) 0 0/12px 12px,
+      linear-gradient(120deg,rgba(255,201,92,.08),rgba(255,77,85,.06),rgba(200,75,255,.08));
+    padding:22px 24px;margin-bottom:14px;
   }
+  .lineplate .lwho{font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+  .lineplate .lcap{font-size:1.35rem;font-weight:700;line-height:1.35}
+  .lineplate .ldur{position:absolute;top:16px;right:18px;font-size:.75rem;color:var(--muted)}
+
+  canvas.viz{width:100%;height:88px;display:block;background:#0a0a0e;border:1px solid var(--line);border-radius:12px;margin:12px 0 4px}
+  .rectime{height:6px;background:#1c1c25;border-radius:99px;overflow:hidden;margin-bottom:14px}
+  .rectime i{display:block;height:100%;width:0;background:var(--grad)}
+
+  .boothbtns{display:flex;gap:10px;flex-wrap:wrap}
+  #btn-line-rec.recording{background:var(--grad);border:none;color:#14060a;animation:pulse 1.1s infinite}
+
+  .prompter{margin-top:14px;min-height:60px}
+  .pline{display:flex;gap:14px;align-items:center;background:#14141b;border:1px solid var(--line);border-radius:12px;padding:12px 16px;transition:.2s}
   .pline img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#000}
   .pline .ptext{flex:1}
   .pline .pwho{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .pline .pcap{font-weight:500}
-  .pline.mine{border-color:var(--rec);box-shadow:0 0 18px rgba(229,72,77,.35)}
-  .pline.mine .pwho{color:var(--rec)}
-  .pline.mine .pwho::after{content:" — 🎙 DU BIST DRAN!";font-weight:700}
+  .pline.mine{border-color:var(--hot);box-shadow:0 0 18px rgba(255,77,85,.3)}
+  .pline.mine .pwho{color:var(--hot)}
   .pnext{font-size:.85rem;color:var(--muted);margin-top:8px;padding-left:6px}
-  .pnext b{color:var(--cue);font-weight:700}
+  .pnext b{color:var(--amber);font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <div class="logo">Synchronstudio<span>privates Dubbing-Game</span></div>
+    <div class="logo"><em>Synchron</em>studio<span>privates Dubbing-Game</span></div>
     <div class="onair" id="onair">On Air</div>
   </header>
 
-  <!-- ── START ─────────────────────────────────── -->
+  <!-- START -->
   <section class="screen active" id="scr-start">
     <div class="card">
       <h2>Wer spricht?</h2>
-      <div class="row">
-        <input type="text" id="in-name" placeholder="Dein Name" maxlength="16" style="flex:1">
-      </div>
+      <div class="row"><input type="text" id="in-name" placeholder="Dein Name" maxlength="16" style="flex:1"></div>
     </div>
     <div class="card">
       <h2>Raum erstellen</h2>
-      <p class="sub">Du bist der Host, wählst die Szene und startest die Aufnahme.</p>
-      <button class="primary" id="btn-create">Raum erstellen</button>
+      <p class="sub">Du bist der Host, wählst die Szene und startest die Session.</p>
+      <button class="primary big" id="btn-create">Raum erstellen</button>
     </div>
     <div class="card">
       <h2>Raum beitreten</h2>
@@ -175,26 +205,23 @@
     <p class="status" id="start-status"></p>
   </section>
 
-  <!-- ── LOBBY ─────────────────────────────────── -->
+  <!-- LOBBY -->
   <section class="screen" id="scr-lobby">
     <div class="card">
       <span class="tag">Raumcode</span>
       <div class="roomcode-big" id="lobby-code">0000</div>
-      <p class="sub">Schick den Code deinen Leuten. Alle öffnen dieselbe Seite und treten bei.</p>
+      <p class="sub">Schick den Code deinen Leuten. Alle öffnen denselben Link und treten bei.</p>
       <div class="players" id="player-list"></div>
     </div>
 
-    <!-- Nur Host: Szene wählen -->
     <div class="card" id="host-scene" style="display:none">
       <h2>Szene wählen</h2>
       <div class="row">
         <select id="scene-select" style="flex:1"></select>
         <button id="btn-load-scene">Laden</button>
       </div>
-      <p class="sub" style="margin-top:14px">… oder eigenes Video direkt vom PC (wird an alle Spieler übertragen):</p>
-      <div class="row">
-        <input type="file" id="file-video" accept="video/mp4,video/webm">
-      </div>
+      <p class="sub" style="margin-top:14px">… oder eigenes Video direkt vom PC (wird an alle übertragen):</p>
+      <div class="row"><input type="file" id="file-video" accept="video/mp4,video/webm"></div>
       <div id="local-cfg" style="display:none;margin-top:16px">
         <label class="small">Rollen für dieses Video (Name / Pan / Effekt):</label>
         <div id="rolecfg-list"></div>
@@ -207,28 +234,68 @@
       <p class="status" id="scene-status"></p>
     </div>
 
-    <!-- Szene + Rollen (alle) -->
     <div class="card" id="scene-card" style="display:none">
       <h2 id="scene-title">Szene</h2>
-      <video id="preview" playsinline preload="auto"></video>
+      <video id="preview" playsinline preload="auto" controls></video>
       <div class="bar" id="download-bar" style="display:none"><i></i></div>
       <h2 style="margin-top:18px">Rolle aussuchen</h2>
       <div class="roles" id="role-list"></div>
       <div class="row" style="margin-top:16px">
         <button id="btn-mic-test">🎤 Mikro-Check (3 Sek. mit deinem Effekt)</button>
-        <button id="btn-ready">Bin bereit</button>
+        <button class="primary" id="btn-ready">Bin bereit</button>
       </div>
       <p class="hint">Kopfhörer aufsetzen! Sonst nimmt dein Mikro den Video-Sound mit auf.</p>
       <p class="status" id="lobby-status"></p>
     </div>
 
     <div class="card" id="host-start" style="display:none">
-      <button class="primary" id="btn-start" disabled>🔴 Aufnahme starten</button>
+      <button class="primary big" id="btn-start" disabled>🔴 Session starten</button>
       <p class="status" id="start-hint">Warte, bis alle mit Rolle „bereit“ sind …</p>
     </div>
   </section>
 
-  <!-- ── AUFNAHME ──────────────────────────────── -->
+  <!-- LINE-BOOTH: Zeile für Zeile einsprechen -->
+  <section class="screen" id="scr-booth">
+    <div class="card">
+      <div class="booth-head">
+        <div class="booth-role"><img id="booth-avatar" alt="" style="display:none"><div><span class="tag">Deine Rolle</span><div class="rname" id="booth-rolename">—</div></div></div>
+        <div class="linecount" id="booth-count">1/1<small>Voiceline</small></div>
+      </div>
+
+      <div class="lineplate">
+        <div class="lwho" id="line-who">—</div>
+        <div class="lcap" id="line-text">—</div>
+        <div class="ldur" id="line-dur"></div>
+      </div>
+
+      <video id="booth-video" playsinline preload="auto" style="max-height:260px"></video>
+      <canvas class="viz" id="viz"></canvas>
+      <div class="rectime"><i id="rectime-fill"></i></div>
+
+      <div class="boothbtns">
+        <button class="big" id="btn-line-scene">🎬 Szene ansehen</button>
+        <button class="big primary" id="btn-line-rec">⏺ Aufnehmen</button>
+        <button class="big" id="btn-line-play" disabled>▶ Anhören</button>
+        <button class="big" id="btn-line-next" disabled>✅ Passt, weiter</button>
+      </div>
+      <p class="status" id="booth-status">Unendlich Versuche — nimm auf, bis es sitzt.</p>
+    </div>
+    <div class="card">
+      <h2>Studio-Status</h2>
+      <div class="players" id="booth-players"></div>
+    </div>
+  </section>
+
+  <!-- WARTEN -->
+  <section class="screen" id="scr-wait">
+    <div class="card">
+      <h2>🎙 Deine Spuren sind im Kasten!</h2>
+      <p class="sub">Warte, bis alle fertig eingesprochen haben — dann startet die Premiere automatisch.</p>
+      <div class="players" id="wait-players"></div>
+    </div>
+  </section>
+
+  <!-- REALTIME (für Szenen ohne Line-Timings) -->
   <section class="screen" id="scr-record">
     <div class="card">
       <h2 id="rec-role">Deine Rolle</h2>
@@ -238,11 +305,11 @@
     </div>
   </section>
 
-  <!-- ── PREMIERE ──────────────────────────────── -->
+  <!-- PREMIERE -->
   <section class="screen" id="scr-playback">
     <div class="card">
       <h2>🎬 Premiere</h2>
-      <p class="sub">Euer fertiger Synchro-Take — Stimmen mit Panning &amp; Effekten über dem Original-Sound.</p>
+      <p class="sub">Euer fertiger Synchro-Take — Stimmen mit Panning, Effekten und Kompressor über dem Original-Sound.</p>
       <video id="play-video" playsinline preload="auto"></video>
       <div class="prompter" id="play-prompter"></div>
       <div class="synccontrol">
@@ -251,16 +318,16 @@
         <span class="tag" id="sync-val">0 ms</span>
       </div>
       <div class="row" style="margin-top:16px">
-        <button class="primary" id="btn-replay">▶ Nochmal abspielen</button>
-        <button id="btn-again" style="display:none">Neue Runde (gleiche Szene)</button>
-        <button id="btn-back" style="display:none">Andere Szene</button>
+        <button class="primary big" id="btn-replay">▶ Nochmal abspielen</button>
+        <button class="big" id="btn-download">⬇ Ergebnis als Video speichern</button>
+        <button id="btn-again">Neue Runde (gleiche Szene)</button>
+        <button id="btn-back">Andere Szene</button>
       </div>
       <p class="status" id="play-status"></p>
     </div>
   </section>
 
 </div>
-
 <div class="countdown" id="countdown"><div>3</div></div>
 <script src="client.js"></script>
 </body>

@@ -1,64 +1,86 @@
 /* ═══════════════════════════════════════════════════════════════
    SYNCHRONSTUDIO — privates Online-Dubbing-Game
-   Komplett statisch: PeerJS (P2P) statt eigenem Server.
-   Host = Autorität. Gäste verbinden sich über den Raumcode.
+   Statisch (GitHub Pages) + PeerJS (P2P). Host = Autorität.
+   Modus A: Line-Booth (Szenen mit "lines"-Timings, Choicer-Voicer-Style)
+   Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const PEER_PREFIX = "syncstudio-emvw-";   // macht die Raum-IDs auf dem öffentlichen PeerServer einzigartig — kannst du ändern
-const CHUNK_SIZE = 128 * 1024;            // Video-Übertragung in 128-KB-Häppchen
+const PEER_PREFIX = "syncstudio-emvw-";
+const CHUNK_SIZE = 128 * 1024;
 
 // ── State ────────────────────────────────────────────────────
-let peer = null;
-let isHost = false;
-let myName = "";
-let myId = "";
-let hostConn = null;              // Gast → Host
-const conns = new Map();          // Host: peerId → conn
-let players = [];                 // [{id, name, role, ready}]
-let scene = null;                 // {title, roles:[{id,name,pan,effect,gain}], videoUrl?}
-let localVideoBuf = null;         // ArrayBuffer, wenn Host eigenes Video nutzt
-let videoBlobUrl = null;
+let peer = null, isHost = false, myName = "", myId = "";
+let hostConn = null;
+const conns = new Map();
+let players = [];                 // [{id,name,role,ready,done,total}]
+let scene = null;
+let localVideoBuf = null, videoBlobUrl = null;
 let micStream = null;
-let recorder = null;
-let recChunks = [];
 let audioCtx = null;
-let tracks = {};                  // roleId → AudioBuffer
+let mixItems = [];                // [{role, startAt, buffer}]
 let playNodes = [];
 let syncOffsetMs = 0;
 
-// ── Kleine Helfer ────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
-const show = (id) => {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  $(id).classList.add("active");
-};
-const status = (id, msg, isErr) => {
-  const el = $(id);
-  el.textContent = msg;
-  el.style.color = isErr ? "var(--rec)" : "";
-};
+const show = (id) => { document.querySelectorAll(".screen").forEach(s => s.classList.remove("active")); $(id).classList.add("active"); };
+const status = (id, msg, isErr) => { const el = $(id); el.textContent = msg; el.style.color = isErr ? "var(--hot)" : ""; };
 const randCode = () => String(Math.floor(1000 + Math.random() * 9000));
+const esc = (s) => String(s).replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]));
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+// ═════════════════════════════════════════════════════════════
+// SFX — komplett synthetisch, keine Dateien
+// ═════════════════════════════════════════════════════════════
+const SFX = (() => {
+  function tone(f, dur = 0.08, type = "square", vol = 0.1, when = 0, slide = 0) {
+    try {
+      const a = getCtx(), o = a.createOscillator(), g = a.createGain();
+      const t = a.currentTime + when;
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(a.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    } catch {}
+  }
+  return {
+    click: () => tone(950, 0.045, "square", 0.05),
+    ok:    () => { tone(660, 0.09, "triangle", 0.11); tone(990, 0.13, "triangle", 0.11, 0.09); },
+    beep:  () => tone(440, 0.12, "sine", 0.14),
+    go:    () => tone(880, 0.3, "sine", 0.16),
+    rec:   () => tone(340, 0.14, "sine", 0.16, 0, 170),
+    stop:  () => tone(170, 0.14, "sine", 0.14, 0, 340),
+    done:  () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.13, "triangle", 0.1, i * 0.09)),
+    err:   () => tone(150, 0.22, "sawtooth", 0.09),
+  };
+})();
+document.addEventListener("click", e => { if (e.target.closest("button:not(:disabled)")) SFX.click(); });
 
 // ═════════════════════════════════════════════════════════════
 // 1) RAUM ERSTELLEN / BEITRETEN
 // ═════════════════════════════════════════════════════════════
-
 $("btn-create").onclick = () => {
   myName = $("in-name").value.trim();
-  if (!myName) return status("start-status", "Erst Namen eingeben, digga 😄", true);
+  if (!myName) return status("start-status", "Erst Namen eingeben, digga 😄", true), SFX.err();
   isHost = true;
   const code = randCode();
   status("start-status", "Erstelle Raum …");
   peer = new Peer(PEER_PREFIX + code);
   peer.on("open", () => {
     myId = peer.id;
-    players = [{ id: myId, name: myName + " (Host)", role: null, ready: false }];
+    players = [{ id: myId, name: myName + " (Host)", role: null, ready: false, done: 0, total: 0 }];
     enterLobby(code);
     loadSceneList();
   });
   peer.on("connection", (conn) => setupHostConn(conn));
   peer.on("error", (e) => {
-    if (e.type === "unavailable-id") { peer.destroy(); $("btn-create").click(); } // Code schon belegt → neu würfeln
+    if (e.type === "unavailable-id") { peer.destroy(); $("btn-create").click(); }
     else status("start-status", "Verbindungsfehler: " + e.type, true);
   });
 };
@@ -66,18 +88,15 @@ $("btn-create").onclick = () => {
 $("btn-join").onclick = () => {
   myName = $("in-name").value.trim();
   const code = $("in-code").value.trim();
-  if (!myName) return status("start-status", "Erst Namen eingeben 🙂", true);
-  if (!/^\d{4}$/.test(code)) return status("start-status", "Der Raumcode hat 4 Ziffern.", true);
+  if (!myName) return status("start-status", "Erst Namen eingeben 🙂", true), SFX.err();
+  if (!/^\d{4}$/.test(code)) return status("start-status", "Der Raumcode hat 4 Ziffern.", true), SFX.err();
   isHost = false;
   status("start-status", "Verbinde …");
   peer = new Peer();
   peer.on("open", () => {
     myId = peer.id;
     hostConn = peer.connect(PEER_PREFIX + code, { reliable: true });
-    hostConn.on("open", () => {
-      hostConn.send({ t: "hello", name: myName });
-      enterLobby(code);
-    });
+    hostConn.on("open", () => { hostConn.send({ t: "hello", name: myName }); enterLobby(code); });
     hostConn.on("data", (msg) => handleMsg(msg, hostConn));
     hostConn.on("close", () => status("lobby-status", "Verbindung zum Host weg 😬 Seite neu laden.", true));
   });
@@ -92,118 +111,72 @@ function enterLobby(code) {
   if (isHost) { $("host-scene").style.display = ""; $("host-start").style.display = ""; }
   show("scr-lobby");
   renderPlayers();
+  SFX.ok();
 }
 
 // ═════════════════════════════════════════════════════════════
-// 2) NACHRICHTEN (Host = Verteiler)
+// 2) NACHRICHTEN
 // ═════════════════════════════════════════════════════════════
-
 function setupHostConn(conn) {
   conn.on("open", () => conns.set(conn.peer, conn));
   conn.on("data", (msg) => handleMsg(msg, conn));
-  conn.on("close", () => {
-    conns.delete(conn.peer);
-    players = players.filter(p => p.id !== conn.peer);
-    broadcastState();
-  });
+  conn.on("close", () => { conns.delete(conn.peer); players = players.filter(p => p.id !== conn.peer); broadcastState(); });
 }
-
 function broadcast(msg) { conns.forEach(c => { if (c.open) c.send(msg); }); }
-function broadcastState() {
-  renderPlayers();
-  broadcast({ t: "state", players });
-  checkStartable();
-}
+function broadcastState() { renderPlayers(); renderBoothPlayers(); broadcast({ t: "state", players }); checkStartable(); checkAllDone(); }
 
 function handleMsg(msg, conn) {
   switch (msg.t) {
-
     // — beim Host —
-    case "hello":
-      players.push({ id: conn.peer, name: msg.name, role: null, ready: false });
-      // Neuem Spieler den aktuellen Stand schicken
-      if (scene) {
-        if (localVideoBuf) sendLocalVideo(conn);
-        else conn.send({ t: "scene", scene });
-      }
+    case "hello": {
+      const cap = scene ? scene.roles.length : 4;
+      if (players.length >= cap) { conn.send({ t: "full", cap }); setTimeout(() => conn.close(), 500); break; }
+      players.push({ id: conn.peer, name: msg.name, role: null, ready: false, done: 0, total: 0 });
+      if (scene) { if (localVideoBuf) sendLocalVideo(conn); else conn.send({ t: "scene", scene }); }
       broadcastState();
       break;
-
+    }
     case "pickRole": {
       const taken = players.some(p => p.role === msg.role && p.id !== conn.peer);
-      if (!taken) {
-        const p = players.find(p => p.id === conn.peer);
-        if (p) { p.role = msg.role; p.ready = false; }
-      }
-      broadcastState();
-      break;
+      if (!taken) { const p = players.find(p => p.id === conn.peer); if (p) { p.role = msg.role; p.ready = false; } }
+      broadcastState(); break;
     }
-
-    case "ready": {
-      const p = players.find(p => p.id === conn.peer);
-      if (p) p.ready = true;
-      broadcastState();
-      break;
-    }
-
-    case "audio":
-      collectAudio(msg.role, msg.buf);
-      break;
+    case "ready": { const p = players.find(p => p.id === conn.peer); if (p && p.role != null) p.ready = true; broadcastState(); break; }
+    case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
+    case "tracks": collectTracks(msg.role, msg.items); break;
 
     // — bei Gästen —
-    case "state":
-      players = msg.players;
-      renderPlayers();
-      renderRoles();
-      break;
-
-    case "scene":
-      scene = msg.scene;
-      videoBlobUrl = null;
-      showScene(scene.videoUrl);
-      break;
-
-    case "videoMeta":
-      startVideoReceive(msg);
-      break;
-    case "videoChunk":
-      receiveVideoChunk(msg.buf);
-      break;
-
-    case "go":
-      startRecording();
-      break;
-
-    case "mix":
-      loadMix(msg.tracks);
-      break;
-
-    case "again":
-      resetForNewRound();
-      break;
+    case "full":
+      status("start-status", "Raum ist voll — diese Szene hat nur " + msg.cap + " Rollen. 😅", true);
+      show("scr-start"); break;
+    case "state": players = msg.players; renderPlayers(); renderRoles(); renderBoothPlayers(); break;
+    case "scene": scene = msg.scene; videoBlobUrl = null; showScene(scene.videoUrl); break;
+    case "videoMeta": startVideoReceive(msg); break;
+    case "videoChunk": receiveVideoChunk(msg.buf); break;
+    case "goLines": startBooth(); break;
+    case "go": startRealtime(); break;
+    case "mix": loadMix(msg.data); break;
+    case "again": resetForNewRound(); break;
   }
 }
 
 // ═════════════════════════════════════════════════════════════
-// 3) SZENEN — scenes.json ODER eigenes Video vom PC
+// 3) SZENEN
 // ═════════════════════════════════════════════════════════════
-
 let sceneList = [];
-
 async function loadSceneList() {
-  try {
-    const res = await fetch("scenes.json");
-    sceneList = await res.json();
-  } catch { sceneList = []; }
+  try { sceneList = await (await fetch("scenes.json")).json(); } catch { sceneList = []; }
   const sel = $("scene-select");
   sel.innerHTML = sceneList.length
-    ? sceneList.map((s, i) => `<option value="${i}">${s.title} (${s.roles.length} Rollen)</option>`).join("")
+    ? sceneList.map((s, i) => `<option value="${i}">${esc(s.title)} (${s.roles.length} Rollen${s.lines ? ", " + s.lines.length + " Lines" : ""})</option>`).join("")
     : "<option>— keine Szenen in scenes.json —</option>";
 }
 
 $("btn-load-scene").onclick = () => {
   const s = sceneList[$("scene-select").value];
   if (!s) return;
+  if (players.length > s.roles.length)
+    return status("scene-status", "⚠ Ihr seid " + players.length + " Leute, aber die Szene hat nur " + s.roles.length + " Rollen.", true);
   scene = s; localVideoBuf = null; videoBlobUrl = null;
   resetRoles();
   showScene(scene.videoUrl);
@@ -211,7 +184,6 @@ $("btn-load-scene").onclick = () => {
   broadcastState();
 };
 
-// — Eigenes Video: Rollen-Editor —
 const EFFECTS = { none: "Normal", vintage_1990: "Vintage / 90er Tape", radio: "Funkgerät", telefon: "Telefon", hall: "Halliger Raum" };
 
 $("file-video").onchange = async (e) => {
@@ -219,9 +191,8 @@ $("file-video").onchange = async (e) => {
   if (!f) return;
   status("scene-status", "Lese Video ein …");
   localVideoBuf = await f.arrayBuffer();
-  if (localVideoBuf.byteLength > 60 * 1024 * 1024)
-    status("scene-status", "⚠ " + Math.round(localVideoBuf.byteLength / 1e6) + " MB — geht, aber die Übertragung an die anderen dauert. Unter 30 MB ist smoother.");
-  else status("scene-status", "Video geladen (" + Math.round(localVideoBuf.byteLength / 1e6) + " MB). Jetzt Rollen einstellen.");
+  status("scene-status", "Video geladen (" + Math.round(localVideoBuf.byteLength / 1e6) + " MB). Jetzt Rollen einstellen." +
+    (localVideoBuf.byteLength > 60e6 ? " ⚠ Groß — Übertragung dauert." : ""));
   $("local-cfg").style.display = "";
   if (!$("rolecfg-list").children.length) { addRoleCfg(); addRoleCfg(); }
 };
@@ -242,11 +213,13 @@ $("btn-add-role").onclick = addRoleCfg;
 $("btn-use-local").onclick = () => {
   const roles = [...$("rolecfg-list").children].map((div, i) => ({
     id: i + 1,
-    name: div.querySelector('input[type=text]').value || "Charakter " + (i + 1),
-    pan: parseFloat(div.querySelector('input[type=range]').value),
+    name: div.querySelector("input[type=text]").value || "Charakter " + (i + 1),
+    pan: parseFloat(div.querySelector("input[type=range]").value),
     effect: div.querySelector("select").value,
     gain: 1.0
   }));
+  if (players.length > roles.length)
+    return status("scene-status", "⚠ Ihr seid " + players.length + " Leute, aber nur " + roles.length + " Rollen.", true);
   scene = { title: $("file-video").files[0].name.replace(/\.\w+$/, ""), roles };
   resetRoles();
   videoBlobUrl = URL.createObjectURL(new Blob([localVideoBuf], { type: "video/mp4" }));
@@ -255,15 +228,14 @@ $("btn-use-local").onclick = () => {
   broadcastState();
 };
 
-function resetRoles(){ players.forEach(p => { p.role = null; p.ready = false; }); }
+function resetRoles() { players.forEach(p => { p.role = null; p.ready = false; p.done = 0; p.total = 0; }); }
 
-// — Video-Übertragung an Gäste (chunked) —
 function sendLocalVideo(conn) {
   conn.send({ t: "videoMeta", scene, size: localVideoBuf.byteLength });
   let off = 0;
   const pump = () => {
     while (off < localVideoBuf.byteLength) {
-      if (conn.dataChannel && conn.dataChannel.bufferedAmount > 4 * 1024 * 1024) { setTimeout(pump, 100); return; }
+      if (conn.dataChannel && conn.dataChannel.bufferedAmount > 4e6) { setTimeout(pump, 100); return; }
       conn.send({ t: "videoChunk", buf: localVideoBuf.slice(off, off + CHUNK_SIZE) });
       off += CHUNK_SIZE;
     }
@@ -288,6 +260,7 @@ function receiveVideoChunk(buf) {
     videoBlobUrl = URL.createObjectURL(new Blob([rxBuf], { type: "video/mp4" }));
     rxBuf = null;
     showScene(videoBlobUrl);
+    SFX.ok();
   }
 }
 
@@ -299,27 +272,33 @@ function showScene(src) {
 }
 
 // ═════════════════════════════════════════════════════════════
-// 4) LOBBY-UI: Spieler, Rollen, Bereit
+// 4) LOBBY-UI
 // ═════════════════════════════════════════════════════════════
-
-function renderPlayers() {
-  $("player-list").innerHTML = players.map(p => {
-    const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
-    return `<div class="player ${p.ready ? "ready" : ""}">
-      <span class="pname">${esc(p.name)}</span>
-      <span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>
-      ${p.ready ? '<span class="tag" style="color:var(--ok)">bereit</span>' : ""}
-    </div>`;
-  }).join("");
+function playerCard(p) {
+  const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
+  const prog = p.total > 0 ? `<div class="pbar"><i style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span class="tag">${p.done}/${p.total} Lines</span>` : "";
+  return `<div class="player ${p.ready ? "ready" : ""}">
+    <span class="pname">${esc(p.name)}</span>
+    <span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>
+    ${p.ready && !p.total ? '<span class="tag" style="color:var(--ok)">bereit</span>' : ""}${prog}
+  </div>`;
+}
+function renderPlayers() { $("player-list").innerHTML = players.map(playerCard).join(""); }
+function renderBoothPlayers() {
+  const html = players.map(playerCard).join("");
+  $("booth-players").innerHTML = html;
+  $("wait-players").innerHTML = html;
 }
 
 function renderRoles() {
   if (!scene) return;
+  const lineCount = (rid) => scene.lines ? scene.lines.filter(l => l.chars.includes(rid)).length : null;
   $("role-list").innerHTML = scene.roles.map(r => {
     const owner = players.find(p => p.role === r.id);
     const mine = owner && owner.id === myId;
+    const lc = lineCount(r.id);
     return `<button class="rolebtn ${mine ? "mine" : owner ? "taken" : ""}" data-r="${r.id}" ${owner && !mine ? "disabled" : ""}>
-      <span>${esc(r.name)}</span>
+      <span>${esc(r.name)}${lc != null ? ` <span class="meta">· ${lc} Lines</span>` : ""}</span>
       <span class="meta">${owner ? esc(owner.name) : "frei"} · Pan ${r.pan > 0 ? "R" : r.pan < 0 ? "L" : "Mitte"} · ${EFFECTS[r.effect] || r.effect}</span>
     </button>`;
   }).join("");
@@ -333,47 +312,43 @@ function pickRole(roleId) {
     const me = players.find(p => p.id === myId);
     me.role = roleId; me.ready = false;
     broadcastState(); renderRoles();
-  } else {
-    hostConn.send({ t: "pickRole", role: roleId });
-  }
+  } else hostConn.send({ t: "pickRole", role: roleId });
 }
 
 $("btn-ready").onclick = async () => {
   const me = players.find(p => p.id === myId);
-  const myRole = isHost ? me?.role : players.find(p => p.id === myId)?.role;
-  if (myRole == null) return status("lobby-status", "Erst eine Rolle aussuchen!", true);
-  if (!videoReady()) return status("lobby-status", "Video lädt noch …", true);
-  const ok = await ensureMic();
-  if (!ok) return;
+  if (me?.role == null) return status("lobby-status", "Erst eine Rolle aussuchen!", true), SFX.err();
+  if (!isHost && !videoBlobUrl && !scene?.videoUrl) return status("lobby-status", "Video lädt noch …", true);
+  if (!(await ensureMic())) return;
   if (isHost) { me.ready = true; broadcastState(); }
   else hostConn.send({ t: "ready" });
   status("lobby-status", "✅ Bereit! Warten auf die anderen …");
+  SFX.ok();
 };
-
-function videoReady() {
-  return isHost ? true : (videoBlobUrl || (scene && scene.videoUrl));
-}
 
 function checkStartable() {
   if (!isHost) return;
-  const withRole = players.filter(p => p.role != null);
-  const ok = withRole.length >= 1 && withRole.every(p => p.ready) && players.every(p => p.role != null);
+  const ok = players.length && players.every(p => p.role != null && p.ready);
   $("btn-start").disabled = !ok;
   $("start-hint").textContent = ok ? "Alle bereit — los geht's!" : "Warte, bis alle eine Rolle haben und „bereit“ sind …";
 }
 
-// ── Mikro ────────────────────────────────────────────────────
 async function ensureMic() {
   if (micStream) return true;
   try {
-    micStream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-    });
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     return true;
   } catch {
     status("lobby-status", "Kein Mikro-Zugriff. In den Browser-Einstellungen erlauben!", true);
+    SFX.err();
     return false;
   }
+}
+
+function pickMime() {
+  for (const m of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"])
+    if (MediaRecorder.isTypeSupported(m)) return m;
+  return "";
 }
 
 $("btn-mic-test").onclick = async () => {
@@ -400,68 +375,196 @@ $("btn-mic-test").onclick = async () => {
 };
 
 // ═════════════════════════════════════════════════════════════
-// 5) AUFNAHME — synchron bei allen
+// 5) SESSION-START (Host)
 // ═════════════════════════════════════════════════════════════
-
 $("btn-start").onclick = () => {
-  broadcast({ t: "go" });
-  startRecording();
+  if (scene.lines?.length) { broadcast({ t: "goLines" }); startBooth(); }
+  else { broadcast({ t: "go" }); startRealtime(); }
 };
 
-function pickMime() {
-  for (const m of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"])
-    if (MediaRecorder.isTypeSupported(m)) return m;
-  return "";
+// ═════════════════════════════════════════════════════════════
+// 6) LINE-BOOTH — Zeile für Zeile, unendlich Versuche
+// ═════════════════════════════════════════════════════════════
+let myLines = [], curLine = 0, takes = {};   // takes: lineIdx → ArrayBuffer
+let lineRec = null, lineChunks = [], recTimer = null, recStartT = 0, recMax = 0;
+let vizSrc = null, vizAn = null, vizRAF = null;
+
+function myRole() { return players.find(p => p.id === myId)?.role; }
+function roleOf(id) { return scene.roles.find(r => r.id === id); }
+
+function startBooth() {
+  const rid = myRole();
+  myLines = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.includes(rid));
+  curLine = 0; takes = {};
+  const r = roleOf(rid);
+  $("booth-rolename").textContent = r.name;
+  const av = scene.avatars?.[String(rid)];
+  $("booth-avatar").style.display = av ? "" : "none";
+  if (av) $("booth-avatar").src = av;
+  $("booth-video").src = videoBlobUrl || scene.videoUrl;
+  sendProgress();
+  show("scr-booth");
+  $("onair").classList.add("live");
+  SFX.go();
+  startViz();
+  renderLine();
 }
 
-// ── Teleprompter (Choicer-Voicer-Style Line-Cues) ────────────
-function attachPrompter(videoEl, promptEl, myRoleId) {
-  promptEl.innerHTML = "";
-  if (!scene?.lines?.length) return;
-  const lines = scene.lines;
-  let lastIdx = -2;
-  videoEl.ontimeupdate = () => {
-    const t = videoEl.currentTime;
-    let idx = -1;
-    for (let i = 0; i < lines.length; i++) if (t >= lines[i].t && t < lines[i].end) { idx = i; break; }
-    if (idx === lastIdx) return;
-    lastIdx = idx;
-    const cur = idx >= 0 ? lines[idx] : null;
-    const next = lines.find(l => l.t > t);
-    const mine = cur && myRoleId != null && cur.chars.includes(myRoleId);
-    const av = cur && scene.avatars ? scene.avatars[String(cur.chars[0])] : null;
-    promptEl.innerHTML =
-      (cur ? `<div class="pline ${mine ? "mine" : ""}">
-          ${av ? `<img src="${av}" alt="">` : ""}
-          <div class="ptext"><div class="pwho">${esc(cur.who)}</div><div class="pcap">${esc(cur.text)}</div></div>
-        </div>` : `<div class="pline"><div class="ptext"><div class="pwho">…</div><div class="pcap" style="color:var(--muted)">Ruhe im Studio</div></div></div>`) +
-      (next ? `<div class="pnext">Gleich (${Math.max(0, next.t - t).toFixed(0)}s): <b>${esc(next.who)}</b> — ${esc(next.text)}</div>` : "");
-  };
+function renderLine() {
+  const l = myLines[curLine];
+  if (!l) return finishBooth();
+  $("booth-count").innerHTML = `${curLine + 1}/${myLines.length}<small>Voiceline</small>`;
+  $("line-who").textContent = l.who + (l.chars.length > 1 ? " (zusammen!)" : "");
+  $("line-text").textContent = l.text;
+  $("line-dur").textContent = "~" + Math.max(1, Math.round(l.end - l.t)) + " Sek.";
+  $("booth-video").currentTime = l.t;
+  $("btn-line-play").disabled = !takes[l.idx];
+  $("btn-line-next").disabled = !takes[l.idx];
+  $("rectime-fill").style.width = "0";
+  status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
 }
 
-async function startRecording() {
+// Szenen-Ausschnitt zum Reinhören
+$("btn-line-scene").onclick = () => {
+  const l = myLines[curLine];
+  const v = $("booth-video");
+  v.currentTime = Math.max(0, l.t - 0.5);
+  v.volume = 0.6;
+  v.play();
+  const stopAt = () => { if (v.currentTime >= l.end + 0.3) { v.pause(); v.removeEventListener("timeupdate", stopAt); } };
+  v.addEventListener("timeupdate", stopAt);
+};
+
+$("btn-line-rec").onclick = () => {
+  if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
+  const l = myLines[curLine];
+  recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + 1.2));
+  lineChunks = [];
+  lineRec = new MediaRecorder(micStream, { mimeType: pickMime() });
+  lineRec.ondataavailable = e => { if (e.data.size) lineChunks.push(e.data); };
+  lineRec.onstop = onLineRecorded;
+  lineRec.start();
+  SFX.rec();
+  $("btn-line-rec").textContent = "⏹ Stopp";
+  $("btn-line-rec").classList.add("recording");
+  recStartT = performance.now();
+  clearInterval(recTimer);
+  recTimer = setInterval(() => {
+    const el = (performance.now() - recStartT) / 1000;
+    $("rectime-fill").style.width = Math.min(100, el / recMax * 100) + "%";
+    if (el >= recMax) stopLineRec();
+  }, 50);
+  status("booth-status", "🔴 Aufnahme läuft … (stoppt automatisch nach " + recMax.toFixed(1) + "s)");
+};
+
+function stopLineRec() {
+  clearInterval(recTimer);
+  if (lineRec && lineRec.state === "recording") lineRec.stop();
+  $("btn-line-rec").textContent = "⏺ Nochmal aufnehmen";
+  $("btn-line-rec").classList.remove("recording");
+  SFX.stop();
+}
+
+async function onLineRecorded() {
+  const l = myLines[curLine];
+  takes[l.idx] = await new Blob(lineChunks, { type: lineChunks[0]?.type }).arrayBuffer();
+  $("btn-line-play").disabled = false;
+  $("btn-line-next").disabled = false;
+  status("booth-status", "Take im Kasten! Anhören oder direkt weiter.");
+}
+
+$("btn-line-play").onclick = async () => {
+  const l = myLines[curLine];
+  if (!takes[l.idx]) return;
+  const ctx = getCtx();
+  const buf = await ctx.decodeAudioData(takes[l.idx].slice(0));
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(buildChain(ctx, roleOf(myRole()), ctx.destination));
+  src.start();
+};
+
+$("btn-line-next").onclick = () => {
+  SFX.ok();
+  curLine++;
+  sendProgress();
+  renderLine();
+};
+
+function sendProgress() {
+  const done = Object.keys(takes).length, total = myLines.length;
   const me = players.find(p => p.id === myId);
-  const role = scene.roles.find(r => r.id === me.role);
+  if (me) { me.done = done; me.total = total; }
+  if (isHost) broadcastState();
+  else hostConn.send({ t: "progress", done, total });
+}
+
+function finishBooth() {
+  cancelAnimationFrame(vizRAF);
+  $("onair").classList.remove("live");
+  SFX.done();
+  const items = myLines.map(l => ({ startAt: l.t, buf: takes[l.idx] })).filter(i => i.buf);
+  if (isHost) collectTracks(myRole(), items);
+  else hostConn.send({ t: "tracks", role: myRole(), items });
+  show("scr-wait");
+  renderBoothPlayers();
+}
+
+// ── Visualizer (VU-Bars) ─────────────────────────────────────
+function startViz() {
+  const ctx = getCtx();
+  if (!vizSrc) { vizSrc = ctx.createMediaStreamSource(micStream); vizAn = ctx.createAnalyser(); vizAn.fftSize = 256; vizSrc.connect(vizAn); }
+  const canvas = $("viz"), g = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const data = new Uint8Array(vizAn.frequencyBinCount);
+  cancelAnimationFrame(vizRAF);
+  (function draw() {
+    vizRAF = requestAnimationFrame(draw);
+    const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+    if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
+    g.clearRect(0, 0, W, H);
+    vizAn.getByteFrequencyData(data);
+    const bars = 48, bw = W / bars;
+    for (let i = 0; i < bars; i++) {
+      const v = data[Math.floor(i * data.length / bars / 1.6)] / 255;
+      const h = Math.max(2 * dpr, v * H * 0.95);
+      const grad = g.createLinearGradient(0, H, 0, H - h);
+      grad.addColorStop(0, "#ffc95c"); grad.addColorStop(0.6, "#ff4d55"); grad.addColorStop(1, "#c84bff");
+      g.fillStyle = grad;
+      g.fillRect(i * bw + bw * 0.18, H - h, bw * 0.64, h);
+    }
+  })();
+}
+
+// ═════════════════════════════════════════════════════════════
+// 7) REALTIME-MODUS (Szenen ohne Line-Timings)
+// ═════════════════════════════════════════════════════════════
+let rtRecorder = null, rtChunks = [];
+
+async function startRealtime() {
+  const role = roleOf(myRole());
   $("rec-role").textContent = "🎭 Du bist: " + role.name;
   const v = $("rec-video");
   v.src = videoBlobUrl || scene.videoUrl;
-  attachPrompter(v, $("rec-prompter"), me.role);
+  attachPrompter(v, $("rec-prompter"), myRole());
   show("scr-record");
-
   await countdown();
   $("onair").classList.add("live");
-
-  recChunks = [];
-  recorder = new MediaRecorder(micStream, { mimeType: pickMime() });
-  recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
-  recorder.onstop = onRecorded;
-
-  // Beides so gleichzeitig wie möglich starten
-  recorder.start();
+  rtChunks = [];
+  rtRecorder = new MediaRecorder(micStream, { mimeType: pickMime() });
+  rtRecorder.ondataavailable = e => { if (e.data.size) rtChunks.push(e.data); };
+  rtRecorder.onstop = async () => {
+    $("onair").classList.remove("live");
+    status("rec-status", "Aufnahme fertig — sammle alle Spuren ein …");
+    const buf = await new Blob(rtChunks, { type: rtChunks[0]?.type }).arrayBuffer();
+    const items = [{ startAt: 0, buf }];
+    if (isHost) collectTracks(myRole(), items);
+    else hostConn.send({ t: "tracks", role: myRole(), items });
+  };
+  rtRecorder.start();
   v.currentTime = 0;
   await v.play();
-
-  v.onended = () => { if (recorder.state !== "inactive") recorder.stop(); };
+  v.onended = () => { if (rtRecorder.state !== "inactive") rtRecorder.stop(); };
 }
 
 function countdown() {
@@ -469,95 +572,115 @@ function countdown() {
     const el = $("countdown"), num = el.querySelector("div");
     el.classList.add("show");
     let n = 3;
-    num.textContent = n;
+    num.textContent = n; SFX.beep();
     const iv = setInterval(() => {
       n--;
-      if (n === 0) { clearInterval(iv); el.classList.remove("show"); res(); }
-      else num.textContent = n;
+      if (n === 0) { clearInterval(iv); el.classList.remove("show"); SFX.go(); res(); }
+      else { num.textContent = n; SFX.beep(); }
     }, 900);
   });
 }
 
-async function onRecorded() {
-  $("onair").classList.remove("live");
-  status("rec-status", "Aufnahme fertig — sammle alle Spuren ein …");
-  const buf = await new Blob(recChunks, { type: recChunks[0]?.type }).arrayBuffer();
-  const me = players.find(p => p.id === myId);
-  if (isHost) collectAudio(me.role, buf);
-  else hostConn.send({ t: "audio", role: me.role, buf });
-}
-
-// — Host sammelt & verteilt den Mix —
-const collected = new Map();
-function collectAudio(roleId, buf) {
-  collected.set(roleId, buf);
-  const needed = players.filter(p => p.role != null).length;
-  if (collected.size >= needed) {
-    const trackList = [...collected.entries()].map(([role, b]) => ({ role, buf: b }));
-    broadcast({ t: "mix", tracks: trackList });
-    loadMix(trackList);
+// ═════════════════════════════════════════════════════════════
+// 8) HOST: Spuren einsammeln → Mix an alle
+// ═════════════════════════════════════════════════════════════
+const collected = new Map();   // role → items
+function collectTracks(role, items) {
+  collected.set(role, items);
+  const neededRoles = new Set(players.filter(p => p.role != null).map(p => p.role));
+  if (collected.size >= neededRoles.size) {
+    const data = [...collected.entries()].map(([r, it]) => ({ role: r, items: it }));
+    broadcast({ t: "mix", data });
+    loadMix(data);
     collected.clear();
   }
 }
+function checkAllDone() { /* Fortschritt läuft über state-Broadcasts */ }
 
 // ═════════════════════════════════════════════════════════════
-// 6) PREMIERE — Web Audio Engine (Pan + Effekte + Kompressor)
+// 9) PREMIERE — Web-Audio-Engine + Download
 // ═════════════════════════════════════════════════════════════
-
-function getCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  return audioCtx;
-}
-
-async function loadMix(trackList) {
+async function loadMix(data) {
   show("scr-playback");
   status("play-status", "Dekodiere Spuren …");
   const ctx = getCtx();
-  tracks = {};
-  for (const t of trackList) {
-    try { tracks[t.role] = await ctx.decodeAudioData(t.buf.slice(0)); }
-    catch { console.warn("Spur kaputt:", t.role); }
+  mixItems = [];
+  for (const track of data) {
+    for (const item of track.items) {
+      try { mixItems.push({ role: track.role, startAt: item.startAt, buffer: await ctx.decodeAudioData(item.buf.slice(0)) }); }
+      catch { console.warn("Spur kaputt:", track.role); }
+    }
   }
   $("play-video").src = videoBlobUrl || scene.videoUrl;
   attachPrompter($("play-video"), $("play-prompter"), null);
-  status("play-status", "Bereit! Drück Play. 🍿");
-  playMix();
+  status("play-status", "Bereit! 🍿");
+  SFX.done();
+  playMix(false);
 }
 
-$("btn-replay").onclick = playMix;
+$("btn-replay").onclick = () => playMix(false);
+$("btn-download").onclick = () => playMix(true);
 
-async function playMix() {
+const elemSrcMap = new Map();
+function elementSource(ctx, v) {
+  if (!elemSrcMap.has(v)) elemSrcMap.set(v, ctx.createMediaElementSource(v));
+  return elemSrcMap.get(v);
+}
+
+async function playMix(saveFile) {
   const ctx = getCtx();
   const v = $("play-video");
   playNodes.forEach(n => { try { n.stop(); } catch {} });
   playNodes = [];
 
-  // Master: Kompressor sorgt dafür, dass alles zusammen "wie aus einem Guss" klingt
   const master = ctx.createDynamicsCompressor();
   master.threshold.value = -18; master.knee.value = 20;
   master.ratio.value = 4; master.attack.value = 0.005; master.release.value = 0.15;
   master.connect(ctx.destination);
+  elementSource(ctx, v).connect(master);
+
+  let fileRec = null;
+  if (saveFile) {
+    const dest = ctx.createMediaStreamDestination();
+    master.connect(dest);
+    const capture = (v.captureStream || v.mozCaptureStream).call(v);
+    const stream = new MediaStream([...capture.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+    const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm";
+    fileRec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
+    const chunks = [];
+    fileRec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    fileRec.onstop = () => {
+      const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
+      const a = document.createElement("a");
+      a.href = url; a.download = (scene?.id || "synchro") + "_dub.webm";
+      a.click();
+      status("play-status", "✅ Gespeichert! Für TikTok/Insta die .webm in CapCut o. Ä. zu MP4 exportieren.");
+      SFX.done();
+    };
+    status("play-status", "🔴 Nimmt auf — läuft einmal komplett durch, nicht wegklicken …");
+  }
 
   v.pause(); v.currentTime = 0;
   await v.play();
-  const t0 = ctx.currentTime + Math.max(0, syncOffsetMs / 1000);
-  const early = Math.max(0, -syncOffsetMs / 1000);
+  if (fileRec) fileRec.start();
+  const t0 = ctx.currentTime;
+  const off = syncOffsetMs / 1000;
 
-  for (const [roleId, buffer] of Object.entries(tracks)) {
-    const role = scene.roles.find(r => r.id === parseInt(roleId)) || { pan: 0, effect: "none", gain: 1 };
+  for (const item of mixItems) {
+    const role = roleOf(item.role) || { pan: 0, effect: "none", gain: 1 };
     const src = ctx.createBufferSource();
-    src.buffer = buffer;
+    src.buffer = item.buffer;
     src.connect(buildChain(ctx, role, master));
-    src.start(t0, early);
+    const when = t0 + item.startAt + off;
+    if (when >= ctx.currentTime) src.start(when);
+    else src.start(ctx.currentTime, ctx.currentTime - when);
     playNodes.push(src);
   }
+
+  if (fileRec) v.addEventListener("ended", () => { if (fileRec.state !== "inactive") fileRec.stop(); }, { once: true });
 }
 
-$("sync-offset").oninput = (e) => {
-  syncOffsetMs = parseInt(e.target.value);
-  $("sync-val").textContent = syncOffsetMs + " ms";
-};
+$("sync-offset").oninput = (e) => { syncOffsetMs = parseInt(e.target.value); $("sync-val").textContent = syncOffsetMs + " ms"; };
 
 // ── Effekt-Ketten ────────────────────────────────────────────
 function buildChain(ctx, role, dest) {
@@ -578,7 +701,7 @@ function buildChain(ctx, role, dest) {
     case "vintage_1990":
       filt("highpass", 120); filt("lowpass", 6200);
       filt("peaking", 2800, 1, 3);
-      node = chainShaper(ctx, node, 6); // sanfte Tape-Sättigung
+      node = chainShaper(ctx, node, 6);
       break;
     case "radio":
       filt("highpass", 380); filt("lowpass", 3000);
@@ -588,7 +711,6 @@ function buildChain(ctx, role, dest) {
       filt("highpass", 300); filt("lowpass", 3400);
       break;
     case "hall": {
-      // Dry + Echo-Fahne (Delay-Feedback, dumpf gefiltert)
       const dry = ctx.createGain(); dry.gain.value = 0.85;
       const wet = ctx.createGain(); wet.gain.value = 0.4;
       const delay = ctx.createDelay(); delay.delayTime.value = 0.11;
@@ -601,17 +723,11 @@ function buildChain(ctx, role, dest) {
       return input;
     }
   }
-
   node.connect(pan);
   pan.connect(dest);
   return input;
 }
-
-function chainShaper(ctx, node, amount) {
-  const s = shaper(ctx, amount);
-  node.connect(s);
-  return s;
-}
+function chainShaper(ctx, node, amount) { const s = shaper(ctx, amount); node.connect(s); return s; }
 function shaper(ctx, amount) {
   const ws = ctx.createWaveShaper();
   const n = 1024, curve = new Float32Array(n);
@@ -623,14 +739,34 @@ function shaper(ctx, amount) {
   return ws;
 }
 
-// ═════════════════════════════════════════════════════════════
-// 7) NEUE RUNDE
-// ═════════════════════════════════════════════════════════════
-
-if (true) {
-  $("btn-again").style.display = "";
-  $("btn-back").style.display = "";
+// ── Teleprompter (Premiere-Untertitel + Realtime-Cues) ───────
+function attachPrompter(videoEl, promptEl, myRoleId) {
+  promptEl.innerHTML = "";
+  if (!scene?.lines?.length) return;
+  const lines = scene.lines;
+  let lastIdx = -2;
+  videoEl.ontimeupdate = () => {
+    const t = videoEl.currentTime;
+    let idx = -1;
+    for (let i = 0; i < lines.length; i++) if (t >= lines[i].t && t < lines[i].end) { idx = i; break; }
+    if (idx === lastIdx) return;
+    lastIdx = idx;
+    const cur = idx >= 0 ? lines[idx] : null;
+    const next = lines.find(l => l.t > t);
+    const mine = cur && myRoleId != null && cur.chars.includes(myRoleId);
+    const av = cur && scene.avatars ? scene.avatars[String(cur.chars[0])] : null;
+    promptEl.innerHTML =
+      (cur ? `<div class="pline ${mine ? "mine" : ""}">
+          ${av ? `<img src="${av}" alt="">` : ""}
+          <div class="ptext"><div class="pwho">${esc(cur.who)}${mine ? " — 🎙 DU!" : ""}</div><div class="pcap">${esc(cur.text)}</div></div>
+        </div>` : `<div class="pline"><div class="ptext"><div class="pwho">…</div><div class="pcap" style="color:var(--muted)">Ruhe im Studio</div></div></div>`) +
+      (next ? `<div class="pnext">Gleich (${Math.max(0, next.t - t).toFixed(0)}s): <b>${esc(next.who)}</b> — ${esc(next.text)}</div>` : "");
+  };
 }
+
+// ═════════════════════════════════════════════════════════════
+// 10) NEUE RUNDE
+// ═════════════════════════════════════════════════════════════
 $("btn-again").onclick = () => {
   if (isHost) { broadcast({ t: "again" }); resetForNewRound(); }
   else status("play-status", "Nur der Host kann eine neue Runde starten.", true);
@@ -639,13 +775,10 @@ $("btn-back").onclick = () => {
   if (isHost) { scene = null; broadcast({ t: "again" }); resetForNewRound(); $("scene-card").style.display = "none"; }
   else status("play-status", "Nur der Host kann die Szene wechseln.", true);
 };
-
 function resetForNewRound() {
-  players.forEach(p => p.ready = false);
-  tracks = {}; collected.clear();
+  players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; });
+  mixItems = []; collected.clear(); takes = {};
   show("scr-lobby");
   if (isHost) broadcastState(); else { renderPlayers(); renderRoles(); }
   status("lobby-status", "Neue Runde — wieder „Bin bereit“ drücken, wenn's losgehen soll.");
 }
-
-function esc(s) { return String(s).replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c])); }
