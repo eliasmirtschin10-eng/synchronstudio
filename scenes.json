@@ -1,0 +1,263 @@
+[
+  {
+    "id": "dexter_cargo",
+    "title": "Dexter — Cargo Scene (Surprise Mothafucka')",
+    "videoUrl": "scenes/dexter_cargo.mp4",
+    "avatars": {
+      "1": "scenes/dexter/dexter.png",
+      "2": "scenes/dexter/doakes.png",
+      "3": "scenes/dexter/random_dude.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Dexter",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Doakes",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Random Dude (Security)",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 12.09,
+        "end": 20.86,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Okay Deb... Don't be dead."
+      },
+      {
+        "t": 20.86,
+        "end": 23.77,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Shit (under breath)"
+      },
+      {
+        "t": 23.77,
+        "end": 27.45,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Surpise Mothafucka'"
+      },
+      {
+        "t": 27.45,
+        "end": 28.74,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "You following me now?"
+      },
+      {
+        "t": 28.74,
+        "end": 30.57,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Better have a hell of a reason for being here."
+      },
+      {
+        "t": 30.57,
+        "end": 31.74,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Lookin for my sister."
+      },
+      {
+        "t": 31.74,
+        "end": 33.34,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "In a cargo box?"
+      },
+      {
+        "t": 33.34,
+        "end": 34.74,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Yeah i'm kinda working on a theory."
+      },
+      {
+        "t": 34.74,
+        "end": 38.42,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "You forget you work for the fucking cops? We love theories c'mon spin me a story asshole."
+      },
+      {
+        "t": 38.42,
+        "end": 40.13,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "What I do on my time is my business Sgt."
+      },
+      {
+        "t": 40.13,
+        "end": 46.1,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Yeah, me too. And I'm on my time now. There's no liutenant here to save your ass so don't fuck with me Morgan."
+      },
+      {
+        "t": 46.1,
+        "end": 48.19,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Alright, you got me."
+      },
+      {
+        "t": 48.19,
+        "end": 52.04,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Ordered some furniture from Thailand I was waiting for it to be deli-"
+      },
+      {
+        "t": 52.04,
+        "end": 60.46,
+        "chars": [
+          1,
+          2
+        ],
+        "who": "Both",
+        "text": "*angry fighting noises*"
+      },
+      {
+        "t": 60.46,
+        "end": 61.95,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Lab geek my ass."
+      },
+      {
+        "t": 61.95,
+        "end": 63.37,
+        "chars": [
+          1,
+          2
+        ],
+        "who": "Both",
+        "text": "*weird snarling*"
+      },
+      {
+        "t": 63.37,
+        "end": 67.55,
+        "chars": [
+          3
+        ],
+        "who": "Random dude",
+        "text": "Hey, the hell's going on over here?! Security I need to get somebody down here right now."
+      },
+      {
+        "t": 67.55,
+        "end": 68.8,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Miami Metro PD."
+      },
+      {
+        "t": 68.8,
+        "end": 70.39,
+        "chars": [
+          3
+        ],
+        "who": "Random dude",
+        "text": "Yeah well is this guy under arrest?"
+      },
+      {
+        "t": 70.39,
+        "end": 71.68,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "That's a good question."
+      },
+      {
+        "t": 71.68,
+        "end": 81.0,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "You're connected to this. I don't know how but i'm gonna find out and some of what I find is gonna stick to yo ass."
+      }
+    ]
+  },
+  {
+    "id": "beispiel1",
+    "title": "Beispiel: Retro Anime Szene",
+    "videoUrl": "scenes/retro_szene.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Charakter Links (90s Vibe)",
+        "pan": -0.8,
+        "effect": "vintage_1990",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Charakter Rechts",
+        "pan": 0.8,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Funkgerät-Stimme",
+        "pan": 0.0,
+        "effect": "radio",
+        "gain": 0.9
+      },
+      {
+        "id": 4,
+        "name": "Erzähler (Hall)",
+        "pan": 0.0,
+        "effect": "hall",
+        "gain": 1.0
+      }
+    ]
+  }
+]
