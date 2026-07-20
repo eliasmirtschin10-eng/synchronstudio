@@ -5,6 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
+const APP_VERSION = "1.4";
 const PEER_PREFIX = "syncstudio-emvw-";
 const CHUNK_SIZE = 128 * 1024;
 
@@ -61,12 +62,14 @@ const SFX = (() => {
   };
 })();
 document.addEventListener("click", e => { if (e.target.closest("button:not(:disabled)")) SFX.click(); });
+document.body.insertAdjacentHTML("beforeend",
+  `<div style="position:fixed;left:10px;bottom:8px;z-index:99;font-size:.68rem;color:#55556a;letter-spacing:.08em;pointer-events:none">v${APP_VERSION}</div>`);
 
 // ═════════════════════════════════════════════════════════════
 // MIKROFON — Einstellungen + Processing-Graph
 // Aufnahmen laufen durch: Quelle → Brumm-Filter → Gain → recDest
 // ═════════════════════════════════════════════════════════════
-const micSettings = { deviceId: null, ns: true, ec: true, agc: true, lowcut: true, gain: 1, gate: 0.35 };
+const micSettings = { deviceId: null, ns: true, ec: true, agc: true, lowcut: true, gain: 1, gate: 0.5 };
 let micSrcNode = null, micHP = null, micGain = null, recDest = null, micGateNode = null, gateAn = null;
 let vizAn = null, vizRAF = null;
 let micReturnScreen = "scr-start";
@@ -111,20 +114,22 @@ function applyMicTuning() {
 }
 
 // ── Noise Gate: Mikro ist stumm, solange du nicht sprichst ──
-let gateOpen = true;
+let gateOpen = true, lastLoudT = 0;
 function startGateLoop() {
   const buf = new Float32Array(gateAn.fftSize);
   (function loop() {
     requestAnimationFrame(loop);
     if (!micStream) return;
-    const thr = micSettings.gate * 0.09;            // Slider 0..1 → Schwelle 0..0.09 RMS
+    const thr = micSettings.gate * 0.16;            // Slider 0..1 → Schwelle 0..0.16 RMS (deutlich stärker)
     if (thr <= 0) { if (!gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.01); gateOpen = true; } return; }
     gateAn.getFloatTimeDomainData(buf);
     let sum = 0;
     for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
     const rms = Math.sqrt(sum / buf.length);
+    const now = performance.now();
+    if (rms > thr) lastLoudT = now;
     if (rms > thr && !gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.004); gateOpen = true; }
-    else if (rms <= thr * 0.7 && gateOpen) { micGateNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.06); gateOpen = false; }
+    else if (gateOpen && now - lastLoudT > 200) { micGateNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05); gateOpen = false; }
     const lamp = $("gate-lamp");
     if (lamp) lamp.style.background = gateOpen ? "var(--ok)" : "#3a3a46";
   })();
@@ -310,7 +315,7 @@ function handleMsg(msg, conn) {
 // ═════════════════════════════════════════════════════════════
 let sceneList = [];
 async function loadSceneList() {
-  try { sceneList = await (await fetch("scenes.json")).json(); } catch { sceneList = []; }
+  try { sceneList = await (await fetch("scenes.json?v=" + APP_VERSION)).json(); } catch { sceneList = []; }
   const sel = $("scene-select");
   sel.innerHTML = sceneList.length
     ? sceneList.map((s, i) => `<option value="${i}">${esc(s.title)} (${s.roles.length} Rollen${s.lines ? ", " + s.lines.length + " Lines" : ""})</option>`).join("")
@@ -561,18 +566,29 @@ function renderLine() {
 }
 
 // Szenen-Ausschnitt zum Reinhören
+let sceneStopHandler = null;
 $("btn-line-scene").onclick = () => {
   const l = myLines[curLine];
   const v = $("booth-video");
+  if (sceneStopHandler) { v.removeEventListener("timeupdate", sceneStopHandler); sceneStopHandler = null; }
+  if (!v.paused) { v.pause(); $("btn-line-scene").textContent = "🎬 Szene ansehen"; return; }   // 2. Klick = Stopp
   v.currentTime = Math.max(0, l.t - 0.5);
   v.volume = 0.6;
   v.play();
-  const stopAt = () => { if (v.currentTime >= l.end + 0.3) { v.pause(); v.removeEventListener("timeupdate", stopAt); } };
-  v.addEventListener("timeupdate", stopAt);
+  $("btn-line-scene").textContent = "⏹ Stopp";
+  sceneStopHandler = () => {
+    if (v.currentTime >= l.end + 0.3) {
+      v.pause();
+      v.removeEventListener("timeupdate", sceneStopHandler); sceneStopHandler = null;
+      $("btn-line-scene").textContent = "🎬 Szene ansehen";
+    }
+  };
+  v.addEventListener("timeupdate", sceneStopHandler);
 };
 
-$("btn-line-rec").onclick = () => {
+$("btn-line-rec").onclick = async () => {
   if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
+  if ($("rec-timer").checked) await recCountdown();
   const l = myLines[curLine];
   recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + 1.2));
   // Video läuft automatisch als Guide mit (leiser, Kopfhörer!)
@@ -596,6 +612,22 @@ $("btn-line-rec").onclick = () => {
   status("booth-status", "🔴 Aufnahme läuft … (stoppt automatisch nach " + recMax.toFixed(1) + "s)");
 };
 
+
+function recCountdown() {
+  return new Promise(res => {
+    const b = $("btn-line-rec");
+    let n = 3;
+    b.disabled = true;
+    b.textContent = "⏱ " + n + " …";
+    SFX.beep();
+    const iv = setInterval(() => {
+      n--;
+      if (n === 0) { clearInterval(iv); b.disabled = false; SFX.go(); res(); }
+      else { b.textContent = "⏱ " + n + " …"; SFX.beep(); }
+    }, 800);
+  });
+}
+
 function stopLineRec() {
   clearInterval(recTimer);
   $("booth-video").pause();
@@ -613,15 +645,19 @@ async function onLineRecorded() {
   status("booth-status", "Take im Kasten! Anhören oder direkt weiter.");
 }
 
+let previewSrc = null;
 $("btn-line-play").onclick = async () => {
   const l = myLines[curLine];
   if (!takes[l.idx]) return;
+  if (previewSrc) { try { previewSrc.stop(); } catch {} previewSrc = null; }
   const ctx = getCtx();
   const buf = await ctx.decodeAudioData(takes[l.idx].slice(0));
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.connect(buildChain(ctx, roleOf(myRole()), ctx.destination));
   src.start();
+  previewSrc = src;
+  src.onended = () => { if (previewSrc === src) previewSrc = null; };
 };
 
 $("btn-line-next").onclick = () => {
