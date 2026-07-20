@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.6";
 const PEER_PREFIX = "syncstudio-emvw-";
 // STUN + kostenloses TURN-Relay (Open Relay Project) — nötig, wenn Router die
 // Direktverbindung blocken (klassisch: Freund in anderem Netz hängt bei "Verbinde…")
@@ -229,9 +229,14 @@ $("btn-create").onclick = () => {
   if (!myName) return status("start-status", "Erst Namen eingeben, digga 😄", true), SFX.err();
   isHost = true;
   const code = randCode();
-  status("start-status", "Erstelle Raum …");
+  status("start-status", "① Verbinde zum Vermittlungsserver …");
+  let opened = false;
+  setTimeout(() => {
+    if (!opened) status("start-status", "❌ Kein Kontakt zum Vermittlungsserver. Fast immer: Brave-Shields / Adblocker — für diese Seite ausschalten und neu laden.", true);
+  }, 10000);
   peer = new Peer(PEER_PREFIX + code, PEER_CONFIG);
   peer.on("open", () => {
+    opened = true;
     myId = peer.id;
     players = [{ id: myId, name: myName + " (Host)", role: null, ready: false, done: 0, total: 0 }];
     enterLobby(code);
@@ -250,18 +255,35 @@ $("btn-join").onclick = () => {
   if (!myName) return status("start-status", "Erst Namen eingeben 🙂", true), SFX.err();
   if (!/^\d{4}$/.test(code)) return status("start-status", "Der Raumcode hat 4 Ziffern.", true), SFX.err();
   isHost = false;
-  status("start-status", "Verbinde …");
+  status("start-status", "① Verbinde zum Vermittlungsserver …");
+  let opened = false, joined = false;
   peer = new Peer(PEER_CONFIG);
+
+  // Schritt 1 hängt → Server nicht erreichbar (Brave-Shields, Adblocker, Firewall)
+  setTimeout(() => {
+    if (!opened) status("start-status", "❌ Kein Kontakt zum Vermittlungsserver. Fast immer: Brave-Shields / Adblocker blockt — Schild-Icon anklicken, für diese Seite ausschalten, neu laden. Oder kurz in Chrome/Firefox testen.", true);
+  }, 10000);
+
   peer.on("open", () => {
+    opened = true;
     myId = peer.id;
+    status("start-status", "② Server OK — suche Raum " + code + " …");
     hostConn = peer.connect(PEER_PREFIX + code, { reliable: true });
-    hostConn.on("open", () => { hostConn.send({ t: "hello", name: myName }); enterLobby(code); });
+
+    // Schritt 2 hängt → Raum existiert, aber Peer-Verbindung kommt nicht durch (NAT/Firewall)
+    setTimeout(() => {
+      if (!joined) status("start-status", "❌ Raum gefunden, aber die Verbindung zum Host kommt nicht durch. Beide mal: anderes Netz testen (z. B. Handy-Hotspot), VPN aus, Brave-Shields aus.", true);
+    }, 15000);
+
+    hostConn.on("open", () => { joined = true; hostConn.send({ t: "hello", name: myName }); enterLobby(code); });
     hostConn.on("data", (msg) => handleMsg(msg, hostConn));
     hostConn.on("close", () => status("lobby-status", "Verbindung zum Host weg 😬 Seite neu laden.", true));
+    hostConn.on("error", (e) => { console.error("conn error", e); status("start-status", "Verbindungsfehler zum Host: " + (e.type || e), true); });
   });
   peer.on("error", (e) => {
-    if (e.type === "peer-unavailable") status("start-status", "Raum " + code + " nicht gefunden. Läuft der Host noch?", true);
-    else status("start-status", "Verbindungsfehler: " + e.type, true);
+    console.error("peer error", e);
+    if (e.type === "peer-unavailable") status("start-status", "Raum " + code + " nicht gefunden. Läuft der Host noch? Code richtig?", true);
+    else status("start-status", "Verbindungsfehler: " + e.type + " — F12 → Console für Details.", true);
   });
 };
 
