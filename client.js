@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.4";
+const APP_VERSION = "2.5";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -351,11 +351,42 @@ $("btn-join").onclick = () => {
   });
 };
 
+
+// ═════════════════════════════════════════════════════════════
+// RAUM VERLASSEN — sauberer Reset ohne Seiten-Reload
+// ═════════════════════════════════════════════════════════════
+function leaveRoom() {
+  try { if (lineRec && lineRec.state === "recording") lineRec.stop(); } catch {}
+  clearInterval(recTimer); clearInterval(cbTimer);
+  playNodes.forEach(n => { try { n.stop(); } catch {} }); playNodes = [];
+  ["preview","booth-video","play-video","rec-video"].forEach(id => { const v = $(id); if (v) { v.pause(); v.removeAttribute("src"); v.load(); } });
+  try { peer && peer.destroy(); } catch {}
+  peer = null; hostConn = null; conns.clear();
+  isHost = false; players = []; scene = null;
+  localVideoBuf = null; videoBlobUrl = null;
+  takes = {}; myLines = []; curLine = 0; mixItems = []; collected.clear();
+  ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null };
+  $("onair").classList.remove("live");
+  $("host-scene").style.display = "none";
+  $("host-start").style.display = "none";
+  $("scene-card").style.display = "none";
+  $("leave-btn").style.display = "none";
+  status("start-status", "Raum verlassen. Du kannst direkt einen neuen erstellen oder beitreten.");
+  show("scr-start");
+  SFX.stop();
+}
+document.body.insertAdjacentHTML("beforeend",
+  `<button id="leave-btn" style="position:fixed;right:12px;bottom:10px;z-index:98;display:none;padding:8px 14px;font-size:.82rem;background:#1f1f28;border:1px solid var(--line);border-radius:8px;color:var(--muted)">🚪 Raum verlassen</button>`);
+$("leave-btn").onclick = () => {
+  if (confirm("Raum wirklich verlassen?" + (isHost ? " Du bist Host — der Raum wird für alle geschlossen!" : ""))) leaveRoom();
+};
+
 function enterLobby(code) {
   $("lobby-code").textContent = code;
   if (isHost) { $("host-scene").style.display = ""; $("host-start").style.display = ""; }
   show("scr-lobby");
   renderPlayers();
+  $("leave-btn").style.display = "";
   SFX.ok();
 }
 
@@ -698,7 +729,7 @@ let origSrc = null;
 $("btn-line-orig").onclick = async () => {
   const l = myLines[curLine];
   if (!l.orig) return;
-  if (origSrc) { try { origSrc.stop(); } catch {} origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; return; }
+  if (origSrc) { try { origSrc.stop(); } catch {} origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; $("booth-video").pause(); return; }
   const ctx = getCtx();
   try {
     if (!origCache.has(l.orig)) {
@@ -706,13 +737,17 @@ $("btn-line-orig").onclick = async () => {
       const buf = await (await fetch(l.orig)).arrayBuffer();
       origCache.set(l.orig, await ctx.decodeAudioData(buf));
     }
+    // Video läuft synchron mit, Original-Stimme liegt drüber (Video leise)
+    const v = $("booth-video");
+    v.pause(); v.currentTime = l.t; v.volume = 0.25;
+    await v.play().catch(() => {});
     const src = ctx.createBufferSource();
     src.buffer = origCache.get(l.orig);
     src.connect(ctx.destination);
     src.start();
     origSrc = src;
     $("btn-line-orig").textContent = "⏹ Stopp";
-    src.onended = () => { if (origSrc === src) { origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; } };
+    src.onended = () => { if (origSrc === src) { origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; v.pause(); } };
   } catch (e) {
     $("btn-line-orig").textContent = "🗣 Original anhören";
     status("booth-status", "Original-Audio nicht ladbar — GitHub Pages noch am Deployen?", true);

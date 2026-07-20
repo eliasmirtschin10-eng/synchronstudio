@@ -618,6 +618,162 @@
     ]
   },
   {
+    "id": "invincible_sure",
+    "title": "Invincible — Are You Sure? (3 Rollen)",
+    "videoUrl": "scenes/invincible.mp4",
+    "avatars": {
+      "1": "scenes/invincible/debbie.png",
+      "2": "scenes/invincible/mark.png",
+      "3": "scenes/invincible/nolan.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Debbie",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Mark",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Nolan (Omni-Man)",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 1.18,
+        "end": 9.99,
+        "chars": [
+          1
+        ],
+        "who": "Debbie",
+        "text": "And a big welcome home to my favorite son. I made some chicken... But I also heated up some authentic German bratwurst, flown in special today. Just for you.",
+        "de": "Und ein herzliches Willkommen zu Hause an meinen Lieblingssohn. Ich hab Chicken gemacht.",
+        "orig": "scenes/invincible/lines/01.mp3"
+      },
+      {
+        "t": 9.99,
+        "end": 16.64,
+        "chars": [
+          2
+        ],
+        "who": "Mark",
+        "text": "I had a pretty interesting day.",
+        "de": "Ich hatte einen ziemlich interessanten Tag.",
+        "orig": "scenes/invincible/lines/02.mp3"
+      },
+      {
+        "t": 16.64,
+        "end": 21.01,
+        "chars": [
+          3
+        ],
+        "who": "Nolan",
+        "text": "Sorry I'm late. Honest to God, a dragon was attacking Hong Kong. I stopped it.",
+        "de": "Sorry, dass ich zu spät bin. Ich schwöre, ein Drache hat Hongkong angegriffen.",
+        "orig": "scenes/invincible/lines/03.mp3"
+      },
+      {
+        "t": 21.01,
+        "end": 26.13,
+        "chars": [
+          1
+        ],
+        "who": "Debbie",
+        "text": "Ooh, a dragon. Nice. Mark was getting ready to tell us how interesting his day was.",
+        "de": "Ooh, ein Drache. Nice. Mark wollte uns gerade erzählen, wie sein Tag war.",
+        "orig": "scenes/invincible/lines/04.mp3"
+      },
+      {
+        "t": 26.13,
+        "end": 30.63,
+        "chars": [
+          2
+        ],
+        "who": "Mark",
+        "text": "Guess who's finally getting his powers? *chuckle*",
+        "de": "Rate mal, wer endlich seine Kräfte kriegt? *lacht*",
+        "orig": "scenes/invincible/lines/05.mp3"
+      },
+      {
+        "t": 30.63,
+        "end": 32.44,
+        "chars": [
+          3
+        ],
+        "who": "Nolan",
+        "text": "Are you sure?",
+        "de": "Bist du sicher?",
+        "orig": "scenes/invincible/lines/06.mp3"
+      },
+      {
+        "t": 32.44,
+        "end": 38.92,
+        "chars": [
+          2
+        ],
+        "who": "Mark",
+        "text": "Pretty sure. Threw a trash bag... into space. At work.",
+        "de": "Ziemlich sicher. Hab 'nen Müllsack... ins All geworfen. Auf der Arbeit.",
+        "orig": "scenes/invincible/lines/07.mp3"
+      },
+      {
+        "t": 38.92,
+        "end": 44.23,
+        "chars": [
+          3
+        ],
+        "who": "Nolan",
+        "text": "Oh! That's great, son, just great! If you're up for it, I'll make some time tomorrow for training.",
+        "de": "Oh! Das ist großartig, Sohn, einfach großartig! Wenn du Bock hast, trainieren wir morgen.",
+        "orig": "scenes/invincible/lines/08.mp3"
+      },
+      {
+        "t": 44.23,
+        "end": 45.55,
+        "chars": [
+          1
+        ],
+        "who": "Debbie",
+        "text": "This is so exciting!",
+        "de": "Das ist so aufregend!",
+        "orig": "scenes/invincible/lines/09.mp3"
+      },
+      {
+        "t": 45.55,
+        "end": 48.35,
+        "chars": [
+          3
+        ],
+        "who": "Nolan",
+        "text": "Bright and early tomorrow, Mark. Make sure you get a good night's sleep.",
+        "de": "Morgen früh in aller Frühe, Mark. Schlaf dich gut aus.",
+        "orig": "scenes/invincible/lines/10.mp3"
+      },
+      {
+        "t": 48.35,
+        "end": 49.96,
+        "chars": [
+          2
+        ],
+        "who": "Mark",
+        "text": "Ha! For sure!",
+        "de": "Ha! Auf jeden!",
+        "orig": "scenes/invincible/lines/11.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
