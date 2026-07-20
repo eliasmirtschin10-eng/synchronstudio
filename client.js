@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.6";
+const APP_VERSION = "2.7";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -131,6 +131,17 @@ let micSrcNode = null, micHP = null, micGain = null, recDest = null, micGateNode
 let vizAn = null, vizRAF = null;
 let micReturnScreen = "scr-start";
 
+
+// Name & Mikro-Einstellungen merken (bleibt im Browser gespeichert)
+try {
+  const savedName = localStorage.getItem("ss_name");
+  if (savedName) window.addEventListener("DOMContentLoaded", () => { $("in-name").value = savedName; });
+  const savedMic = JSON.parse(localStorage.getItem("ss_mic") || "null");
+  if (savedMic) Object.assign(micSettings, savedMic);
+} catch {}
+function saveName() { try { localStorage.setItem("ss_name", myName); } catch {} }
+function saveMic() { try { localStorage.setItem("ss_mic", JSON.stringify(micSettings)); } catch {} }
+
 async function buildMic() {
   try {
     if (micStream) micStream.getTracks().forEach(t => t.stop());
@@ -165,6 +176,7 @@ async function buildMic() {
   }
 }
 function applyMicTuning() {
+  saveMic();
   if (!micHP) return;
   micHP.frequency.value = micSettings.lowcut ? 90 : 5;
   micGain.gain.value = micSettings.gain;
@@ -231,6 +243,11 @@ async function initMicScreen() {
   const ok = await buildMic();
   if (!ok) return;
   await populateDevices();
+  // Gespeicherte Einstellungen in die UI übernehmen
+  $("mic-ns").checked = micSettings.ns; $("mic-ec").checked = micSettings.ec;
+  $("mic-agc").checked = micSettings.agc; $("mic-lowcut").checked = micSettings.lowcut;
+  $("mic-gain").value = micSettings.gain; $("mic-gain-val").textContent = Math.round(micSettings.gain * 100) + "%";
+  $("mic-gate").value = micSettings.gate; $("mic-gate-val").textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%";
   startVizOn("mic-viz");
   $("btn-mic-done").disabled = false;
   status("mic-status", "Sprich rein — die Bars sollen ausschlagen. Dann Test aufnehmen!");
@@ -282,6 +299,7 @@ document.addEventListener("click", function once() { if (document.querySelector(
 $("btn-create").onclick = () => {
   myName = $("in-name").value.trim();
   if (!myName) return status("start-status", "Erst Namen eingeben, digga 😄", true), SFX.err();
+  saveName();
   isHost = true;
   const code = randCode();
   status("start-status", "① Verbinde zum Vermittlungsserver …");
@@ -309,6 +327,7 @@ $("btn-join").onclick = () => {
   const code = $("in-code").value.trim();
   if (!myName) return status("start-status", "Erst Namen eingeben 🙂", true), SFX.err();
   if (!/^\d{4}$/.test(code)) return status("start-status", "Der Raumcode hat 4 Ziffern.", true), SFX.err();
+  saveName();
   isHost = false;
   status("start-status", "① Verbinde zum Vermittlungsserver …");
   let opened = false, joined = false;
@@ -421,6 +440,12 @@ function handleMsg(msg, conn) {
     case "tracks": collectTracks(msg.role, msg.items); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
     case "rate": collectRating(conn.peer, msg.scores); break;
+    case "mg":
+      if (msg.k === "rxStart") { const d = 1500 + Math.random() * 3500; broadcast({ t: "rxGo", delay: d }); rxRun(d); }
+      if (msg.k === "tpStart") { const ph = TP_PHRASES[Math.floor(Math.random() * TP_PHRASES.length)]; broadcast({ t: "tpGo", phrase: ph }); tpRun(ph); }
+      if (msg.k === "rxScore") mgScore("rx", conn.peer, msg.ms);
+      if (msg.k === "tpScore") mgScore("tp", conn.peer, msg.ms);
+      break;
     case "premReady": { const p = players.find(p => p.id === conn.peer); if (p) p.prem = true; broadcastState(); renderPremState(); break; }
     case "cb":
       if (msg.a.k === "start") { broadcast({ t: "cbGo" }); cbRun(); }
@@ -441,6 +466,9 @@ function handleMsg(msg, conn) {
     case "tttState": ttt = msg.ttt; renderTTT(); break;
     case "premGo": premStart(); break;
     case "rateResult": showRateResult(msg.results); break;
+    case "rxGo": rxRun(msg.delay); break;
+    case "tpGo": tpRun(msg.phrase); break;
+    case "mgResult": mgShowResult(msg.game, msg.list); break;
     case "cbGo": cbRun(); break;
     case "cbResult": cbShowResult(msg.list); break;
     case "again": resetForNewRound(); break;
@@ -756,10 +784,11 @@ $("btn-line-orig").onclick = async () => {
     }
     // Video läuft synchron mit, Original-Stimme liegt drüber (Video leise)
     const v = $("booth-video");
-    v.pause(); v.currentTime = l.t; v.volume = 0.25;
+    v.pause(); v.currentTime = l.t; v.volume = boothVol * 0.45; v.playbackRate = practiceSpeed;
     await v.play().catch(() => {});
     const src = ctx.createBufferSource();
     src.buffer = origCache.get(l.orig);
+    src.playbackRate.value = practiceSpeed;
     src.connect(ctx.destination);
     src.start();
     origSrc = src;
@@ -771,6 +800,15 @@ $("btn-line-orig").onclick = async () => {
   }
 };
 
+
+// Übungs-Tempo: Szene & Original langsamer ansehen/anhören — die AUFNAHME läuft
+// immer in Normal-Tempo, damit das Endergebnis richtig klingt.
+let practiceSpeed = 1;
+document.querySelectorAll(".speedbtn").forEach(b => b.onclick = () => {
+  practiceSpeed = parseFloat(b.dataset.s);
+  document.querySelectorAll(".speedbtn").forEach(x => x.classList.toggle("mine", x === b));
+});
+
 let sceneStopHandler = null;
 $("btn-line-scene").onclick = () => {
   const l = myLines[curLine];
@@ -778,7 +816,7 @@ $("btn-line-scene").onclick = () => {
   if (sceneStopHandler) { v.removeEventListener("timeupdate", sceneStopHandler); sceneStopHandler = null; }
   if (!v.paused) { v.pause(); $("btn-line-scene").textContent = "🎬 Szene ansehen"; return; }   // 2. Klick = Stopp
   v.currentTime = Math.max(0, l.t - 0.5);
-  v.volume = 0.6;
+  v.volume = boothVol; v.playbackRate = practiceSpeed;
   v.play();
   $("btn-line-scene").textContent = "⏹ Stopp";
   sceneStopHandler = () => {
@@ -810,7 +848,7 @@ $("btn-line-rec").onclick = async () => {
     const room = nextL ? Math.max(0.3, nextL.t - l.end) : 1.2;
     recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + Math.min(1.2, room)));
     const v = $("booth-video");
-    v.pause(); v.currentTime = l.t; v.volume = 0.55;
+    v.pause(); v.currentTime = l.t; v.volume = boothVol; v.playbackRate = 1;
     await new Promise(res => {
       const to = setTimeout(res, 4000);
       const h = () => { clearTimeout(to); v.removeEventListener("seeked", h); res(); };
@@ -906,7 +944,7 @@ $("btn-line-play").onclick = async () => {
   const buf = await ctx.decodeAudioData(await toArrayBuffer(takes[l.idx]));
   // Videobild läuft synchron mit (leise), kein Standbild mehr
   const v = $("booth-video");
-  v.pause(); v.currentTime = l.t; v.volume = 0.35;
+  v.pause(); v.currentTime = l.t; v.volume = boothVol * 0.6; v.playbackRate = 1;
   await v.play();
   const src = ctx.createBufferSource();
   src.buffer = buf;
@@ -1170,6 +1208,90 @@ function showRateResult(results) {
   SFX.done();
 }
 
+
+// ═════════════════════════════════════════════════════════════
+// WARTE-ARENA 3+4: Reaktions-Duell & Tipp-Renner
+// ═════════════════════════════════════════════════════════════
+// — Reaktion —
+let rxWaiting = false, rxGreenAt = 0, rxDone = false;
+const rxScores = new Map(), tpScores = new Map();
+
+$("btn-rx-start").onclick = () => {
+  const delay = 1500 + Math.random() * 3500;
+  if (isHost) { broadcast({ t: "rxGo", delay }); rxRun(delay); }
+  else hostConn.send({ t: "mg", k: "rxStart" });
+};
+function rxRun(delay) {
+  rxWaiting = true; rxDone = false;
+  $("rx-pad").style.display = ""; $("btn-rx-start").style.display = "none";
+  $("rx-result").innerHTML = "";
+  const pad = $("rx-pad");
+  pad.style.background = "#5c1a1e"; pad.textContent = "WARTE AUF GRÜN …";
+  rxGreenAt = 0;
+  setTimeout(() => {
+    if (!rxWaiting) return;
+    rxGreenAt = performance.now();
+    pad.style.background = "#1a5c34"; pad.textContent = "JETZT! KLICK!";
+    SFX.go();
+  }, delay);
+}
+$("rx-pad") && ($("rx-pad").onclick = () => {
+  if (!rxWaiting || rxDone) return;
+  rxDone = true; rxWaiting = false;
+  let ms;
+  if (!rxGreenAt) { ms = 9999; $("rx-pad").textContent = "ZU FRÜH! 😅"; SFX.err(); }
+  else { ms = Math.round(performance.now() - rxGreenAt); $("rx-pad").textContent = ms + " ms!"; SFX.ok(); }
+  setTimeout(() => { $("rx-pad").style.display = "none"; $("btn-rx-start").style.display = ""; }, 1200);
+  if (isHost) mgScore("rx", myId, ms); else hostConn.send({ t: "mg", k: "rxScore", ms });
+});
+
+// — Tipp-Renner (eigene, kurze Phrasen) —
+const TP_PHRASES = ["synchronstudio läuft heiß", "wer klickt der spricht", "mikro an hirn aus", "premiere in drei zwei eins", "der take sitzt beim ersten mal", "kopfhörer auf und los", "gate offen stimme raus", "voll auf die lippen getimet"];
+let tpPhrase = "", tpStartT = 0, tpDone = false;
+$("btn-tp-start").onclick = () => {
+  const phrase = TP_PHRASES[Math.floor(Math.random() * TP_PHRASES.length)];
+  if (isHost) { broadcast({ t: "tpGo", phrase }); tpRun(phrase); }
+  else hostConn.send({ t: "mg", k: "tpStart" });
+};
+function tpRun(phrase) {
+  tpPhrase = phrase; tpDone = false; tpStartT = performance.now();
+  $("tp-area").style.display = ""; $("btn-tp-start").style.display = "none";
+  $("tp-result").innerHTML = "";
+  $("tp-phrase").textContent = "„" + phrase + "“";
+  const inp = $("tp-input");
+  inp.value = ""; inp.disabled = false; inp.focus();
+  inp.oninput = () => {
+    if (tpDone) return;
+    if (inp.value.trim().toLowerCase() === tpPhrase) {
+      tpDone = true; inp.disabled = true;
+      const ms = Math.round(performance.now() - tpStartT);
+      $("tp-phrase").textContent = "✅ " + (ms / 1000).toFixed(2) + "s!";
+      SFX.ok();
+      setTimeout(() => { $("tp-area").style.display = "none"; $("btn-tp-start").style.display = ""; }, 1200);
+      if (isHost) mgScore("tp", myId, ms); else hostConn.send({ t: "mg", k: "tpScore", ms });
+    }
+  };
+}
+
+// — Auswertung (Host sammelt, kleinste Zeit gewinnt) —
+function mgScore(game, pid, ms) {
+  const map = game === "rx" ? rxScores : tpScores;
+  map.set(pid, ms);
+  clearTimeout(mgScore["_t" + game]);
+  mgScore["_t" + game] = setTimeout(() => {
+    const list = [...map.entries()].sort((a, b) => a[1] - b[1]);
+    broadcast({ t: "mgResult", game, list });
+    mgShowResult(game, list);
+    map.clear();
+  }, game === "rx" ? 4000 : 15000);
+}
+function mgShowResult(game, list) {
+  const el = $(game === "rx" ? "rx-result" : "tp-result");
+  el.innerHTML = list.map(([pid, ms], i) =>
+    `<div>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(nameOf(pid))}</b> — ${ms >= 9999 ? "zu früh 😅" : game === "rx" ? ms + " ms" : (ms / 1000).toFixed(2) + "s"}</div>`).join("");
+  SFX.done();
+}
+
 // ═════════════════════════════════════════════════════════════
 // 8) HOST: Spuren einsammeln → Mix an alle
 // ═════════════════════════════════════════════════════════════
@@ -1290,22 +1412,49 @@ function elementSource(ctx, v) {
   return elemSrcMap.get(v);
 }
 
+
+// Ein einziger, dauerhafter Audio-Graph für die Premiere.
+// (Vorher wurde pro "Nochmal abspielen" ein neuer Kompressor gebaut und der
+//  Video-Ton blieb mit ALLEN alten verbunden → wurde immer lauter. Gefixt.)
+let premNodes = null;
+const premVol = { master: 1, voice: 1, video: 1 };
+function premGraph(ctx, v) {
+  if (!premNodes) {
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.knee.value = 20;
+    comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.15;
+    const masterGain = ctx.createGain();
+    const voiceGain = ctx.createGain();
+    const vidGain = ctx.createGain();
+    voiceGain.connect(comp); vidGain.connect(comp);
+    comp.connect(masterGain); masterGain.connect(ctx.destination);
+    elementSource(ctx, v).connect(vidGain);
+    premNodes = { comp, masterGain, voiceGain, vidGain };
+    applyPremVol();
+  }
+  return premNodes;
+}
+function applyPremVol() {
+  if (!premNodes) return;
+  premNodes.masterGain.gain.value = premVol.master;
+  premNodes.voiceGain.gain.value = premVol.voice;
+  premNodes.vidGain.gain.value = premVol.video;
+}
+
 async function playMix(saveFile) {
   const ctx = getCtx();
   const v = $("play-video");
   playNodes.forEach(n => { try { n.stop(); } catch {} });
   playNodes = [];
 
-  const master = ctx.createDynamicsCompressor();
-  master.threshold.value = -18; master.knee.value = 20;
-  master.ratio.value = 4; master.attack.value = 0.005; master.release.value = 0.15;
-  master.connect(ctx.destination);
-  elementSource(ctx, v).connect(master);
+  const g = premGraph(ctx, v);
+  const master = g.voiceGain;          // Stimmen laufen über den Voice-Regler in den Graph
+  v.playbackRate = 1;
 
   let fileRec = null;
   if (saveFile) {
     const dest = ctx.createMediaStreamDestination();
-    master.connect(dest);
+    g.masterGain.connect(dest);
     const capture = (v.captureStream || v.mozCaptureStream).call(v);
     const stream = new MediaStream([...capture.getVideoTracks(), ...dest.stream.getAudioTracks()]);
     const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm";
@@ -1313,6 +1462,7 @@ async function playMix(saveFile) {
     const chunks = [];
     fileRec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     fileRec.onstop = () => {
+      try { g.masterGain.disconnect(dest); } catch {}
       const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
       const a = document.createElement("a");
       a.href = url; a.download = (scene?.id || "synchro") + "_dub.webm";
@@ -1353,6 +1503,13 @@ async function playMix(saveFile) {
 
   if (fileRec) v.addEventListener("ended", () => { if (fileRec.state !== "inactive") fileRec.stop(); }, { once: true });
 }
+
+
+$("vol-master").oninput = e => { premVol.master = parseFloat(e.target.value); applyPremVol(); };
+$("vol-voice").oninput  = e => { premVol.voice  = parseFloat(e.target.value); applyPremVol(); };
+$("vol-video").oninput  = e => { premVol.video  = parseFloat(e.target.value); applyPremVol(); };
+let boothVol = 0.55;
+$("booth-vol").oninput = e => { boothVol = parseFloat(e.target.value); $("booth-video").volume = boothVol; };
 
 $("sync-offset").oninput = (e) => { syncOffsetMs = parseInt(e.target.value); $("sync-val").textContent = syncOffsetMs + " ms"; };
 

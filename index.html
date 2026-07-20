@@ -329,6 +329,15 @@
       <canvas class="viz" id="viz"></canvas>
       <div class="rectime"><i id="rectime-fill"></i></div>
 
+      <div class="row" style="margin-bottom:10px;gap:16px">
+        <span class="tag">Übungs-Tempo:</span>
+        <button class="rolebtn speedbtn mine" data-s="1" style="width:auto;padding:6px 12px">1×</button>
+        <button class="rolebtn speedbtn" data-s="0.75" style="width:auto;padding:6px 12px">0.75×</button>
+        <button class="rolebtn speedbtn" data-s="0.5" style="width:auto;padding:6px 12px">0.5×</button>
+        <span style="flex:1"></span>
+        <span class="tag">🔊 Video</span>
+        <input type="range" id="booth-vol" min="0" max="1" step="0.05" value="0.55" style="width:120px;accent-color:var(--amber)">
+      </div>
       <label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:10px;font-size:.9rem;color:var(--muted)">
         <input type="checkbox" id="rec-timer" checked style="accent-color:var(--amber);width:17px;height:17px">
         ⏱ 3-Sek.-Countdown vor der Aufnahme (kein Maus-Klick im Take)
@@ -372,6 +381,23 @@
       <button class="big" id="cb-btn" style="display:none;width:100%;padding:34px;font-size:1.6rem;font-family:'Archivo Black'">🔥 KLICK MICH</button>
       <div id="cb-result" style="margin-top:12px;display:grid;gap:4px"></div>
     </div>
+    <div class="card">
+      <h2>🚦 Warte-Arena: Reaktions-Duell</h2>
+      <p class="sub">Warte auf GRÜN, dann klick so schnell du kannst. Zu früh = disqualifiziert 😄</p>
+      <button class="primary big" id="btn-rx-start">🚦 Runde starten</button>
+      <button class="big" id="rx-pad" style="display:none;width:100%;padding:40px;font-size:1.4rem;font-family:'Archivo Black';background:#5c1a1e;border:none;border-radius:14px">WARTE …</button>
+      <div id="rx-result" style="margin-top:12px;display:grid;gap:4px"></div>
+    </div>
+    <div class="card">
+      <h2>⌨️ Warte-Arena: Tipp-Renner</h2>
+      <p class="sub">Tipp den Satz so schnell wie möglich fehlerfrei ab.</p>
+      <button class="primary big" id="btn-tp-start">⌨️ Runde starten</button>
+      <div id="tp-area" style="display:none">
+        <p style="font-size:1.2rem;font-weight:700;margin:10px 0" id="tp-phrase"></p>
+        <input type="text" id="tp-input" placeholder="Hier tippen …" style="width:100%" autocomplete="off">
+      </div>
+      <div id="tp-result" style="margin-top:12px;display:grid;gap:4px"></div>
+    </div>
   </section>
 
   <!-- REALTIME (für Szenen ohne Line-Timings) -->
@@ -394,6 +420,11 @@
       <p class="status" id="prem-status"></p>
       <button class="primary big" id="btn-prem-start" style="display:none" disabled>🎬 Premiere für alle starten</button>
       <div class="prompter" id="play-prompter"></div>
+      <div class="row" style="margin-top:12px;gap:14px">
+        <span class="tag">🔊 Gesamt</span><input type="range" id="vol-master" min="0" max="1.5" step="0.05" value="1" style="flex:1;accent-color:var(--amber)">
+        <span class="tag">🎙 Stimmen</span><input type="range" id="vol-voice" min="0" max="2" step="0.05" value="1" style="flex:1;accent-color:var(--amber)">
+        <span class="tag">🎵 Musik</span><input type="range" id="vol-video" min="0" max="1.5" step="0.05" value="1" style="flex:1;accent-color:var(--amber)">
+      </div>
       <div class="synccontrol">
         <label class="small" style="margin:0;white-space:nowrap">Lippen-Sync</label>
         <input type="range" id="sync-offset" min="-500" max="500" value="0" step="10">
