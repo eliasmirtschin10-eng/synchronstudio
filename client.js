@@ -5,8 +5,17 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 const PEER_PREFIX = "syncstudio-emvw-";
+// STUN + kostenloses TURN-Relay (Open Relay Project) — nötig, wenn Router die
+// Direktverbindung blocken (klassisch: Freund in anderem Netz hängt bei "Verbinde…")
+const PEER_CONFIG = { config: { iceServers: [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
+] } };
 const CHUNK_SIZE = 128 * 1024;
 
 // ── State ────────────────────────────────────────────────────
@@ -221,7 +230,7 @@ $("btn-create").onclick = () => {
   isHost = true;
   const code = randCode();
   status("start-status", "Erstelle Raum …");
-  peer = new Peer(PEER_PREFIX + code);
+  peer = new Peer(PEER_PREFIX + code, PEER_CONFIG);
   peer.on("open", () => {
     myId = peer.id;
     players = [{ id: myId, name: myName + " (Host)", role: null, ready: false, done: 0, total: 0 }];
@@ -242,7 +251,7 @@ $("btn-join").onclick = () => {
   if (!/^\d{4}$/.test(code)) return status("start-status", "Der Raumcode hat 4 Ziffern.", true), SFX.err();
   isHost = false;
   status("start-status", "Verbinde …");
-  peer = new Peer();
+  peer = new Peer(PEER_CONFIG);
   peer.on("open", () => {
     myId = peer.id;
     hostConn = peer.connect(PEER_PREFIX + code, { reliable: true });
@@ -279,8 +288,7 @@ function handleMsg(msg, conn) {
   switch (msg.t) {
     // — beim Host —
     case "hello": {
-      const cap = scene ? scene.roles.length : 4;
-      if (players.length >= cap) { conn.send({ t: "full", cap }); setTimeout(() => conn.close(), 500); break; }
+      if (players.length >= 8) { conn.send({ t: "full", cap: 8 }); setTimeout(() => conn.close(), 500); break; }
       players.push({ id: conn.peer, name: msg.name, role: null, ready: false, done: 0, total: 0 });
       if (scene) { if (localVideoBuf) sendLocalVideo(conn); else conn.send({ t: "scene", scene }); }
       broadcastState();
@@ -294,6 +302,7 @@ function handleMsg(msg, conn) {
     case "ready": { const p = players.find(p => p.id === conn.peer); if (p && p.role != null) p.ready = true; broadcastState(); break; }
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
+    case "ttt": tttHandle(msg.a, conn.peer); break;
 
     // — bei Gästen —
     case "full":
@@ -306,6 +315,7 @@ function handleMsg(msg, conn) {
     case "goLines": startBooth(); break;
     case "go": startRealtime(); break;
     case "mix": loadMix(msg.data); break;
+    case "tttState": ttt = msg.ttt; renderTTT(); break;
     case "again": resetForNewRound(); break;
   }
 }
@@ -325,8 +335,6 @@ async function loadSceneList() {
 $("btn-load-scene").onclick = () => {
   const s = sceneList[$("scene-select").value];
   if (!s) return;
-  if (players.length > s.roles.length)
-    return status("scene-status", "⚠ Ihr seid " + players.length + " Leute, aber die Szene hat nur " + s.roles.length + " Rollen.", true);
   scene = s; localVideoBuf = null; videoBlobUrl = null;
   resetRoles();
   showScene(scene.videoUrl);
@@ -368,8 +376,6 @@ $("btn-use-local").onclick = () => {
     effect: div.querySelector("select").value,
     gain: 1.0
   }));
-  if (players.length > roles.length)
-    return status("scene-status", "⚠ Ihr seid " + players.length + " Leute, aber nur " + roles.length + " Rollen.", true);
   scene = { title: $("file-video").files[0].name.replace(/\.\w+$/, ""), roles };
   resetRoles();
   videoBlobUrl = URL.createObjectURL(new Blob([localVideoBuf], { type: "video/mp4" }));
@@ -467,7 +473,10 @@ function pickRole(roleId) {
 
 $("btn-ready").onclick = async () => {
   const me = players.find(p => p.id === myId);
-  if (me?.role == null) return status("lobby-status", "Erst eine Rolle aussuchen!", true), SFX.err();
+  if (me?.role == null) {
+    const free = scene ? scene.roles.some(r => !players.find(p => p.role === r.id)) : true;
+    return status("lobby-status", free ? "Erst eine Rolle aussuchen! (Oder ohne Rolle einfach zuschauen 🍿)" : "Alle Rollen sind weg — du bist Zuschauer und siehst die Premiere trotzdem! 🍿", !free ? false : true), free && SFX.err();
+  }
   if (!isHost && !videoBlobUrl && !scene?.videoUrl) return status("lobby-status", "Video lädt noch …", true);
   if (!(await ensureMic())) return;
   if (isHost) { me.ready = true; broadcastState(); }
@@ -478,9 +487,13 @@ $("btn-ready").onclick = async () => {
 
 function checkStartable() {
   if (!isHost) return;
-  const ok = players.length && players.every(p => p.role != null && p.ready);
+  const speakers = players.filter(p => p.role != null);
+  const ok = speakers.length >= 1 && speakers.every(p => p.ready);
+  const spectators = players.length - speakers.length;
   $("btn-start").disabled = !ok;
-  $("start-hint").textContent = ok ? "Alle bereit — los geht's!" : "Warte, bis alle eine Rolle haben und „bereit“ sind …";
+  $("start-hint").textContent = ok
+    ? "Los geht's! " + (spectators ? spectators + " Zuschauer gucken zu. Unbesetzte Rollen sprechen original." : "Unbesetzte Rollen sprechen original.")
+    : "Warte, bis alle Sprecher „bereit“ sind … (wer keine Rolle nimmt, ist Zuschauer)";
 }
 
 
@@ -534,6 +547,12 @@ function roleOf(id) { return scene.roles.find(r => r.id === id); }
 
 function startBooth() {
   const rid = myRole();
+  if (rid == null) {                      // Zuschauer
+    show("scr-wait");
+    renderBoothPlayers();
+    status("wait-status", "🍿 Du bist Zuschauer — die Premiere startet automatisch, wenn alle fertig sind.");
+    return;
+  }
   myLines = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.includes(rid));
   curLine = 0; takes = {};
   const r = roleOf(rid);
@@ -730,6 +749,51 @@ function countdown() {
     }, 900);
   });
 }
+
+
+// ═════════════════════════════════════════════════════════════
+// WARTE-ARENA: TicTacToe (Host verwaltet, alle im Warte-Screen)
+// ═════════════════════════════════════════════════════════════
+let ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null };
+const TTT_WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function tttAction(a) { if (isHost) tttHandle(a, myId); else hostConn.send({ t: "ttt", a }); }
+function tttHandle(a, pid) {
+  if (a.k === "join" && ttt.p.length < 2 && !ttt.p.includes(pid) && !ttt.winner) ttt.p.push(pid);
+  if (a.k === "move" && !ttt.winner && ttt.p.length === 2 && ttt.p[ttt.turn] === pid && ttt.board[a.i] == null) {
+    ttt.board[a.i] = ttt.turn === 0 ? "X" : "O";
+    for (const w of TTT_WINS) if (w.every(i => ttt.board[i] === ttt.board[w[0]] && ttt.board[i])) ttt.winner = ttt.turn;
+    if (ttt.winner == null && ttt.board.every(c => c)) ttt.winner = -1;   // Unentschieden
+    if (ttt.winner == null) ttt.turn = 1 - ttt.turn;
+  }
+  if (a.k === "reset") { ttt = { p: ttt.winner != null ? [...ttt.p].reverse() : [], board: Array(9).fill(null), turn: 0, winner: null }; if (a.hard) ttt.p = []; }
+  broadcast({ t: "tttState", ttt });
+  renderTTT();
+}
+function nameOf(pid) { return players.find(p => p.id === pid)?.name || "?"; }
+
+function renderTTT() {
+  const board = $("ttt-board");
+  if (!board) return;
+  const iAmIn = ttt.p.includes(myId);
+  const myTurn = iAmIn && ttt.p[ttt.turn] === myId && ttt.p.length === 2 && ttt.winner == null;
+  board.innerHTML = ttt.board.map((c, i) =>
+    `<button class="tttcell" data-i="${i}" ${c || !myTurn ? "disabled" : ""} style="${c === "X" ? "color:var(--amber)" : c === "O" ? "color:var(--violet)" : ""}">${c || ""}</button>`
+  ).join("");
+  board.querySelectorAll(".tttcell").forEach(b => b.onclick = () => tttAction({ k: "move", i: parseInt(b.dataset.i) }));
+  $("btn-ttt-join").style.display = (!iAmIn && ttt.p.length < 2) ? "" : "none";
+  let info;
+  if (ttt.p.length < 2) info = ttt.p.length === 0 ? "Zwei Wartende können zocken — wer traut sich?" : nameOf(ttt.p[0]) + " wartet auf einen Gegner …";
+  else if (ttt.winner === -1) info = "Unentschieden! 🤝";
+  else if (ttt.winner != null) info = "🏆 " + nameOf(ttt.p[ttt.winner]) + " gewinnt!";
+  else info = (myTurn ? "🫵 DU bist dran (" : nameOf(ttt.p[ttt.turn]) + " ist dran (") + (ttt.turn === 0 ? "X" : "O") + ")";
+  $("ttt-info").textContent = nameOf(ttt.p[0] || "") && ttt.p.length === 2 ? nameOf(ttt.p[0]) + " (X) vs " + nameOf(ttt.p[1]) + " (O) — " + info : info;
+}
+document.addEventListener("DOMContentLoaded", () => {
+  $("btn-ttt-join").onclick = () => tttAction({ k: "join" });
+  $("btn-ttt-reset").onclick = () => tttAction({ k: "reset" });
+  renderTTT();
+});
 
 // ═════════════════════════════════════════════════════════════
 // 8) HOST: Spuren einsammeln → Mix an alle
@@ -940,6 +1004,7 @@ $("btn-back").onclick = () => {
 function resetForNewRound() {
   players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; });
   mixItems = []; collected.clear(); takes = {};
+  if (isHost) { ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null }; broadcast({ t: "tttState", ttt }); renderTTT(); }
   show("scr-lobby");
   if (isHost) broadcastState(); else { renderPlayers(); renderRoles(); }
   status("lobby-status", "Neue Runde — wieder „Bin bereit“ drücken, wenn's losgehen soll.");
