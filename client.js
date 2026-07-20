@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.1";
+const APP_VERSION = "2.2";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -50,6 +50,25 @@ const show = (id) => { document.querySelectorAll(".screen").forEach(s => s.class
 const status = (id, msg, isErr) => { const el = $(id); el.textContent = msg; el.style.color = isErr ? "var(--hot)" : ""; };
 const randCode = () => String(Math.floor(1000 + Math.random() * 9000));
 const esc = (s) => String(s).replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]));
+
+
+function setBar(id, pct) {
+  const el = $(id);
+  if (!el) return;
+  el.style.display = pct >= 100 ? "none" : "";
+  el.querySelector("i").style.width = Math.min(100, Math.max(0, pct)) + "%";
+}
+// Wartet, bis das Video wirklich abspielbereit ist (canplaythrough), mit Timeout-Fallback
+function waitCanPlay(v, timeoutMs = 20000) {
+  return new Promise(res => {
+    if (v.readyState >= 3) return res();
+    const done = () => { clearTimeout(to); v.removeEventListener("canplaythrough", done); v.removeEventListener("canplay", done); res(); };
+    const to = setTimeout(done, timeoutMs);
+    v.addEventListener("canplaythrough", done);
+    v.addEventListener("canplay", done);
+    v.load();
+  });
+}
 
 function getCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -355,6 +374,7 @@ function handleMsg(msg, conn) {
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
+    case "premReady": { const p = players.find(p => p.id === conn.peer); if (p) p.prem = true; broadcastState(); renderPremState(); break; }
     case "cb":
       if (msg.a.k === "start") { broadcast({ t: "cbGo" }); cbRun(); }
       if (msg.a.k === "score") cbScore(conn.peer, msg.a.n);
@@ -364,7 +384,7 @@ function handleMsg(msg, conn) {
     case "full":
       status("start-status", "Raum ist voll — diese Szene hat nur " + msg.cap + " Rollen. 😅", true);
       show("scr-start"); break;
-    case "state": players = msg.players; renderPlayers(); renderRoles(); renderBoothPlayers(); break;
+    case "state": players = msg.players; renderPlayers(); renderRoles(); renderBoothPlayers(); if (document.querySelector("#scr-playback.active")) renderPremStateGuest(); break;
     case "scene": scene = msg.scene; videoBlobUrl = null; showScene(scene.videoUrl); break;
     case "videoMeta": startVideoReceive(msg); break;
     case "videoChunk": receiveVideoChunk(msg.buf); break;
@@ -372,6 +392,7 @@ function handleMsg(msg, conn) {
     case "go": startRealtime(); break;
     case "mix": loadMix(msg.data); break;
     case "tttState": ttt = msg.ttt; renderTTT(); break;
+    case "premGo": premStart(); break;
     case "cbGo": cbRun(); break;
     case "cbResult": cbShowResult(msg.list); break;
     case "again": resetForNewRound(); break;
@@ -618,7 +639,17 @@ function startBooth() {
   const av = scene.avatars?.[String(rid)];
   $("booth-avatar").style.display = av ? "" : "none";
   if (av) $("booth-avatar").src = av;
-  $("booth-video").src = videoBlobUrl || scene.videoUrl;
+  const bv = $("booth-video");
+  bv.src = videoBlobUrl || scene.videoUrl;
+  $("btn-line-rec").disabled = true;
+  status("booth-status", "⏳ Video lädt — einen Moment …");
+  setBar("booth-bar", 30);
+  waitCanPlay(bv).then(() => {
+    setBar("booth-bar", 100);
+    $("btn-line-rec").disabled = false;
+    status("booth-status", "Unendlich Versuche — nimm auf, bis es sitzt.");
+    SFX.ok();
+  });
   sendProgress();
   show("scr-booth");
   $("onair").classList.add("live");
@@ -664,8 +695,13 @@ $("btn-line-scene").onclick = () => {
   v.addEventListener("timeupdate", sceneStopHandler);
 };
 
+let recBusy = false;
+function boothButtons(dis) { ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip"].forEach(id => $(id).disabled = dis || (id !== "btn-line-scene" && $(id).disabled)); if(!dis) renderLine._keep || 0; }
 $("btn-line-rec").onclick = async () => {
   if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
+  if (recBusy) return;                       // Spam-Schutz (Handy!)
+  recBusy = true;
+  ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip"].forEach(id => $(id).disabled = true);
   if ($("rec-timer").checked) await recCountdown();
   const l = myLines[curLine];
   // Adaptiver Puffer: nicht in die nächste Line reinlaufen (fixt das "Doppel-Szenen"-Gefühl bei Doakes 14→16)
@@ -677,7 +713,11 @@ $("btn-line-rec").onclick = async () => {
   //  langsameren PCs war die Stimme im Endergebnis verzögert.)
   const v = $("booth-video");
   v.pause(); v.currentTime = l.t; v.volume = 0.55;
-  await new Promise(res => { const h = () => { v.removeEventListener("seeked", h); res(); }; v.addEventListener("seeked", h); });
+  await new Promise(res => {
+    const to = setTimeout(res, 4000);        // Fallback, falls 'seeked' hängt
+    const h = () => { clearTimeout(to); v.removeEventListener("seeked", h); res(); };
+    v.addEventListener("seeked", h);
+  });
   lineChunks = [];
   lineRec = new MediaRecorder(recStream(), { mimeType: pickMime() });
   lineRec.ondataavailable = e => { if (e.data.size) lineChunks.push(e.data); };
@@ -685,6 +725,7 @@ $("btn-line-rec").onclick = async () => {
   await v.play();
   await new Promise(res => { if (!v.paused && v.currentTime > l.t) return res(); const h = () => { v.removeEventListener("playing", h); res(); }; v.addEventListener("playing", h); });
   lineRec.start();
+  recBusy = false;
   SFX.rec();
   $("btn-line-rec").textContent = "⏹ Stopp";
   $("btn-line-rec").classList.add("recording");
@@ -715,6 +756,7 @@ function recCountdown() {
 }
 
 function stopLineRec() {
+  recBusy = false;
   clearInterval(recTimer);
   $("booth-video").pause();
   if (lineRec && lineRec.state === "recording") lineRec.stop();
@@ -724,6 +766,9 @@ function stopLineRec() {
 }
 
 async function onLineRecorded() {
+  recBusy = false;
+  $("btn-line-scene").disabled = false;
+  $("btn-line-skip").disabled = false;
   const l = myLines[curLine];
   takes[l.idx] = await new Blob(lineChunks, { type: lineChunks[0]?.type }).arrayBuffer();
   $("btn-line-play").disabled = false;
@@ -971,6 +1016,7 @@ async function loadMix(data) {
   }
   console.log("Mix geladen:", okCount, "Spuren ok,", failCount, "fehlgeschlagen");
   if (failCount) status("play-status", "⚠ " + failCount + " Spur(en) konnten nicht geladen werden — F12 → Console.", true);
+  setBar("prem-bar", 70);
   // Original-Stimmen für alle Lines, die KEIN Spieler eingesprochen hat
   // (unbesetzte Rollen + übersprungene Lines)
   if (scene.lines) {
@@ -989,13 +1035,51 @@ async function loadMix(data) {
       } catch { console.warn("Original fehlt:", l.orig); }
     }
   }
-  $("play-video").src = videoBlobUrl || scene.videoUrl;
-  attachPrompter($("play-video"), $("play-prompter"), null);
-  status("play-status", "Bereit! 🍿");
-  SFX.done();
-  playMix(false);
+  // Video KOMPLETT vorladen, damit die Premiere bei allen gleichzeitig & ruckelfrei startet
+  const pv = $("play-video");
+  pv.src = videoBlobUrl || scene.videoUrl;
+  attachPrompter(pv, $("play-prompter"), null);
+  status("play-status", "⏳ Video wird vorgeladen …");
+  await waitCanPlay(pv, 25000);
+  setBar("prem-bar", 100);
+  // Fertig geladen → beim Host melden
+  const me = players.find(p => p.id === myId);
+  if (me) me.prem = true;
+  $("btn-replay").disabled = true;
+  $("btn-download").disabled = true;
+  if (isHost) { broadcastState(); renderPremState(); }
+  else { hostConn.send({ t: "premReady" }); status("play-status", "✅ Fertig geladen — warte, bis der Host die Premiere startet …"); }
+  SFX.ok();
 }
 
+function renderPremStateGuest() {
+  const total = players.length, ready = players.filter(p => p.prem).length;
+  const el = $("prem-status");
+  if (el) el.textContent = "📦 " + ready + "/" + total + " haben fertig geladen" + (ready < total ? " …" : " — warte auf den Host!");
+}
+function renderPremState() {
+  const total = players.length;
+  const ready = players.filter(p => p.prem).length;
+  const el = $("prem-status");
+  if (el) el.textContent = "📦 " + ready + "/" + total + " haben fertig geladen" + (ready < total ? " …" : " — alle bereit!");
+  if (isHost) {
+    $("btn-prem-start").style.display = "";
+    $("btn-prem-start").disabled = ready < total;
+  }
+}
+
+function premStart() {
+  $("btn-replay").disabled = false;
+  $("btn-download").disabled = false;
+  $("btn-prem-start") && ($("btn-prem-start").style.display = "none");
+  status("play-status", "🍿 Premiere!");
+  countdown().then(() => playMix(false));
+}
+
+$("btn-prem-start").onclick = () => {
+  broadcast({ t: "premGo" });
+  premStart();
+};
 $("btn-replay").onclick = () => playMix(false);
 $("btn-download").onclick = () => playMix(true);
 
@@ -1162,7 +1246,7 @@ $("btn-back").onclick = () => {
   else status("play-status", "Nur der Host kann die Szene wechseln.", true);
 };
 function resetForNewRound() {
-  players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; });
+  players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; p.prem = false; });
   mixItems = []; collected.clear(); takes = {};
   if (isHost) { ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null }; broadcast({ t: "tttState", ttt }); renderTTT(); }
   show("scr-lobby");
