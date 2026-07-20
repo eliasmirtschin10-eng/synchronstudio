@@ -1130,6 +1130,69 @@
     ]
   },
   {
+    "id": "obsession",
+    "title": "Obsession — Bear und Fettsack (2 Rollen)",
+    "videoUrl": "scenes/obsession.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Bear",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Fettsack",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 3.3,
+        "chars": [
+          1
+        ],
+        "who": "Bear",
+        "text": "Öffne die Schachtel und achte drauf, wie du es formulierst!",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 3.33,
+        "end": 8.34,
+        "chars": [
+          1
+        ],
+        "who": "Bear",
+        "text": "WOW WOW WOW! ALTER STOP, OKAY UM, DU MUSST SAGEN UM UM Ich wünsche das mein Freund Beary...",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 8.34,
+        "end": 11.2,
+        "chars": [
+          2
+        ],
+        "who": "Fettsack",
+        "text": "Ich wünsche mir eine Milliarde Dollar",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 11.25,
+        "end": 13,
+        "chars": [
+          1
+        ],
+        "who": "Bear",
+        "text": "NEINNNN!",
+        "de": "Original ist Deutsch"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
