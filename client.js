@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.3";
+const APP_VERSION = "2.4";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -684,8 +684,8 @@ function renderLine() {
   $("booth-video").currentTime = l.t;
   $("btn-line-play").disabled = !takes[l.idx] || takes[l.idx] === "SKIP";
   $("btn-line-next").disabled = !takes[l.idx];
-  $("btn-line-skip").style.display = l.orig ? "" : "none";
-  $("btn-line-orig").style.display = l.orig ? "" : "none";
+  const sk = $("btn-line-skip"); if (sk) sk.style.display = l.orig ? "" : "none";
+  const og = $("btn-line-orig"); if (og) og.style.display = l.orig ? "" : "none";
   $("rectime-fill").style.width = "0";
   status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
 }
@@ -740,48 +740,74 @@ $("btn-line-scene").onclick = () => {
 };
 
 let recBusy = false;
-function boothButtons(dis) { ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip"].forEach(id => $(id).disabled = dis || (id !== "btn-line-scene" && $(id).disabled)); if(!dis) renderLine._keep || 0; }
+function boothButtons_unused(dis) { ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip"].forEach(id => $(id).disabled = dis || (id !== "btn-line-scene" && $(id).disabled)); if(!dis) renderLine._keep || 0; }
 $("btn-line-rec").onclick = async () => {
   if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
-  if (recBusy) return;                       // Spam-Schutz (Handy!)
-  recBusy = true;
-  ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip","btn-line-orig"].forEach(id => $(id).disabled = true);
-  if ($("rec-timer").checked) await recCountdown();
-  const l = myLines[curLine];
-  // Adaptiver Puffer: nicht in die nächste Line reinlaufen (fixt das "Doppel-Szenen"-Gefühl bei Doakes 14→16)
-  const nextL = scene.lines[l.idx + 1];
-  const room = nextL ? Math.max(0.3, nextL.t - l.end) : 1.2;
-  recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + Math.min(1.2, room)));
-  // LIPPEN-SYNC-FIX: Video erst wirklich laufen lassen, DANN Aufnahme starten.
-  // (Vorher lief die Aufnahme schon, während das Video noch seekte → auf
-  //  langsameren PCs war die Stimme im Endergebnis verzögert.)
-  const v = $("booth-video");
-  v.pause(); v.currentTime = l.t; v.volume = 0.55;
-  await new Promise(res => {
-    const to = setTimeout(res, 4000);        // Fallback, falls 'seeked' hängt
-    const h = () => { clearTimeout(to); v.removeEventListener("seeked", h); res(); };
-    v.addEventListener("seeked", h);
-  });
-  lineChunks = [];
-  lineRec = new MediaRecorder(recStream(), { mimeType: pickMime() });
-  lineRec.ondataavailable = e => { if (e.data.size) lineChunks.push(e.data); };
-  lineRec.onstop = onLineRecorded;
-  await v.play();
-  await new Promise(res => { if (!v.paused && v.currentTime > l.t) return res(); const h = () => { v.removeEventListener("playing", h); res(); }; v.addEventListener("playing", h); });
-  lineRec.start();
-  recBusy = false;
-  SFX.rec();
-  $("btn-line-rec").textContent = "⏹ Stopp";
-  $("btn-line-rec").classList.add("recording");
-  recStartT = performance.now();
-  clearInterval(recTimer);
-  recTimer = setInterval(() => {
-    const el = (performance.now() - recStartT) / 1000;
-    $("rectime-fill").style.width = Math.min(100, el / recMax * 100) + "%";
-    if (el >= recMax) stopLineRec();
-  }, 50);
-  status("booth-status", "🔴 Aufnahme läuft … (stoppt automatisch nach " + recMax.toFixed(1) + "s)");
+  if (recBusy) {
+    // Notaus: Falls ein früherer Start hängen geblieben ist, nach 6s Reset erlauben
+    if (performance.now() - (recBusy.t || 0) > 6000) forceRecReset();
+    return;
+  }
+  recBusy = { t: performance.now() };
+  ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip","btn-line-orig"].forEach(id => { const el = $(id); if (el) el.disabled = true; });
+  try {
+    if ($("rec-timer").checked) await recCountdown();
+    const l = myLines[curLine];
+    // Adaptiver Puffer: nicht in die nächste Line reinlaufen
+    const nextL = scene.lines[l.idx + 1];
+    const room = nextL ? Math.max(0.3, nextL.t - l.end) : 1.2;
+    recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + Math.min(1.2, room)));
+    const v = $("booth-video");
+    v.pause(); v.currentTime = l.t; v.volume = 0.55;
+    await new Promise(res => {
+      const to = setTimeout(res, 4000);
+      const h = () => { clearTimeout(to); v.removeEventListener("seeked", h); res(); };
+      v.addEventListener("seeked", h);
+    });
+    lineChunks = [];
+    lineRec = new MediaRecorder(recStream(), { mimeType: pickMime() });
+    lineRec.ondataavailable = e => { if (e.data.size) lineChunks.push(e.data); };
+    lineRec.onstop = onLineRecorded;
+    await v.play();
+    // KEIN Event-Warten mehr (Race!): pollen, bis das Video wirklich läuft
+    await new Promise(res => {
+      const t0 = performance.now();
+      const iv = setInterval(() => {
+        if (v.currentTime > l.t + 0.03 || performance.now() - t0 > 2500) { clearInterval(iv); res(); }
+      }, 16);
+    });
+    lineRec.start();
+    recBusy = false;
+    SFX.rec();
+    $("btn-line-rec").textContent = "⏹ Stopp";
+    $("btn-line-rec").classList.add("recording");
+    recStartT = performance.now();
+    clearInterval(recTimer);
+    recTimer = setInterval(() => {
+      const el = (performance.now() - recStartT) / 1000;
+      $("rectime-fill").style.width = Math.min(100, el / recMax * 100) + "%";
+      if (el >= recMax) stopLineRec();
+    }, 50);
+    status("booth-status", "🔴 Aufnahme läuft … (stoppt automatisch nach " + recMax.toFixed(1) + "s)");
+  } catch (e) {
+    console.error("Rec-Start fehlgeschlagen:", e);
+    forceRecReset();
+    status("booth-status", "⚠ Aufnahme-Start hakte — nochmal drücken!", true);
+  }
 };
+
+// Alles zurücksetzen, falls ein Start hängen bleibt
+function forceRecReset() {
+  recBusy = false;
+  clearInterval(recTimer);
+  try { $("booth-video").pause(); } catch {}
+  if (lineRec && lineRec.state === "recording") { try { lineRec.stop(); } catch {} }
+  $("btn-line-rec").textContent = "⏺ Aufnehmen";
+  $("btn-line-rec").classList.remove("recording");
+  $("btn-line-rec").disabled = false;
+  ["btn-line-scene","btn-line-orig"].forEach(id => { const el = $(id); if (el) el.disabled = false; });
+  renderLine();
+}
 
 
 function recCountdown() {
@@ -811,9 +837,7 @@ function stopLineRec() {
 
 async function onLineRecorded() {
   recBusy = false;
-  $("btn-line-scene").disabled = false;
-  $("btn-line-skip").disabled = false;
-  $("btn-line-orig").disabled = false;
+  ["btn-line-scene","btn-line-skip","btn-line-orig"].forEach(id => { const el = $(id); if (el) el.disabled = false; });
   const l = myLines[curLine];
   takes[l.idx] = await new Blob(lineChunks, { type: lineChunks[0]?.type }).arrayBuffer();
   $("btn-line-play").disabled = false;
