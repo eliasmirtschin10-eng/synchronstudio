@@ -223,6 +223,7 @@
       </div>
       <div class="row" style="margin-top:18px">
         <button class="big" id="btn-mic-record">🎤 Test aufnehmen (3 Sek.)</button>
+        <button class="big ghost" id="btn-mic-raw">🎙 Roh-Modus (alle Filter aus)</button>
         <button class="big primary" id="btn-mic-done" disabled>✅ Klingt gut, weiter</button>
       </div>
       <p class="status" id="mic-status">Klick auf „Test aufnehmen“, um dein Mikro freizugeben.</p>
@@ -327,6 +328,7 @@
         <button class="big primary" id="btn-line-rec">⏺ Aufnehmen</button>
         <button class="big" id="btn-line-play" disabled>▶ Anhören</button>
         <button class="big" id="btn-line-next" disabled>✅ Passt, weiter</button>
+        <button class="big ghost" id="btn-line-skip" style="display:none">⏭ Skip (Original behalten)</button>
       </div>
       <p class="status" id="booth-status">Unendlich Versuche — nimm auf, bis es sitzt.</p>
     </div>
@@ -351,6 +353,13 @@
         <button id="btn-ttt-join">🕹 Mitspielen</button>
         <button class="ghost" id="btn-ttt-reset">Neustart</button>
       </div>
+    </div>
+    <div class="card">
+      <h2>⚡ Warte-Arena: Klick-Battle</h2>
+      <p class="sub" id="cb-info">10 Sekunden, ein Button — wer klickt am schnellsten? Alle Wartenden spielen mit.</p>
+      <button class="primary big" id="btn-cb-start">⚡ Battle starten</button>
+      <button class="big" id="cb-btn" style="display:none;width:100%;padding:34px;font-size:1.6rem;font-family:'Archivo Black'">🔥 KLICK MICH</button>
+      <div id="cb-result" style="margin-top:12px;display:grid;gap:4px"></div>
     </div>
   </section>
 

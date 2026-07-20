@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.0";
+const APP_VERSION = "2.1";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -229,6 +229,13 @@ $("mic-ns").onchange = e => { micSettings.ns = e.target.checked; buildMic(); };
 $("mic-ec").onchange = e => { micSettings.ec = e.target.checked; buildMic(); };
 $("mic-agc").onchange = e => { micSettings.agc = e.target.checked; buildMic(); };
 $("mic-lowcut").onchange = e => { micSettings.lowcut = e.target.checked; applyMicTuning(); };
+$("btn-mic-raw").onclick = () => {
+  Object.assign(micSettings, { ns: false, ec: false, agc: false, lowcut: false, gate: 0 });
+  $("mic-ns").checked = $("mic-ec").checked = $("mic-agc").checked = $("mic-lowcut").checked = false;
+  $("mic-gate").value = 0; $("mic-gate-val").textContent = "Aus";
+  buildMic();
+  status("mic-status", "🎙 Roh-Modus: Alle Filter aus — pur wie dein Mikro klingt. (Kopfhörer Pflicht, sonst Echo!)");
+};
 $("mic-gain").oninput = e => { micSettings.gain = parseFloat(e.target.value); $("mic-gain-val").textContent = Math.round(micSettings.gain * 100) + "%"; applyMicTuning(); };
 $("mic-gate").oninput = e => { micSettings.gate = parseFloat(e.target.value); $("mic-gate-val").textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%"; };
 // Beim ersten Klick irgendwo den Setup starten (AudioContext braucht eine Geste)
@@ -348,6 +355,10 @@ function handleMsg(msg, conn) {
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
+    case "cb":
+      if (msg.a.k === "start") { broadcast({ t: "cbGo" }); cbRun(); }
+      if (msg.a.k === "score") cbScore(conn.peer, msg.a.n);
+      break;
 
     // — bei Gästen —
     case "full":
@@ -361,6 +372,8 @@ function handleMsg(msg, conn) {
     case "go": startRealtime(); break;
     case "mix": loadMix(msg.data); break;
     case "tttState": ttt = msg.ttt; renderTTT(); break;
+    case "cbGo": cbRun(); break;
+    case "cbResult": cbShowResult(msg.list); break;
     case "again": resetForNewRound(); break;
   }
 }
@@ -623,8 +636,9 @@ function renderLine() {
   $("line-de").textContent = l.de ? "🇩🇪 " + l.de : "";
   $("line-dur").textContent = "~" + Math.max(1, Math.round(l.end - l.t)) + " Sek.";
   $("booth-video").currentTime = l.t;
-  $("btn-line-play").disabled = !takes[l.idx];
+  $("btn-line-play").disabled = !takes[l.idx] || takes[l.idx] === "SKIP";
   $("btn-line-next").disabled = !takes[l.idx];
+  $("btn-line-skip").style.display = l.orig ? "" : "none";
   $("rectime-fill").style.width = "0";
   status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
 }
@@ -654,14 +668,22 @@ $("btn-line-rec").onclick = async () => {
   if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
   if ($("rec-timer").checked) await recCountdown();
   const l = myLines[curLine];
-  recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + 1.2));
-  // Video läuft automatisch als Guide mit (leiser, Kopfhörer!)
+  // Adaptiver Puffer: nicht in die nächste Line reinlaufen (fixt das "Doppel-Szenen"-Gefühl bei Doakes 14→16)
+  const nextL = scene.lines[l.idx + 1];
+  const room = nextL ? Math.max(0.3, nextL.t - l.end) : 1.2;
+  recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + Math.min(1.2, room)));
+  // LIPPEN-SYNC-FIX: Video erst wirklich laufen lassen, DANN Aufnahme starten.
+  // (Vorher lief die Aufnahme schon, während das Video noch seekte → auf
+  //  langsameren PCs war die Stimme im Endergebnis verzögert.)
   const v = $("booth-video");
-  v.currentTime = l.t; v.volume = 0.55; v.play();
+  v.pause(); v.currentTime = l.t; v.volume = 0.55;
+  await new Promise(res => { const h = () => { v.removeEventListener("seeked", h); res(); }; v.addEventListener("seeked", h); });
   lineChunks = [];
   lineRec = new MediaRecorder(recStream(), { mimeType: pickMime() });
   lineRec.ondataavailable = e => { if (e.data.size) lineChunks.push(e.data); };
   lineRec.onstop = onLineRecorded;
+  await v.play();
+  await new Promise(res => { if (!v.paused && v.currentTime > l.t) return res(); const h = () => { v.removeEventListener("playing", h); res(); }; v.addEventListener("playing", h); });
   lineRec.start();
   SFX.rec();
   $("btn-line-rec").textContent = "⏹ Stopp";
@@ -712,19 +734,31 @@ async function onLineRecorded() {
 let previewSrc = null;
 $("btn-line-play").onclick = async () => {
   const l = myLines[curLine];
-  if (!takes[l.idx]) return;
+  if (!takes[l.idx] || takes[l.idx] === "SKIP") return;
   if (previewSrc) { try { previewSrc.stop(); } catch {} previewSrc = null; }
   const ctx = getCtx();
   const buf = await ctx.decodeAudioData(await toArrayBuffer(takes[l.idx]));
+  // Videobild läuft synchron mit (leise), kein Standbild mehr
+  const v = $("booth-video");
+  v.pause(); v.currentTime = l.t; v.volume = 0.35;
+  await v.play();
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.connect(buildChain(ctx, roleOf(myRole()), ctx.destination));
   src.start();
   previewSrc = src;
-  src.onended = () => { if (previewSrc === src) previewSrc = null; };
+  src.onended = () => { if (previewSrc === src) previewSrc = null; v.pause(); };
 };
 
 $("btn-line-next").onclick = () => {
+  SFX.ok();
+  curLine++;
+  sendProgress();
+  renderLine();
+};
+$("btn-line-skip").onclick = () => {
+  const l = myLines[curLine];
+  takes[l.idx] = "SKIP";              // Marker: diese Line behält das Original-Audio
   SFX.ok();
   curLine++;
   sendProgress();
@@ -745,7 +779,8 @@ function finishBooth() {
   SFX.done();
   show("scr-wait");
   renderBoothPlayers();
-  const items = myLines.map(l => ({ startAt: l.t, buf: takes[l.idx] })).filter(i => i.buf);
+  const items = myLines.filter(l => takes[l.idx] && takes[l.idx] !== "SKIP")
+    .map(l => ({ startAt: l.t, idx: l.idx, buf: takes[l.idx] }));
   if (isHost) collectTracks(myRole(), items);
   else hostConn.send({ t: "tracks", role: myRole(), items });
 }
@@ -840,6 +875,56 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTTT();
 });
 
+
+// ═════════════════════════════════════════════════════════════
+// WARTE-ARENA 2: Klick-Battle (10 Sekunden, alle Wartenden)
+// ═════════════════════════════════════════════════════════════
+let cbActive = false, cbClicks = 0, cbTimer = null;
+function cbStart() {
+  if (isHost) { broadcast({ t: "cbGo" }); cbRun(); }
+  else hostConn.send({ t: "cb", a: { k: "start" } });
+}
+function cbRun() {
+  cbActive = true; cbClicks = 0;
+  $("cb-btn").style.display = ""; $("btn-cb-start").style.display = "none";
+  $("cb-result").innerHTML = "";
+  let left = 10;
+  $("cb-info").textContent = "⚡ LOS! Klick was das Zeug hält — " + left + "s";
+  SFX.go();
+  clearInterval(cbTimer);
+  cbTimer = setInterval(() => {
+    left--;
+    $("cb-info").textContent = left > 0 ? "⚡ " + left + "s — KLICK KLICK KLICK!" : "Zeit um!";
+    if (left <= 0) {
+      clearInterval(cbTimer);
+      cbActive = false;
+      $("cb-btn").style.display = "none"; $("btn-cb-start").style.display = "";
+      if (isHost) cbScore(myId, cbClicks); else hostConn.send({ t: "cb", a: { k: "score", n: cbClicks } });
+    }
+  }, 1000);
+}
+const cbScores = new Map();
+function cbScore(pid, n) {
+  cbScores.set(pid, n);
+  clearTimeout(cbScore._t);
+  cbScore._t = setTimeout(() => {
+    const list = [...cbScores.entries()].sort((a, b) => b[1] - a[1]);
+    broadcast({ t: "cbResult", list });
+    cbShowResult(list);
+    cbScores.clear();
+  }, 1500);
+}
+function cbShowResult(list) {
+  $("cb-result").innerHTML = list.map(([pid, n], i) =>
+    `<div>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(nameOf(pid))}</b> — ${n} Klicks</div>`).join("");
+  $("cb-info").textContent = list.length ? "Ergebnis! Revanche?" : "Zwei Wartende, ein Button — wer klickt schneller?";
+  SFX.done();
+}
+document.addEventListener("DOMContentLoaded", () => {
+  $("btn-cb-start").onclick = cbStart;
+  $("cb-btn").onclick = () => { if (cbActive) { cbClicks++; $("cb-btn").textContent = "🔥 " + cbClicks; } };
+});
+
 // ═════════════════════════════════════════════════════════════
 // 8) HOST: Spuren einsammeln → Mix an alle
 // ═════════════════════════════════════════════════════════════
@@ -879,22 +964,28 @@ async function loadMix(data) {
     for (const item of track.items) {
       try {
         const ab = await toArrayBuffer(item.buf);
-        mixItems.push({ role: track.role, startAt: item.startAt, buffer: await ctx.decodeAudioData(ab) });
+        mixItems.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: await ctx.decodeAudioData(ab) });
         okCount++;
       } catch (e) { failCount++; console.warn("Spur kaputt:", track.role, e); }
     }
   }
   console.log("Mix geladen:", okCount, "Spuren ok,", failCount, "fehlgeschlagen");
   if (failCount) status("play-status", "⚠ " + failCount + " Spur(en) konnten nicht geladen werden — F12 → Console.", true);
-  // Nicht besetzte Rollen: Original-Stimmen aus dem Pack einsetzen
+  // Original-Stimmen für alle Lines, die KEIN Spieler eingesprochen hat
+  // (unbesetzte Rollen + übersprungene Lines)
   if (scene.lines) {
-    const played = new Set(data.map(t => t.role));
-    for (const l of scene.lines) {
+    const hasIdx = data.some(t => t.items.some(i => i.idx != null));
+    const coveredIdx = new Set();
+    const playedRoles = new Set(data.map(t => t.role));
+    data.forEach(t => t.items.forEach(i => { if (i.idx != null) coveredIdx.add(i.idx); }));
+    for (let i = 0; i < scene.lines.length; i++) {
+      const l = scene.lines[i];
       if (!l.orig) continue;
-      if (l.chars.some(c => played.has(c))) continue;   // mindestens ein Spieler spricht die Line
+      const covered = hasIdx ? coveredIdx.has(i) : l.chars.some(c => playedRoles.has(c));
+      if (covered) continue;
       try {
         const buf = await (await fetch(l.orig)).arrayBuffer();
-        mixItems.push({ role: null, startAt: l.t, buffer: await ctx.decodeAudioData(buf) });
+        mixItems.push({ role: null, startAt: l.t, lineIdx: i, buffer: await ctx.decodeAudioData(buf) });
       } catch { console.warn("Original fehlt:", l.orig); }
     }
   }
@@ -958,11 +1049,19 @@ async function playMix(saveFile) {
     const src = ctx.createBufferSource();
     src.buffer = item.buffer;
     src.connect(buildChain(ctx, role, master));
+    // Spur auf ihr Line-Fenster begrenzen → kein Reinlabern in die nächste Line
+    let maxDur = item.buffer.duration;
+    if (scene.lines && item.lineIdx != null) {
+      const l = scene.lines[item.lineIdx], nx = scene.lines[item.lineIdx + 1];
+      maxDur = Math.min(maxDur, ((nx ? nx.t : l.end + 0.8) - l.t) + 0.25);
+    }
     const when = t0 + item.startAt + off;
-    if (when >= ctx.currentTime) src.start(when);
-    else src.start(ctx.currentTime, ctx.currentTime - when);
+    if (when >= ctx.currentTime) src.start(when, 0, maxDur);
+    else src.start(ctx.currentTime, ctx.currentTime - when, Math.max(0.05, maxDur - (ctx.currentTime - when)));
     playNodes.push(src);
   }
+  // Videoende = ALLES stoppt → kein 1–2s-Nachlauf-Audio mehr
+  v.addEventListener("ended", () => { playNodes.forEach(n => { try { n.stop(); } catch {} }); }, { once: true });
 
   if (fileRec) v.addEventListener("ended", () => { if (fileRec.state !== "inactive") fileRec.stop(); }, { once: true });
 }
