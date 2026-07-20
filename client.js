@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.5";
+const APP_VERSION = "2.6";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -420,6 +420,7 @@ function handleMsg(msg, conn) {
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
+    case "rate": collectRating(conn.peer, msg.scores); break;
     case "premReady": { const p = players.find(p => p.id === conn.peer); if (p) p.prem = true; broadcastState(); renderPremState(); break; }
     case "cb":
       if (msg.a.k === "start") { broadcast({ t: "cbGo" }); cbRun(); }
@@ -439,6 +440,7 @@ function handleMsg(msg, conn) {
     case "mix": loadMix(msg.data); break;
     case "tttState": ttt = msg.ttt; renderTTT(); break;
     case "premGo": premStart(); break;
+    case "rateResult": showRateResult(msg.results); break;
     case "cbGo": cbRun(); break;
     case "cbResult": cbShowResult(msg.list); break;
     case "again": resetForNewRound(); break;
@@ -460,7 +462,9 @@ async function loadSceneList() {
 $("btn-load-scene").onclick = () => {
   const s = sceneList[$("scene-select").value];
   if (!s) return;
-  scene = s; localVideoBuf = null; videoBlobUrl = null;
+  scene = JSON.parse(JSON.stringify(s));       // Kopie, damit Blind-Flag das Original nicht verändert
+  scene.blind = $("blind-mode").checked;
+  localVideoBuf = null; videoBlobUrl = null;
   resetRoles();
   showScene(scene.videoUrl);
   broadcast({ t: "scene", scene });
@@ -547,6 +551,7 @@ function receiveVideoChunk(buf) {
 
 function showScene(src) {
   $("scene-card").style.display = "";
+  $("btn-roulette").style.display = isHost ? "" : "none";
   $("scene-title").textContent = scene.title;
   if (src) $("preview").src = src;
   renderRoles();
@@ -595,6 +600,18 @@ function pickRole(roleId) {
     broadcastState(); renderRoles();
   } else hostConn.send({ t: "pickRole", role: roleId });
 }
+
+
+$("btn-roulette").onclick = () => {
+  if (!isHost || !scene) return;
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+  const roleIds = scene.roles.map(r => r.id);
+  players.forEach(p => { p.role = null; p.ready = false; });
+  shuffled.slice(0, roleIds.length).forEach((p, i) => { p.role = roleIds[i]; });
+  broadcastState(); renderRoles();
+  status("lobby-status", "🎲 Rollen ausgewürfelt! Wer keine hat, ist Zuschauer. Jetzt alle „Bin bereit“.");
+  SFX.done();
+};
 
 $("btn-ready").onclick = async () => {
   const me = players.find(p => p.id === myId);
@@ -710,13 +727,13 @@ function renderLine() {
   $("booth-count").innerHTML = `${curLine + 1}/${myLines.length}<small>Voiceline</small>`;
   $("line-who").textContent = l.who + (l.chars.length > 1 ? " (zusammen!)" : "");
   $("line-text").textContent = l.text;
-  $("line-de").textContent = l.de ? "🇩🇪 " + l.de : "";
+  $("line-de").textContent = (l.de && !scene.blind) ? "🇩🇪 " + l.de : (scene.blind ? "🕶 Blind-Modus — improvisier!" : "");
   $("line-dur").textContent = "~" + Math.max(1, Math.round(l.end - l.t)) + " Sek.";
   $("booth-video").currentTime = l.t;
   $("btn-line-play").disabled = !takes[l.idx] || takes[l.idx] === "SKIP";
   $("btn-line-next").disabled = !takes[l.idx];
   const sk = $("btn-line-skip"); if (sk) sk.style.display = l.orig ? "" : "none";
-  const og = $("btn-line-orig"); if (og) og.style.display = l.orig ? "" : "none";
+  const og = $("btn-line-orig"); if (og) og.style.display = (l.orig && !scene.blind) ? "" : "none";
   $("rectime-fill").style.width = "0";
   status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
 }
@@ -1074,6 +1091,85 @@ document.addEventListener("DOMContentLoaded", () => {
   $("cb-btn").onclick = () => { if (cbActive) { cbClicks++; $("cb-btn").textContent = "🔥 " + cbClicks; } };
 });
 
+
+// ═════════════════════════════════════════════════════════════
+// BEWERTUNGS-SHOW: Nach der Premiere Sterne verteilen
+// ═════════════════════════════════════════════════════════════
+let pendingRate = false, myStars = {}, rateSent = false;
+const allRatings = new Map();   // Host: voterId → {targetId: stars}
+
+function showRateCard() {
+  const speakers = players.filter(p => p.role != null && p.id !== myId);
+  const anySpeakers = players.filter(p => p.role != null).length >= 2;
+  if (!anySpeakers) return;                      // Solo: keine Show
+  myStars = {}; rateSent = false;
+  $("rate-card").style.display = "";
+  $("rate-result").innerHTML = "";
+  $("btn-rate-submit").style.display = ""; 
+  $("btn-rate-force").style.display = "none";
+  if (!speakers.length) {                        // Ich bin einziger Sprecher → nur zuschauen
+    $("rate-rows").innerHTML = '<p class="sub">Du warst der einzige Sprecher — die anderen bewerten dich gerade… 👀</p>';
+    $("btn-rate-submit").style.display = "none";
+    sendRating({});
+    return;
+  }
+  $("rate-rows").innerHTML = speakers.map(p => `
+    <div class="raterow" data-p="${p.id}">
+      <span><b>${esc(p.name)}</b> <span class="tag">🎭 ${esc(scene.roles.find(r => r.id === p.role)?.name || "")}</span></span>
+      <span>${[1,2,3,4,5].map(n => `<button class="starbtn" data-n="${n}">★</button>`).join("")}</span>
+    </div>`).join("");
+  $("rate-rows").querySelectorAll(".raterow").forEach(row => {
+    row.querySelectorAll(".starbtn").forEach(b => b.onclick = () => {
+      const n = parseInt(b.dataset.n);
+      myStars[row.dataset.p] = n;
+      row.querySelectorAll(".starbtn").forEach(x => x.classList.toggle("on", parseInt(x.dataset.n) <= n));
+      $("btn-rate-submit").disabled = Object.keys(myStars).length < speakers.length;
+      SFX.click();
+    });
+  });
+  $("btn-rate-submit").disabled = true;
+}
+
+$("btn-rate-submit").onclick = () => {
+  if (rateSent) return;
+  rateSent = true;
+  $("btn-rate-submit").disabled = true;
+  $("btn-rate-submit").textContent = "✅ Abgeschickt — warte auf die anderen …";
+  sendRating(myStars);
+};
+function sendRating(scores) {
+  if (isHost) { collectRating(myId, scores); $("btn-rate-force").style.display = ""; }
+  else hostConn.send({ t: "rate", scores });
+}
+function collectRating(voterId, scores) {
+  allRatings.set(voterId, scores);
+  if (allRatings.size >= players.length) finishRating();
+}
+$("btn-rate-force").onclick = () => finishRating();
+function finishRating() {
+  if (!isHost) return;
+  const sums = {}, counts = {};
+  allRatings.forEach(scores => {
+    for (const [pid, n] of Object.entries(scores)) { sums[pid] = (sums[pid] || 0) + n; counts[pid] = (counts[pid] || 0) + 1; }
+  });
+  const results = Object.keys(sums).map(pid => ({ id: pid, name: nameOf(pid), avg: sums[pid] / counts[pid], votes: counts[pid] }))
+    .sort((a, b) => b.avg - a.avg);
+  broadcast({ t: "rateResult", results });
+  showRateResult(results);
+  allRatings.clear();
+}
+function showRateResult(results) {
+  $("btn-rate-submit").style.display = "none";
+  $("btn-rate-force").style.display = "none";
+  $("rate-rows").innerHTML = "";
+  $("rate-result").innerHTML = results.map((r, i) => `
+    <div class="raterow" style="${i === 0 ? "border-color:var(--amber);box-shadow:0 0 16px rgba(255,201,92,.25)" : ""}">
+      <span>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(r.name)}</b>${i === 0 ? ' <span class="tag" style="color:var(--amber)">Bester Synchronsprecher des Abends!</span>' : ""}</span>
+      <span style="color:var(--amber);font-weight:700">${r.avg.toFixed(1)} ★ <span class="tag">(${r.votes} Stimmen)</span></span>
+    </div>`).join("");
+  SFX.done();
+}
+
 // ═════════════════════════════════════════════════════════════
 // 8) HOST: Spuren einsammeln → Mix an alle
 // ═════════════════════════════════════════════════════════════
@@ -1173,6 +1269,7 @@ function renderPremState() {
 }
 
 function premStart() {
+  pendingRate = true;
   $("btn-replay").disabled = false;
   $("btn-download").disabled = false;
   $("btn-prem-start") && ($("btn-prem-start").style.display = "none");
@@ -1249,7 +1346,10 @@ async function playMix(saveFile) {
     playNodes.push(src);
   }
   // Videoende = ALLES stoppt → kein 1–2s-Nachlauf-Audio mehr
-  v.addEventListener("ended", () => { playNodes.forEach(n => { try { n.stop(); } catch {} }); }, { once: true });
+  v.addEventListener("ended", () => {
+    playNodes.forEach(n => { try { n.stop(); } catch {} });
+    if (pendingRate && !saveFile) { pendingRate = false; showRateCard(); }
+  }, { once: true });
 
   if (fileRec) v.addEventListener("ended", () => { if (fileRec.state !== "inactive") fileRec.stop(); }, { once: true });
 }
@@ -1332,7 +1432,7 @@ function attachPrompter(videoEl, promptEl, myRoleId) {
     promptEl.innerHTML =
       (cur ? `<div class="pline ${mine ? "mine" : ""}">
           ${av ? `<img src="${av}" alt="">` : ""}
-          <div class="ptext"><div class="pwho">${esc(cur.who)}${mine ? " — 🎙 DU!" : ""}</div><div class="pcap">${esc(cur.text)}</div>${cur.de ? `<div style="font-size:.85rem;color:var(--amber)">${esc(cur.de)}</div>` : ""}</div>
+          <div class="ptext"><div class="pwho">${esc(cur.who)}${mine ? " — 🎙 DU!" : ""}</div><div class="pcap">${esc(cur.text)}</div>${(cur.de && !scene.blind) ? `<div style="font-size:.85rem;color:var(--amber)">${esc(cur.de)}</div>` : ""}</div>
         </div>` : `<div class="pline"><div class="ptext"><div class="pwho">…</div><div class="pcap" style="color:var(--muted)">Ruhe im Studio</div></div></div>`) +
       (next ? `<div class="pnext">Gleich (${Math.max(0, next.t - t).toFixed(0)}s): <b>${esc(next.who)}</b> — ${esc(next.text)}</div>` : "");
   };
@@ -1352,6 +1452,9 @@ $("btn-back").onclick = () => {
 function resetForNewRound() {
   players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; p.prem = false; });
   mixItems = []; collected.clear(); takes = {};
+  pendingRate = false; rateSent = false; allRatings.clear();
+  $("rate-card").style.display = "none";
+  $("btn-rate-submit").textContent = "Bewertung abschicken";
   if (isHost) { ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null }; broadcast({ t: "tttState", ttt }); renderTTT(); }
   show("scr-lobby");
   if (isHost) broadcastState(); else { renderPlayers(); renderRoles(); }

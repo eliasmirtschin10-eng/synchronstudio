@@ -181,6 +181,10 @@
   }
   .tttcell:disabled{opacity:1;cursor:default}
   .tttcell:not(:disabled):hover{border-color:var(--amber)}
+
+  .raterow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#14141b;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .starbtn{font-size:1.3rem;padding:4px 8px;background:transparent;border:none;color:#3a3a46;cursor:pointer}
+  .starbtn.on{color:var(--amber);text-shadow:0 0 12px rgba(255,201,92,.5)}
 </style>
 </head>
 <body>
@@ -266,6 +270,10 @@
         <select id="scene-select" style="flex:1"></select>
         <button id="btn-load-scene">Laden</button>
       </div>
+      <label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-top:10px;font-size:.9rem;color:var(--muted)">
+        <input type="checkbox" id="blind-mode" style="accent-color:var(--amber);width:17px;height:17px">
+        🕶 Blind-Modus — keine Übersetzung, kein Original-Anhören: alle müssen improvisieren
+      </label>
       <p class="sub" style="margin-top:14px">… oder eigenes Video direkt vom PC (wird an alle übertragen):</p>
       <div class="row"><input type="file" id="file-video" accept="video/mp4,video/webm"></div>
       <div id="local-cfg" style="display:none;margin-top:16px">
@@ -288,6 +296,7 @@
       <div class="roles" id="role-list"></div>
       <div class="row" style="margin-top:16px">
         <button id="btn-mic-test">🎤 Mikro-Check (3 Sek. mit deinem Effekt)</button>
+        <button id="btn-roulette" style="display:none">🎲 Rollen-Roulette</button>
         <button class="primary" id="btn-ready">Bin bereit</button>
       </div>
       <p class="hint">Kopfhörer aufsetzen! Sonst nimmt dein Mikro den Video-Sound mit auf.</p>
@@ -397,6 +406,16 @@
         <button id="btn-back">Andere Szene</button>
       </div>
       <p class="status" id="play-status"></p>
+    </div>
+    <div class="card" id="rate-card" style="display:none">
+      <h2>⭐ Bewertungs-Show</h2>
+      <p class="sub">Gib jedem Sprecher 1–5 Sterne (dich selbst kannst du nicht bewerten).</p>
+      <div id="rate-rows" style="display:grid;gap:10px"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="primary" id="btn-rate-submit" disabled>Bewertung abschicken</button>
+        <button class="ghost" id="btn-rate-force" style="display:none">Ergebnis anzeigen (ohne Nachzügler)</button>
+      </div>
+      <div id="rate-result" style="margin-top:14px;display:grid;gap:6px"></div>
     </div>
   </section>
 
