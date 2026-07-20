@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.1";
+const APP_VERSION = "3.0";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -371,59 +371,6 @@ $("btn-join").onclick = () => {
 };
 
 
-
-// ═════════════════════════════════════════════════════════════
-// LOBBY-MUSIK — spielt nur in Lobby & Warte-Screens, nie ingame
-// ═════════════════════════════════════════════════════════════
-const lobbyAudio = new Audio("scenes/lobby_music.mp3");
-lobbyAudio.loop = true;
-let musicVol = 0.35, musicOn = true;
-try {
-  const mv = localStorage.getItem("ss_musicvol"); if (mv !== null) musicVol = parseFloat(mv);
-  const mo = localStorage.getItem("ss_musicon"); if (mo !== null) musicOn = mo === "1";
-} catch {}
-lobbyAudio.volume = musicVol;
-
-const MUSIC_SCREENS = new Set(["scr-mic", "scr-start", "scr-lobby", "scr-wait", "scr-final"]);
-function updateLobbyMusic() {
-  const active = document.querySelector(".screen.active")?.id;
-  const want = musicOn && MUSIC_SCREENS.has(active);
-  if (want) { lobbyAudio.play().catch(() => {}); }
-  else { lobbyAudio.pause(); }
-  const btn = $("music-toggle");
-  if (btn) btn.textContent = musicOn ? "🎵" : "🔇";
-  const sl = $("music-vol"); if (sl) sl.value = musicVol;
-}
-// show() um Musik-Update erweitern
-const _origShow = show;
-show = function(id) {
-  _origShow(id);
-  updateLobbyMusic();
-  // Ingame (Booth/Aufnahme) ruhig halten: keine Ablenkung
-  const calm = id === "scr-booth" || id === "scr-record";
-  const f = document.getElementById("floaties");
-  if (f) f.style.display = calm ? "none" : "";
-  document.body.classList.toggle("ingame", calm);
-};
-
-window.addEventListener("DOMContentLoaded", () => {
-  $("music-toggle").onclick = () => {
-    musicOn = !musicOn;
-    try { localStorage.setItem("ss_musicon", musicOn ? "1" : "0"); } catch {}
-    updateLobbyMusic();
-    SFX.click();
-  };
-  $("music-vol").oninput = e => {
-    musicVol = parseFloat(e.target.value);
-    lobbyAudio.volume = musicVol;
-    try { localStorage.setItem("ss_musicvol", musicVol); } catch {}
-    if (musicVol > 0 && !musicOn) { musicOn = true; updateLobbyMusic(); }
-  };
-  updateLobbyMusic();
-});
-// Autoplay-Freischaltung beim ersten Klick
-document.addEventListener("click", () => { if (musicOn) lobbyAudio.play().catch(() => {}); }, { once: true });
-
 // ═════════════════════════════════════════════════════════════
 // RAUM VERLASSEN — sauberer Reset ohne Seiten-Reload
 // ═════════════════════════════════════════════════════════════
@@ -441,7 +388,6 @@ function leaveRoom() {
   match = { rounds: 1, round: 1, totals: {}, autoRoulette: false };
   Object.keys(mgWins).forEach(k => delete mgWins[k]);
   $("host-settings").style.display = "none";
-  match.mode = "free";
   $("onair").classList.remove("live");
   $("host-scene").style.display = "none";
   $("host-start").style.display = "none";
@@ -465,10 +411,8 @@ function enterLobby(code) {
   $("leave-btn").style.display = "";
   if (isHost) {
     $("host-settings").style.display = "";
-    $("set-mode").onchange = hostSettingsChanged;
     $("set-rounds").onchange = hostSettingsChanged;
     $("set-roulette").onchange = hostSettingsChanged;
-    hostSettingsChanged();
   }
   renderSettingsView();
   SFX.ok();
@@ -525,11 +469,7 @@ function handleMsg(msg, conn) {
     case "scene": scene = msg.scene; videoBlobUrl = null; showScene(scene.videoUrl); break;
     case "settings": match.rounds = msg.rounds; match.round = msg.round; match.autoRoulette = msg.autoRoulette; renderSettingsView(msg); break;
     case "wins": Object.assign(mgWins, msg.wins); renderWins(); break;
-    case "nextRound":
-      match.round = msg.round; players = msg.players;
-      if (msg.scene) { scene = msg.scene; videoBlobUrl = null; backToLobby(true); showScene(scene.videoUrl); renderSettingsView(); status("lobby-status", "🎲 Runde " + match.round + ": neue Szene & Rollen! „Bin bereit“ drücken."); }
-      else startNewRound();
-      break;
+    case "nextRound": match.round = msg.round; players = msg.players; startNewRound(); break;
     case "matchEnd": showFinal(msg.list, msg.rounds); break;
     case "matchLobby": backToLobby(); break;
     case "videoMeta": startVideoReceive(msg); break;
@@ -695,7 +635,6 @@ function renderRoles() {
 }
 
 function pickRole(roleId) {
-  if (match.mode === "rounds") { status("lobby-status", "🎲 Im Match werden Rollen zufällig verteilt — du kannst nicht selbst wählen.", true); return; }
   if (isHost) {
     const taken = players.some(p => p.role === roleId && p.id !== myId);
     if (taken) return;
@@ -721,34 +660,26 @@ $("btn-roulette").onclick = () => {
 // ═════════════════════════════════════════════════════════════
 // MATCH-SYSTEM: Runden, Gesamtwertung, Finale
 // ═════════════════════════════════════════════════════════════
-let match = { mode: "free", rounds: 3, round: 1, totals: {}, autoRoulette: true };
+let match = { rounds: 1, round: 1, totals: {}, autoRoulette: false };
 const mgWins = {};   // Arena-Siege der Session
 
 function hostSettingsChanged() {
   if (!isHost) return;
-  match.mode = $("set-mode").value;
   match.rounds = parseInt($("set-rounds").value);
   match.autoRoulette = $("set-roulette").checked;
-  // Im Runden-Modus ist alles Zufall: Rollenwahl & Szenenwahl werden ausgeblendet
-  const rnd = match.mode === "rounds";
-  $("rounds-opts").style.display = rnd ? "" : "none";
-  $("host-scene").style.display = rnd ? "none" : "";
   broadcastSettings();
 }
 function broadcastSettings() {
-  broadcast({ t: "settings", mode: match.mode, rounds: match.rounds, round: match.round, autoRoulette: match.autoRoulette, blind: !!(scene && scene.blind) });
+  broadcast({ t: "settings", rounds: match.rounds, round: match.round, autoRoulette: match.autoRoulette, blind: !!(scene && scene.blind) });
   renderSettingsView();
 }
 function renderSettingsView(s) {
   const el = $("settings-view");
   if (!el) return;
-  const mode = s ? s.mode : match.mode;
   const rounds = s ? s.rounds : match.rounds, round = s ? s.round : match.round;
   const rl = s ? s.autoRoulette : match.autoRoulette;
   const bl = s ? s.blind : !!(scene && scene.blind);
-  el.innerHTML = mode === "rounds"
-    ? `🏆 <b>Match · Runde ${round}/${rounds}</b> · 🎲 Zufalls-Szenen &amp; -Rollen · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>')
-    : `🎮 <b>Freies Spiel</b> · Szene &amp; Rollen frei wählbar · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
+  el.innerHTML = `⚙ <b>Runde ${round}/${rounds}</b> · 🎲 Roulette: ${rl ? "an" : "aus"} · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(stellt der Host ein)</span>');
 }
 function renderWins() {
   const el = $("mg-wins");
@@ -779,22 +710,13 @@ $("btn-ready").onclick = async () => {
 
 function checkStartable() {
   if (!isHost) return;
-  if (match.mode === "rounds" && !scene) {
-    // Match noch nicht gestartet → Button startet das Match
-    $("btn-start").style.display = "";
-    $("btn-start").disabled = players.length < 1;
-    $("btn-start").textContent = "🎲 Match starten (" + match.rounds + " Runden)";
-    $("start-hint").textContent = "Zufalls-Szene & zufällige Rollen für alle. Los geht's, sobald du startest!";
-    return;
-  }
-  $("btn-start").textContent = "🔴 Session starten";
   const speakers = players.filter(p => p.role != null);
   const ok = speakers.length >= 1 && speakers.every(p => p.ready);
   const spectators = players.length - speakers.length;
   $("btn-start").disabled = !ok;
   $("start-hint").textContent = ok
-    ? "Los geht's! " + (spectators ? spectators + " Zuschauer gucken zu." : "Unbesetzte Rollen sprechen original.")
-    : "Warte, bis alle Sprecher „bereit“ sind …";
+    ? "Los geht's! " + (spectators ? spectators + " Zuschauer gucken zu. Unbesetzte Rollen sprechen original." : "Unbesetzte Rollen sprechen original.")
+    : "Warte, bis alle Sprecher „bereit“ sind … (wer keine Rolle nimmt, ist Zuschauer)";
 }
 
 
@@ -831,46 +753,10 @@ $("btn-mic-test").onclick = async () => {
 // ═════════════════════════════════════════════════════════════
 // 5) SESSION-START (Host)
 // ═════════════════════════════════════════════════════════════
-
-// Im Runden-Modus: Zufalls-Szene laden + Rollen würfeln (Host)
-async function pickRandomScene() {
-  const playable = sceneList.filter(s => s.lines && s.lines.length && s.id !== "testplace");
-  const s = playable[Math.floor(Math.random() * playable.length)];
-  scene = JSON.parse(JSON.stringify(s));
-  scene.blind = $("blind-mode") ? $("blind-mode").checked : false;
-  localVideoBuf = null; videoBlobUrl = null;
-  rouletteRoles();
-  broadcast({ t: "scene", scene });
-  broadcastSettings();
-  broadcastState();
-}
-function rouletteRoles() {
-  const shuffled = [...players].sort(() => Math.random() - 0.5);
-  const roleIds = scene.roles.map(r => r.id);
-  players.forEach(p => { p.role = null; p.ready = false; });
-  shuffled.slice(0, roleIds.length).forEach((p, i) => { p.role = roleIds[i]; });
-}
-
-$("btn-start").onclick = async () => {
-  if (match.mode === "rounds" && !scene) {
-    // Match-Kickoff: Zufalls-Szene laden, dann warten auf Bereit
-    await pickRandomScene();
-    status("lobby-status", "🎲 Runde 1: Szene &amp; Rollen ausgewürfelt! Alle „Bin bereit“ drücken.");
-    $("btn-start").style.display = "none";
-    $("btn-go-round").style.display = "";
-    return;
-  }
-  startSession();
-};
-$("btn-go-round").onclick = () => startSession();
-function startSession() {
-  const speakers = players.filter(p => p.role != null);
-  if (!speakers.length || !speakers.every(p => p.ready)) {
-    status("lobby-status", "Es müssen erst alle Sprecher „bereit“ sein!", true); SFX.err(); return;
-  }
+$("btn-start").onclick = () => {
   if (scene.lines?.length) { broadcast({ t: "goLines" }); startBooth(); }
   else { broadcast({ t: "go" }); startRealtime(); }
-}
+};
 
 // ═════════════════════════════════════════════════════════════
 // 6) LINE-BOOTH — Zeile für Zeile, unendlich Versuche
@@ -1308,8 +1194,7 @@ function showRateCard() {
   const speakers = players.filter(p => p.role != null && p.id !== myId);
   const anySpeakers = players.filter(p => p.role != null).length >= 2;
   if (!anySpeakers) return;                      // Solo: keine Show
-  myStars = {}; rateSent = false; ratingDone = false; allRatings.clear();
-  const rp = $("rate-progress"); if (rp) rp.textContent = "";
+  myStars = {}; rateSent = false;
   $("rate-card").style.display = "";
   $("rate-result").innerHTML = "";
   $("btn-rate-submit").style.display = ""; 
@@ -1344,36 +1229,17 @@ $("btn-rate-submit").onclick = () => {
   $("btn-rate-submit").textContent = "✅ Abgeschickt — warte auf die anderen …";
   sendRating(myStars);
 };
-let rateForceTimer = null;
 function sendRating(scores) {
-  if (isHost) {
-    collectRating(myId, scores);
-    clearTimeout(rateForceTimer);
-    rateForceTimer = setTimeout(() => {
-      if (allRatings.size < players.length) $("btn-rate-force").style.display = "";
-    }, 25000);   // Notfall-Button erst nach 25s, falls jemand hängt
-  } else hostConn.send({ t: "rate", scores });
+  if (isHost) { collectRating(myId, scores); $("btn-rate-force").style.display = ""; }
+  else hostConn.send({ t: "rate", scores });
 }
 function collectRating(voterId, scores) {
   allRatings.set(voterId, scores);
-  updateRateProgress();
-  if (allRatings.size >= players.length) finishRating();   // wirklich ALLE
+  if (allRatings.size >= players.length) finishRating();
 }
-function updateRateProgress() {
-  if (!isHost) return;
-  const have = allRatings.size, total = players.length;
-  const el = $("rate-progress");
-  if (el) el.textContent = "🗳 " + have + "/" + total + " haben abgestimmt" + (have < total ? " …" : " — alle fertig!");
-  // Force-Button erst NACH langem Warten anbieten, nicht sofort
-  const btn = $("btn-rate-force");
-  if (have >= total) btn.style.display = "none";
-}
-$("btn-rate-force").onclick = () => { if (confirm("Wirklich ohne die fehlenden Stimmen weiter?")) finishRating(); };
-let ratingDone = false;
+$("btn-rate-force").onclick = () => finishRating();
 function finishRating() {
-  if (!isHost || ratingDone) return;
-  ratingDone = true;
-  clearTimeout(rateForceTimer);
+  if (!isHost) return;
   const sums = {}, counts = {};
   allRatings.forEach(scores => {
     for (const [pid, n] of Object.entries(scores)) { sums[pid] = (sums[pid] || 0) + n; counts[pid] = (counts[pid] || 0) + 1; }
@@ -1391,19 +1257,16 @@ function finishRating() {
   btn.textContent = match.round < match.rounds ? ("▶ Nächste Runde (" + (match.round + 1) + "/" + match.rounds + ")") : "🏁 Finale anzeigen!";
 }
 
-$("btn-next-round").onclick = async () => {
+$("btn-next-round").onclick = () => {
   if (!isHost) return;
   $("btn-next-round").style.display = "none";
   if (match.round < match.rounds) {
     match.round++;
-    if (match.mode === "rounds") {
-      // Neue Zufalls-Szene + neue Zufalls-Rollen, zurück in die Lobby zum Bereitmachen
-      backToLobby(true);
-      await pickRandomScene();
-      status("lobby-status", "🎲 Runde " + match.round + "/" + match.rounds + ": neue Szene &amp; Rollen! Alle „Bin bereit“.");
-      $("btn-go-round").style.display = "";
-      broadcast({ t: "nextRound", round: match.round, players, scene });
-      return;
+    if (match.autoRoulette && scene) {
+      const shuffled = [...players].sort(() => Math.random() - 0.5);
+      const roleIds = scene.roles.map(r => r.id);
+      players.forEach(p => { p.role = null; });
+      shuffled.slice(0, roleIds.length).forEach((p, i) => { p.role = roleIds[i]; });
     }
     broadcast({ t: "nextRound", round: match.round, players });
     startNewRound();
@@ -1465,20 +1328,11 @@ $("btn-back-lobby").onclick = () => {
   broadcast({ t: "matchLobby" });
   backToLobby();
 };
-function backToLobby(keepMatch) {
-  if (!keepMatch) { match.round = 1; match.totals = {}; }
-  players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; p.prem = false; });
-  mixItems = []; collected.clear(); takes = {};
-  pendingRate = false; rateSent = false; ratingDone = false; allRatings.clear(); myStars = {};
-  $("rate-card").style.display = "none"; $("rate-rows").innerHTML = ""; $("rate-result").innerHTML = "";
-  $("btn-next-round").style.display = "none"; $("btn-rate-submit").disabled = true;
-  $("btn-rate-submit").textContent = "Bewertung abschicken";
-  show("scr-lobby");
-  $("leave-btn").style.display = "";
-  if (isHost) { broadcastState(); }
+function backToLobby() {
+  match.round = 1; match.totals = {};
+  resetForNewRound();
   renderSettingsView();
-  updateLobbyMusic();
-  if (!keepMatch) status("lobby-status", "🏠 Zurück in der Lobby!");
+  status("lobby-status", "🏠 Zurück in der Lobby — Host kann eine neue Szene oder ein neues Match starten!");
 }
 function showRateResult(results) {
   $("btn-rate-submit").style.display = "none";
