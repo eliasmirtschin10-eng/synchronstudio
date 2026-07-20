@@ -1037,6 +1037,99 @@
     ]
   },
   {
+    "id": "backrooms",
+    "title": "Backrooms — Clark & Dr. Mary Kline (2 Rollen)",
+    "videoUrl": "scenes/backrooms.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Clark",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Dr. Mary Kline",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 4.55,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "Oder muss ich dann zuhause Windeln wechseln, weil du zum allerersten Mal in deinem Leben richtig arbeitest?",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 4.58,
+        "end": 5.2,
+        "chars": [
+          2
+        ],
+        "who": "Dr. Mary Kline",
+        "text": "Jetzt bist du grausam...",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 5.25,
+        "end": 7,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "Ich bin ehrlich...",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 7.06,
+        "end": 9.3,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "Das ist es doch... was du immer wolltest!",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 10.04,
+        "end": 12.59,
+        "chars": [
+          2
+        ],
+        "who": "Dr. Mary Kline",
+        "text": "Nur weil du kein Architekt geworden bist, heißt das nicht...",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 12.6,
+        "end": 15.02,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "Ich bin ein verfickter Architekt!",
+        "de": "Original ist Deutsch"
+      },
+      {
+        "t": 15.16,
+        "end": 22.07,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "Ich verkauf doch nur beschissene Möbel, weil jemand seinen fetten faulen Arsch nicht hoch bekommt!",
+        "de": "Original ist Deutsch"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
