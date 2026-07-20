@@ -181,11 +181,44 @@
 
   <header>
     <div class="logo"><em>Synchron</em>studio<span>privates Dubbing-Game</span></div>
-    <div class="onair" id="onair">On Air</div>
+    <div class="row" style="gap:14px">
+      <button class="ghost" id="btn-mic-settings" title="Mikrofon-Einstellungen" style="font-size:1.1rem">🎚</button>
+      <div class="onair" id="onair">On Air</div>
+    </div>
   </header>
 
+  <!-- MIKROFON-SETUP (Pflicht beim Reinkommen) -->
+  <section class="screen active" id="scr-mic">
+    <div class="card">
+      <h2>🎚 Erst mal: Mikro einstellen</h2>
+      <p class="sub">Ohne gutes Mikro klingt die beste Synchro kacke. Sprich rein und schau, ob die Bars ausschlagen.</p>
+      <canvas class="viz" id="mic-viz"></canvas>
+      <div style="display:grid;gap:14px;margin-top:14px">
+        <div>
+          <label class="small">Mikrofon</label>
+          <select id="mic-device" style="width:100%"></select>
+        </div>
+        <div class="row" style="gap:18px">
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="mic-ns" checked style="accent-color:var(--amber);width:18px;height:18px"> Rauschunterdrückung</label>
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="mic-ec" checked style="accent-color:var(--amber);width:18px;height:18px"> Echo-Unterdrückung</label>
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="mic-agc" checked style="accent-color:var(--amber);width:18px;height:18px"> Auto-Lautstärke</label>
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="mic-lowcut" checked style="accent-color:var(--amber);width:18px;height:18px"> Brumm-Filter (Tiefen-Cut)</label>
+        </div>
+        <div>
+          <label class="small">Aufnahme-Lautstärke (Gain): <span id="mic-gain-val">100%</span></label>
+          <input type="range" id="mic-gain" min="0.4" max="2.6" step="0.1" value="1" style="width:100%;accent-color:var(--amber)">
+        </div>
+      </div>
+      <div class="row" style="margin-top:18px">
+        <button class="big" id="btn-mic-record">🎤 Test aufnehmen (3 Sek.)</button>
+        <button class="big primary" id="btn-mic-done" disabled>✅ Klingt gut, weiter</button>
+      </div>
+      <p class="status" id="mic-status">Klick auf „Test aufnehmen“, um dein Mikro freizugeben.</p>
+    </div>
+  </section>
+
   <!-- START -->
-  <section class="screen active" id="scr-start">
+  <section class="screen" id="scr-start">
     <div class="card">
       <h2>Wer spricht?</h2>
       <div class="row"><input type="text" id="in-name" placeholder="Dein Name" maxlength="16" style="flex:1"></div>
@@ -265,6 +298,7 @@
       <div class="lineplate">
         <div class="lwho" id="line-who">—</div>
         <div class="lcap" id="line-text">—</div>
+        <div class="lde" id="line-de" style="margin-top:8px;font-size:1rem;color:var(--amber)"></div>
         <div class="ldur" id="line-dur"></div>
       </div>
 

@@ -63,6 +63,124 @@ const SFX = (() => {
 document.addEventListener("click", e => { if (e.target.closest("button:not(:disabled)")) SFX.click(); });
 
 // ═════════════════════════════════════════════════════════════
+// MIKROFON — Einstellungen + Processing-Graph
+// Aufnahmen laufen durch: Quelle → Brumm-Filter → Gain → recDest
+// ═════════════════════════════════════════════════════════════
+const micSettings = { deviceId: null, ns: true, ec: true, agc: true, lowcut: true, gain: 1 };
+let micSrcNode = null, micHP = null, micGain = null, recDest = null;
+let vizAn = null, vizRAF = null;
+let micReturnScreen = "scr-start";
+
+async function buildMic() {
+  try {
+    if (micStream) micStream.getTracks().forEach(t => t.stop());
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: {
+      deviceId: micSettings.deviceId ? { exact: micSettings.deviceId } : undefined,
+      echoCancellation: micSettings.ec,
+      noiseSuppression: micSettings.ns,
+      autoGainControl: micSettings.agc
+    }});
+    const ctx = getCtx();
+    if (!recDest) {
+      recDest = ctx.createMediaStreamDestination();
+      micHP = ctx.createBiquadFilter(); micHP.type = "highpass";
+      micGain = ctx.createGain();
+      vizAn = ctx.createAnalyser(); vizAn.fftSize = 256;
+      micHP.connect(micGain); micGain.connect(recDest); micGain.connect(vizAn);
+    }
+    if (micSrcNode) micSrcNode.disconnect();
+    micSrcNode = ctx.createMediaStreamSource(micStream);
+    micSrcNode.connect(micHP);
+    applyMicTuning();
+    return true;
+  } catch (e) {
+    status("mic-status", "Kein Mikro-Zugriff — im Browser oben links erlauben!", true);
+    SFX.err();
+    return false;
+  }
+}
+function applyMicTuning() {
+  if (!micHP) return;
+  micHP.frequency.value = micSettings.lowcut ? 90 : 5;
+  micGain.gain.value = micSettings.gain;
+}
+function recStream() { return recDest.stream; }
+async function ensureMic() { return micStream ? true : buildMic(); }
+
+async function populateDevices() {
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "audioinput");
+    $("mic-device").innerHTML = devs.map(d => `<option value="${d.deviceId}">${esc(d.label || "Mikrofon")}</option>`).join("");
+    if (micSettings.deviceId) $("mic-device").value = micSettings.deviceId;
+  } catch {}
+}
+
+function startVizOn(canvasId) {
+  const canvas = $(canvasId), g = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const data = new Uint8Array(vizAn.frequencyBinCount);
+  cancelAnimationFrame(vizRAF);
+  (function draw() {
+    vizRAF = requestAnimationFrame(draw);
+    const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+    if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
+    g.clearRect(0, 0, W, H);
+    vizAn.getByteFrequencyData(data);
+    const bars = 48, bw = W / bars;
+    for (let i = 0; i < bars; i++) {
+      const v = data[Math.floor(i * data.length / bars / 1.6)] / 255;
+      const h = Math.max(2 * dpr, v * H * 0.95);
+      const grad = g.createLinearGradient(0, H, 0, H - h);
+      grad.addColorStop(0, "#ffc95c"); grad.addColorStop(0.6, "#ff4d55"); grad.addColorStop(1, "#c84bff");
+      g.fillStyle = grad;
+      g.fillRect(i * bw + bw * 0.18, H - h, bw * 0.64, h);
+    }
+  })();
+}
+
+// Setup-Screen
+async function initMicScreen() {
+  const ok = await buildMic();
+  if (!ok) return;
+  await populateDevices();
+  startVizOn("mic-viz");
+  $("btn-mic-done").disabled = false;
+  status("mic-status", "Sprich rein — die Bars sollen ausschlagen. Dann Test aufnehmen!");
+}
+$("btn-mic-record").onclick = async () => {
+  if (!micStream) { await initMicScreen(); if (!micStream) return; }
+  status("mic-status", "🎤 Sprich jetzt 3 Sekunden …");
+  const rec = new MediaRecorder(recStream(), { mimeType: pickMime() });
+  const chunks = [];
+  rec.ondataavailable = e => chunks.push(e.data);
+  rec.onstop = async () => {
+    status("mic-status", "So klingst du in der Aufnahme:");
+    const ctx = getCtx();
+    const buf = await ctx.decodeAudioData(await new Blob(chunks).arrayBuffer());
+    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination); src.start();
+    src.onended = () => { status("mic-status", "Passt? Dann weiter — sonst Regler anpassen und nochmal testen."); $("btn-mic-done").disabled = false; };
+  };
+  rec.start(); SFX.rec();
+  setTimeout(() => { rec.stop(); SFX.stop(); }, 3000);
+};
+$("btn-mic-done").onclick = () => { cancelAnimationFrame(vizRAF); show(micReturnScreen); SFX.ok(); };
+$("btn-mic-settings").onclick = () => {
+  micReturnScreen = document.querySelector(".screen.active")?.id || "scr-start";
+  if (micReturnScreen === "scr-mic") return;
+  show("scr-mic");
+  initMicScreen();
+};
+$("mic-device").onchange = e => { micSettings.deviceId = e.target.value; buildMic(); };
+$("mic-ns").onchange = e => { micSettings.ns = e.target.checked; buildMic(); };
+$("mic-ec").onchange = e => { micSettings.ec = e.target.checked; buildMic(); };
+$("mic-agc").onchange = e => { micSettings.agc = e.target.checked; buildMic(); };
+$("mic-lowcut").onchange = e => { micSettings.lowcut = e.target.checked; applyMicTuning(); };
+$("mic-gain").oninput = e => { micSettings.gain = parseFloat(e.target.value); $("mic-gain-val").textContent = Math.round(micSettings.gain * 100) + "%"; applyMicTuning(); };
+// Beim ersten Klick irgendwo den Setup starten (AudioContext braucht eine Geste)
+document.addEventListener("click", function once() { if (document.querySelector("#scr-mic.active") && !micStream) initMicScreen(); }, { once: true });
+
+
+// ═════════════════════════════════════════════════════════════
 // 1) RAUM ERSTELLEN / BEITRETEN
 // ═════════════════════════════════════════════════════════════
 $("btn-create").onclick = () => {
@@ -333,17 +451,7 @@ function checkStartable() {
   $("start-hint").textContent = ok ? "Alle bereit — los geht's!" : "Warte, bis alle eine Rolle haben und „bereit“ sind …";
 }
 
-async function ensureMic() {
-  if (micStream) return true;
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-    return true;
-  } catch {
-    status("lobby-status", "Kein Mikro-Zugriff. In den Browser-Einstellungen erlauben!", true);
-    SFX.err();
-    return false;
-  }
-}
+
 
 function pickMime() {
   for (const m of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"])
@@ -354,7 +462,7 @@ function pickMime() {
 $("btn-mic-test").onclick = async () => {
   if (!(await ensureMic())) return;
   status("lobby-status", "🎤 Sprich jetzt 3 Sekunden …");
-  const rec = new MediaRecorder(micStream, { mimeType: pickMime() });
+  const rec = new MediaRecorder(recStream(), { mimeType: pickMime() });
   const chunks = [];
   rec.ondataavailable = e => chunks.push(e.data);
   rec.onstop = async () => {
@@ -387,7 +495,7 @@ $("btn-start").onclick = () => {
 // ═════════════════════════════════════════════════════════════
 let myLines = [], curLine = 0, takes = {};   // takes: lineIdx → ArrayBuffer
 let lineRec = null, lineChunks = [], recTimer = null, recStartT = 0, recMax = 0;
-let vizSrc = null, vizAn = null, vizRAF = null;
+
 
 function myRole() { return players.find(p => p.id === myId)?.role; }
 function roleOf(id) { return scene.roles.find(r => r.id === id); }
@@ -406,7 +514,7 @@ function startBooth() {
   show("scr-booth");
   $("onair").classList.add("live");
   SFX.go();
-  startViz();
+  startVizOn("viz");
   renderLine();
 }
 
@@ -416,6 +524,7 @@ function renderLine() {
   $("booth-count").innerHTML = `${curLine + 1}/${myLines.length}<small>Voiceline</small>`;
   $("line-who").textContent = l.who + (l.chars.length > 1 ? " (zusammen!)" : "");
   $("line-text").textContent = l.text;
+  $("line-de").textContent = l.de ? "🇩🇪 " + l.de : "";
   $("line-dur").textContent = "~" + Math.max(1, Math.round(l.end - l.t)) + " Sek.";
   $("booth-video").currentTime = l.t;
   $("btn-line-play").disabled = !takes[l.idx];
@@ -439,8 +548,11 @@ $("btn-line-rec").onclick = () => {
   if (lineRec && lineRec.state === "recording") { stopLineRec(); return; }
   const l = myLines[curLine];
   recMax = Math.min(20, Math.max(2.5, (l.end - l.t) + 1.2));
+  // Video läuft automatisch als Guide mit (leiser, Kopfhörer!)
+  const v = $("booth-video");
+  v.currentTime = l.t; v.volume = 0.55; v.play();
   lineChunks = [];
-  lineRec = new MediaRecorder(micStream, { mimeType: pickMime() });
+  lineRec = new MediaRecorder(recStream(), { mimeType: pickMime() });
   lineRec.ondataavailable = e => { if (e.data.size) lineChunks.push(e.data); };
   lineRec.onstop = onLineRecorded;
   lineRec.start();
@@ -459,6 +571,7 @@ $("btn-line-rec").onclick = () => {
 
 function stopLineRec() {
   clearInterval(recTimer);
+  $("booth-video").pause();
   if (lineRec && lineRec.state === "recording") lineRec.stop();
   $("btn-line-rec").textContent = "⏺ Nochmal aufnehmen";
   $("btn-line-rec").classList.remove("recording");
@@ -503,37 +616,11 @@ function finishBooth() {
   cancelAnimationFrame(vizRAF);
   $("onair").classList.remove("live");
   SFX.done();
+  show("scr-wait");
+  renderBoothPlayers();
   const items = myLines.map(l => ({ startAt: l.t, buf: takes[l.idx] })).filter(i => i.buf);
   if (isHost) collectTracks(myRole(), items);
   else hostConn.send({ t: "tracks", role: myRole(), items });
-  show("scr-wait");
-  renderBoothPlayers();
-}
-
-// ── Visualizer (VU-Bars) ─────────────────────────────────────
-function startViz() {
-  const ctx = getCtx();
-  if (!vizSrc) { vizSrc = ctx.createMediaStreamSource(micStream); vizAn = ctx.createAnalyser(); vizAn.fftSize = 256; vizSrc.connect(vizAn); }
-  const canvas = $("viz"), g = canvas.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  const data = new Uint8Array(vizAn.frequencyBinCount);
-  cancelAnimationFrame(vizRAF);
-  (function draw() {
-    vizRAF = requestAnimationFrame(draw);
-    const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
-    if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
-    g.clearRect(0, 0, W, H);
-    vizAn.getByteFrequencyData(data);
-    const bars = 48, bw = W / bars;
-    for (let i = 0; i < bars; i++) {
-      const v = data[Math.floor(i * data.length / bars / 1.6)] / 255;
-      const h = Math.max(2 * dpr, v * H * 0.95);
-      const grad = g.createLinearGradient(0, H, 0, H - h);
-      grad.addColorStop(0, "#ffc95c"); grad.addColorStop(0.6, "#ff4d55"); grad.addColorStop(1, "#c84bff");
-      g.fillStyle = grad;
-      g.fillRect(i * bw + bw * 0.18, H - h, bw * 0.64, h);
-    }
-  })();
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -551,7 +638,7 @@ async function startRealtime() {
   await countdown();
   $("onair").classList.add("live");
   rtChunks = [];
-  rtRecorder = new MediaRecorder(micStream, { mimeType: pickMime() });
+  rtRecorder = new MediaRecorder(recStream(), { mimeType: pickMime() });
   rtRecorder.ondataavailable = e => { if (e.data.size) rtChunks.push(e.data); };
   rtRecorder.onstop = async () => {
     $("onair").classList.remove("live");
@@ -611,6 +698,18 @@ async function loadMix(data) {
       catch { console.warn("Spur kaputt:", track.role); }
     }
   }
+  // Nicht besetzte Rollen: Original-Stimmen aus dem Pack einsetzen
+  if (scene.lines) {
+    const played = new Set(data.map(t => t.role));
+    for (const l of scene.lines) {
+      if (!l.orig) continue;
+      if (l.chars.some(c => played.has(c))) continue;   // mindestens ein Spieler spricht die Line
+      try {
+        const buf = await (await fetch(l.orig)).arrayBuffer();
+        mixItems.push({ role: null, startAt: l.t, buffer: await ctx.decodeAudioData(buf) });
+      } catch { console.warn("Original fehlt:", l.orig); }
+    }
+  }
   $("play-video").src = videoBlobUrl || scene.videoUrl;
   attachPrompter($("play-video"), $("play-prompter"), null);
   status("play-status", "Bereit! 🍿");
@@ -667,7 +766,7 @@ async function playMix(saveFile) {
   const off = syncOffsetMs / 1000;
 
   for (const item of mixItems) {
-    const role = roleOf(item.role) || { pan: 0, effect: "none", gain: 1 };
+    const role = item.role != null ? (roleOf(item.role) || { pan: 0, effect: "none", gain: 1 }) : { pan: 0, effect: "none", gain: 1 };
     const src = ctx.createBufferSource();
     src.buffer = item.buffer;
     src.connect(buildChain(ctx, role, master));
@@ -758,7 +857,7 @@ function attachPrompter(videoEl, promptEl, myRoleId) {
     promptEl.innerHTML =
       (cur ? `<div class="pline ${mine ? "mine" : ""}">
           ${av ? `<img src="${av}" alt="">` : ""}
-          <div class="ptext"><div class="pwho">${esc(cur.who)}${mine ? " — 🎙 DU!" : ""}</div><div class="pcap">${esc(cur.text)}</div></div>
+          <div class="ptext"><div class="pwho">${esc(cur.who)}${mine ? " — 🎙 DU!" : ""}</div><div class="pcap">${esc(cur.text)}</div>${cur.de ? `<div style="font-size:.85rem;color:var(--amber)">${esc(cur.de)}</div>` : ""}</div>
         </div>` : `<div class="pline"><div class="ptext"><div class="pwho">…</div><div class="pcap" style="color:var(--muted)">Ruhe im Studio</div></div></div>`) +
       (next ? `<div class="pnext">Gleich (${Math.max(0, next.t - t).toFixed(0)}s): <b>${esc(next.who)}</b> — ${esc(next.text)}</div>` : "");
   };
