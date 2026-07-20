@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "1.7";
+const APP_VERSION = "1.9";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -18,9 +18,12 @@ const PEER_PREFIX = "syncstudio-emvw-";
 // ║     credential) — fertig. 50 GB/Monat gratis, für Audio massig.   ║
 // ╚══════════════════════════════════════════════════════════════════╝
 const MY_TURN = [
-  // ▼▼ DIESE 2 ZEILEN durch deine Metered-Daten ersetzen ▼▼
-  { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
-  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+  // Metered-Account "synchronstudio" — exakt aus dem Dashboard (global.relay!)
+  { urls: "stun:stun.relay.metered.ca:80" },
+  { urls: "turn:global.relay.metered.ca:80",                 username: "784a2cacd45f00da0669d578", credential: "ix7IinZzU+ItucbO" },
+  { urls: "turn:global.relay.metered.ca:80?transport=tcp",   username: "784a2cacd45f00da0669d578", credential: "ix7IinZzU+ItucbO" },
+  { urls: "turn:global.relay.metered.ca:443",                username: "784a2cacd45f00da0669d578", credential: "ix7IinZzU+ItucbO" },
+  { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "784a2cacd45f00da0669d578", credential: "ix7IinZzU+ItucbO" },
 ];
 const PEER_CONFIG = { config: { iceServers: [
   { urls: "stun:stun.l.google.com:19302" },
