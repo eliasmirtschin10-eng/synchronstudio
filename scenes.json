@@ -774,6 +774,269 @@
     ]
   },
   {
+    "id": "irobot_canyou",
+    "title": "I, Robot — Can You? (2 Rollen)",
+    "videoUrl": "scenes/irobot.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Will Smith",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Sonny (Roboter)",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 1.71,
+        "end": 4.45,
+        "chars": [
+          1
+        ],
+        "who": "Will Smith",
+        "text": "Can a robot write a symphony?",
+        "de": "Kann ein Roboter eine Symphonie schreiben?",
+        "orig": "scenes/irobot/lines/01.mp3"
+      },
+      {
+        "t": 4.45,
+        "end": 9.0,
+        "chars": [
+          1
+        ],
+        "who": "Will Smith",
+        "text": "Can a robot turn a canvas, into a-a beautiful masterpiece?",
+        "de": "Kann ein Roboter eine Leinwand in ein wunderschönes Meisterwerk verwandeln?",
+        "orig": "scenes/irobot/lines/02.mp3"
+      },
+      {
+        "t": 9.0,
+        "end": 12.42,
+        "chars": [
+          2
+        ],
+        "who": "Sonny",
+        "text": "Can you?",
+        "de": "Kannst du es?",
+        "orig": "scenes/irobot/lines/03.mp3"
+      },
+      {
+        "t": 12.42,
+        "end": 14.63,
+        "chars": [
+          1
+        ],
+        "who": "Will Smith",
+        "text": "*sigh*",
+        "de": "*seufz*",
+        "orig": "scenes/irobot/lines/04.mp3"
+      }
+    ]
+  },
+  {
+    "id": "velocidad",
+    "title": "Velocidad Necesito Esto — Speed-Meme, Spanisch! (3 Rollen)",
+    "videoUrl": "scenes/velocidad.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Velocidad (Speed)",
+        "pan": -0.4,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Niño",
+        "pan": 0.3,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Espectador",
+        "pan": 0.6,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 2.36,
+        "end": 3.42,
+        "chars": [
+          1
+        ],
+        "who": "Velocidad",
+        "text": "GG bro... GG",
+        "de": "GG Bro… GG",
+        "orig": "scenes/velocidad/lines/01.mp3"
+      },
+      {
+        "t": 3.42,
+        "end": 9.41,
+        "chars": [
+          2
+        ],
+        "who": "Niño",
+        "text": "Oh Dios mio voy a perder",
+        "de": "Oh mein Gott, ich werde verlieren",
+        "orig": "scenes/velocidad/lines/02.mp3"
+      },
+      {
+        "t": 9.41,
+        "end": 12.14,
+        "chars": [
+          2
+        ],
+        "who": "Niño",
+        "text": "AaAaahAhh",
+        "de": "AaAaahAhh",
+        "orig": "scenes/velocidad/lines/03.mp3"
+      },
+      {
+        "t": 12.14,
+        "end": 15.89,
+        "chars": [
+          2
+        ],
+        "who": "Niño",
+        "text": "Velocidad necesito esto",
+        "de": "Speed, ich brauche das",
+        "orig": "scenes/velocidad/lines/04.mp3"
+      },
+      {
+        "t": 15.89,
+        "end": 21.28,
+        "chars": [
+          2
+        ],
+        "who": "Niño",
+        "text": "Mi madre esta sin hogar",
+        "de": "Meine Mutter ist obdachlos",
+        "orig": "scenes/velocidad/lines/05.mp3"
+      },
+      {
+        "t": 21.28,
+        "end": 24.52,
+        "chars": [
+          2
+        ],
+        "who": "Niño",
+        "text": "Y vivo con mi padre quiero ayudarla",
+        "de": "Und ich lebe bei meinem Vater, ich will ihr helfen",
+        "orig": "scenes/velocidad/lines/06.mp3"
+      },
+      {
+        "t": 24.52,
+        "end": 27.51,
+        "chars": [
+          3
+        ],
+        "who": "Espectador",
+        "text": "¡Velocidad estoy viendo tu directo te estas riendo!",
+        "de": "Speed, ich schaue deinen Stream — du lachst!",
+        "orig": "scenes/velocidad/lines/07.mp3"
+      },
+      {
+        "t": 27.51,
+        "end": 31.87,
+        "chars": [
+          3
+        ],
+        "who": "Espectador",
+        "text": "¡Eso es irrespetuoso hermano, eso es irrespetuoso HERMANO!",
+        "de": "Das ist respektlos, Bruder, das ist respektlos, BRUDER!",
+        "orig": "scenes/velocidad/lines/08.mp3"
+      }
+    ]
+  },
+  {
+    "id": "losbob",
+    "title": "Los & Spongebob — Donut Fries (2 Rollen)",
+    "videoUrl": "scenes/losbob.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Los",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Spongebob",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.0,
+        "end": 5.99,
+        "chars": [
+          1
+        ],
+        "who": "los",
+        "text": "You woke me up at 6am to take you to dunkin donuts",
+        "de": "Du hast mich um 6 Uhr früh geweckt, damit ich dich zu Dunkin Donuts fahre",
+        "orig": "scenes/losbob/lines/01.mp3"
+      },
+      {
+        "t": 5.99,
+        "end": 8.67,
+        "chars": [
+          2
+        ],
+        "who": "spongebob",
+        "text": "And you still went and got donut fries",
+        "de": "Und du hast dir trotzdem Donut-Fries geholt",
+        "orig": "scenes/losbob/lines/02.mp3"
+      },
+      {
+        "t": 8.67,
+        "end": 17.18,
+        "chars": [
+          1
+        ],
+        "who": "los",
+        "text": "YOU GOT DONUT FRIES YOU FUCKIN LIAR, I dont even know what a donut fry is i walked in and got a bagel",
+        "de": "DU HAST DONUT-FRIES GEHOLT, DU LÜGNER — ich weiß nicht mal, was das sein soll",
+        "orig": "scenes/losbob/lines/03.mp3"
+      },
+      {
+        "t": 17.18,
+        "end": 22.99,
+        "chars": [
+          2
+        ],
+        "who": "spongebob",
+        "text": "YOU SAID THEY and i quote \\",
+        "de": "DU HAST GESAGT, und ich zitiere…",
+        "orig": "scenes/losbob/lines/04.mp3"
+      },
+      {
+        "t": 22.99,
+        "end": 31.45,
+        "chars": [
+          1
+        ],
+        "who": "los",
+        "text": "I never said they smack EVER!",
+        "de": "Ich hab NIE gesagt, dass die smacken!",
+        "orig": "scenes/losbob/lines/05.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",

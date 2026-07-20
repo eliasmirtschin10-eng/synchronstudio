@@ -74,3 +74,21 @@ Aus deinem Choicer-Voicer-Pack konvertiert:
 - Der öffentliche PeerJS-Vermittlungsserver ist selten mal kurz down → einfach nochmal versuchen
 - Ihr hört euch während der Aufnahme nicht gegenseitig → Discord nebenbei offen lassen
 - Am besten am PC mit Chrome/Firefox/Edge spielen; iPhone/Safari zickt bei Aufnahmen
+
+## 🛠 Eigene Szenen komplett selbst machen (ohne Claude, ohne Choicer-Voicer-Mod)
+
+Öffne den **Szenen-Editor**: `https://DEINNAME.github.io/synchronstudio/editor.html`
+
+**Workflow:**
+1. **Clip vorbereiten** (in AE/Premiere): Szene schneiden (15–60 s), Tonspur durch Vocal Remover (vocalremover.org / UVR5), Stimmen raus, Musik+SFX auf ca. -8 dB, Export MP4 (H.264+AAC), unter 25 MB
+2. **Editor:** MP4 laden → Rollen anlegen (Name/Pan/Effekt) → Video abspielen und mit den Tasten **S** (Line startet) und **E** (Line endet) die Dialoge timen — Leertaste = Play/Pause, 🐢-Button für 0,5× beim Feintuning
+3. Pro Line: Original-Text, deutsche Übersetzung und Rolle eintragen
+4. **JSON erzeugen** → kopieren
+5. **Repo:** MP4 nach `scenes/` hochladen, `scenes.json` im Browser editieren (Stift-Symbol) und den Block als neuen Listeneintrag einfügen (Komma zwischen Einträgen!), Commit, 3–4 Min warten, Strg+Shift+R
+6. **Optional — Original-Stimmen** (für 🗣-Anhören + unbesetzte Rollen): Die einzelnen Sprach-Schnipsel als MP3 nach `scenes/DEINE_ID/lines/01.mp3` … hochladen und pro Line `"orig": "scenes/DEINE_ID/lines/01.mp3"` ergänzen. Die Schnipsel schneidest du einfach aus der Original-Tonspur (die MIT Stimmen) — in Audacity oder AE pro Line exportieren.
+
+**Faustregeln für gutes Lip-Timing:** Start lieber 0,1 s zu früh als zu spät · Ende = wo die nächste Line beginnt · Grunzer/Geräusche als eigene Lines anlegen · Test im Spiel machen und Zeiten im JSON nachjustieren.
+
+## 🏆 Match-System (ab v3.0)
+
+Host stellt in der Lobby ein: **Rundenzahl** (1–10) und **🎲 Rollen jede Runde neu würfeln**. Alle sehen die Einstellungen, nur der Host kann sie ändern. Ablauf pro Runde: Einsprechen → synchronisierte Premiere → **Pflicht-Bewertung** (jeder bewertet jeden Sprecher) → Host drückt "Nächste Runde". Die Sterne werden über alle Runden summiert; nach der letzten Runde kommt das **animierte Finale** mit Balken-Leaderboard und 👑-Sieger, danach bringt der Host alle gemeinsam zurück in die Lobby — niemand muss je den Raum verlassen.

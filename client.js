@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "2.7";
+const APP_VERSION = "3.0";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -385,6 +385,9 @@ function leaveRoom() {
   localVideoBuf = null; videoBlobUrl = null;
   takes = {}; myLines = []; curLine = 0; mixItems = []; collected.clear();
   ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null };
+  match = { rounds: 1, round: 1, totals: {}, autoRoulette: false };
+  Object.keys(mgWins).forEach(k => delete mgWins[k]);
+  $("host-settings").style.display = "none";
   $("onair").classList.remove("live");
   $("host-scene").style.display = "none";
   $("host-start").style.display = "none";
@@ -406,6 +409,12 @@ function enterLobby(code) {
   show("scr-lobby");
   renderPlayers();
   $("leave-btn").style.display = "";
+  if (isHost) {
+    $("host-settings").style.display = "";
+    $("set-rounds").onchange = hostSettingsChanged;
+    $("set-roulette").onchange = hostSettingsChanged;
+  }
+  renderSettingsView();
   SFX.ok();
 }
 
@@ -458,6 +467,11 @@ function handleMsg(msg, conn) {
       show("scr-start"); break;
     case "state": players = msg.players; renderPlayers(); renderRoles(); renderBoothPlayers(); if (document.querySelector("#scr-playback.active")) renderPremStateGuest(); break;
     case "scene": scene = msg.scene; videoBlobUrl = null; showScene(scene.videoUrl); break;
+    case "settings": match.rounds = msg.rounds; match.round = msg.round; match.autoRoulette = msg.autoRoulette; renderSettingsView(msg); break;
+    case "wins": Object.assign(mgWins, msg.wins); renderWins(); break;
+    case "nextRound": match.round = msg.round; players = msg.players; startNewRound(); break;
+    case "matchEnd": showFinal(msg.list, msg.rounds); break;
+    case "matchLobby": backToLobby(); break;
     case "videoMeta": startVideoReceive(msg); break;
     case "videoChunk": receiveVideoChunk(msg.buf); break;
     case "goLines": startBooth(); break;
@@ -496,6 +510,7 @@ $("btn-load-scene").onclick = () => {
   resetRoles();
   showScene(scene.videoUrl);
   broadcast({ t: "scene", scene });
+  broadcastSettings();
   broadcastState();
 };
 
@@ -640,6 +655,44 @@ $("btn-roulette").onclick = () => {
   status("lobby-status", "🎲 Rollen ausgewürfelt! Wer keine hat, ist Zuschauer. Jetzt alle „Bin bereit“.");
   SFX.done();
 };
+
+
+// ═════════════════════════════════════════════════════════════
+// MATCH-SYSTEM: Runden, Gesamtwertung, Finale
+// ═════════════════════════════════════════════════════════════
+let match = { rounds: 1, round: 1, totals: {}, autoRoulette: false };
+const mgWins = {};   // Arena-Siege der Session
+
+function hostSettingsChanged() {
+  if (!isHost) return;
+  match.rounds = parseInt($("set-rounds").value);
+  match.autoRoulette = $("set-roulette").checked;
+  broadcastSettings();
+}
+function broadcastSettings() {
+  broadcast({ t: "settings", rounds: match.rounds, round: match.round, autoRoulette: match.autoRoulette, blind: !!(scene && scene.blind) });
+  renderSettingsView();
+}
+function renderSettingsView(s) {
+  const el = $("settings-view");
+  if (!el) return;
+  const rounds = s ? s.rounds : match.rounds, round = s ? s.round : match.round;
+  const rl = s ? s.autoRoulette : match.autoRoulette;
+  const bl = s ? s.blind : !!(scene && scene.blind);
+  el.innerHTML = `⚙ <b>Runde ${round}/${rounds}</b> · 🎲 Roulette: ${rl ? "an" : "aus"} · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(stellt der Host ein)</span>');
+}
+function renderWins() {
+  const el = $("mg-wins");
+  if (!el) return;
+  const entries = Object.entries(mgWins).sort((a, b) => b[1] - a[1]);
+  el.innerHTML = entries.length ? "🎖 Arena-Siege: " + entries.map(([pid, n]) => `<b>${esc(nameOf(pid))}</b> ×${n}`).join(" · ") : "";
+}
+function addWin(pid) {
+  if (!isHost || !pid) return;
+  mgWins[pid] = (mgWins[pid] || 0) + 1;
+  broadcast({ t: "wins", wins: mgWins });
+  renderWins();
+}
 
 $("btn-ready").onclick = async () => {
   const me = players.find(p => p.id === myId);
@@ -1046,7 +1099,7 @@ function tttHandle(a, pid) {
   if (a.k === "join" && ttt.p.length < 2 && !ttt.p.includes(pid) && !ttt.winner) ttt.p.push(pid);
   if (a.k === "move" && !ttt.winner && ttt.p.length === 2 && ttt.p[ttt.turn] === pid && ttt.board[a.i] == null) {
     ttt.board[a.i] = ttt.turn === 0 ? "X" : "O";
-    for (const w of TTT_WINS) if (w.every(i => ttt.board[i] === ttt.board[w[0]] && ttt.board[i])) ttt.winner = ttt.turn;
+    for (const w of TTT_WINS) if (w.every(i => ttt.board[i] === ttt.board[w[0]] && ttt.board[i])) { ttt.winner = ttt.turn; addWin(ttt.p[ttt.turn]); }
     if (ttt.winner == null && ttt.board.every(c => c)) ttt.winner = -1;   // Unentschieden
     if (ttt.winner == null) ttt.turn = 1 - ttt.turn;
   }
@@ -1115,6 +1168,7 @@ function cbScore(pid, n) {
     const list = [...cbScores.entries()].sort((a, b) => b[1] - a[1]);
     broadcast({ t: "cbResult", list });
     cbShowResult(list);
+    if (list.length) addWin(list[0][0]);
     cbScores.clear();
   }, 1500);
 }
@@ -1192,9 +1246,93 @@ function finishRating() {
   });
   const results = Object.keys(sums).map(pid => ({ id: pid, name: nameOf(pid), avg: sums[pid] / counts[pid], votes: counts[pid] }))
     .sort((a, b) => b.avg - a.avg);
+  // Sterne in die Match-Gesamtwertung übernehmen
+  results.forEach(r => { match.totals[r.id] = (match.totals[r.id] || 0) + r.avg; });
   broadcast({ t: "rateResult", results });
   showRateResult(results);
   allRatings.clear();
+  // Host-Steuerung: weiter oder Finale
+  const btn = $("btn-next-round");
+  btn.style.display = "";
+  btn.textContent = match.round < match.rounds ? ("▶ Nächste Runde (" + (match.round + 1) + "/" + match.rounds + ")") : "🏁 Finale anzeigen!";
+}
+
+$("btn-next-round").onclick = () => {
+  if (!isHost) return;
+  $("btn-next-round").style.display = "none";
+  if (match.round < match.rounds) {
+    match.round++;
+    if (match.autoRoulette && scene) {
+      const shuffled = [...players].sort(() => Math.random() - 0.5);
+      const roleIds = scene.roles.map(r => r.id);
+      players.forEach(p => { p.role = null; });
+      shuffled.slice(0, roleIds.length).forEach((p, i) => { p.role = roleIds[i]; });
+    }
+    broadcast({ t: "nextRound", round: match.round, players });
+    startNewRound();
+  } else {
+    const list = Object.entries(match.totals).map(([pid, sum]) => ({ id: pid, name: nameOf(pid), sum }))
+      .sort((a, b) => b.sum - a.sum);
+    broadcast({ t: "matchEnd", list, rounds: match.rounds });
+    showFinal(list, match.rounds);
+  }
+};
+
+function startNewRound() {
+  resetForNewRound();
+  broadcastSettings && isHost && broadcastSettings();
+  renderSettingsView();
+  status("lobby-status", "🎬 Runde " + match.round + "/" + match.rounds + (match.autoRoulette ? " — neue Rollen ausgewürfelt!" : "") + " Alle wieder „Bin bereit“!");
+  SFX.go();
+}
+
+// ═══ ANIMIERTES FINALE ═══
+function showFinal(list, rounds) {
+  show("scr-final");
+  $("leave-btn").style.display = "";
+  const maxSum = Math.max(...list.map(r => r.sum), 0.01);
+  const rows = $("final-rows");
+  rows.innerHTML = list.map((r, i) => `
+    <div class="finalrow ${i === 0 ? "winner" : ""}" style="opacity:0;transition:opacity .5s">
+      <span class="fname">${i === 0 ? "👑 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : ""}<b>${esc(r.name)}</b></span>
+      <div class="finalbar-wrap"><div class="finalbar"></div></div>
+      <span class="fscore">0.0 ★</span>
+    </div>`).join("");
+  $("final-sub").textContent = rounds + " Runde" + (rounds > 1 ? "n" : "") + " gespielt — hier ist eure Gesamtwertung:";
+  if (isHost) $("btn-back-lobby").style.display = "";
+  // Gestaffelte Enthüllung: Letzter zuerst, Sieger zuletzt
+  const els = [...rows.children];
+  [...list.keys()].reverse().forEach((idx, step) => {
+    setTimeout(() => {
+      const el = els[idx];
+      el.style.opacity = "1";
+      el.querySelector(".finalbar").style.width = Math.round(list[idx].sum / maxSum * 100) + "%";
+      // Zähler hochlaufen lassen
+      const scoreEl = el.querySelector(".fscore");
+      const target = list[idx].sum;
+      const t0 = performance.now();
+      const tick = () => {
+        const p = Math.min(1, (performance.now() - t0) / 900);
+        scoreEl.textContent = (target * p).toFixed(1) + " ★";
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      tick();
+      SFX.beep();
+      if (idx === 0) setTimeout(() => SFX.done(), 900);
+    }, 700 * step + 400);
+  });
+}
+
+$("btn-back-lobby").onclick = () => {
+  if (!isHost) return;
+  broadcast({ t: "matchLobby" });
+  backToLobby();
+};
+function backToLobby() {
+  match.round = 1; match.totals = {};
+  resetForNewRound();
+  renderSettingsView();
+  status("lobby-status", "🏠 Zurück in der Lobby — Host kann eine neue Szene oder ein neues Match starten!");
 }
 function showRateResult(results) {
   $("btn-rate-submit").style.display = "none";
@@ -1282,6 +1420,7 @@ function mgScore(game, pid, ms) {
     const list = [...map.entries()].sort((a, b) => a[1] - b[1]);
     broadcast({ t: "mgResult", game, list });
     mgShowResult(game, list);
+    if (list.length && list[0][1] < 9999) addWin(list[0][0]);
     map.clear();
   }, game === "rx" ? 4000 : 15000);
 }
@@ -1609,9 +1748,12 @@ $("btn-back").onclick = () => {
 function resetForNewRound() {
   players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; p.prem = false; });
   mixItems = []; collected.clear(); takes = {};
-  pendingRate = false; rateSent = false; allRatings.clear();
+  pendingRate = false; rateSent = false; allRatings.clear(); myStars = {};
   $("rate-card").style.display = "none";
+  $("rate-rows").innerHTML = ""; $("rate-result").innerHTML = "";
   $("btn-rate-submit").textContent = "Bewertung abschicken";
+  $("btn-rate-submit").disabled = true;
+  $("btn-next-round").style.display = "none";
   if (isHost) { ttt = { p: [], board: Array(9).fill(null), turn: 0, winner: null }; broadcast({ t: "tttState", ttt }); renderTTT(); }
   show("scr-lobby");
   if (isHost) broadcastState(); else { renderPlayers(); renderRoles(); }

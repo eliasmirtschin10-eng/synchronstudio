@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synchronstudio — Szenen-Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0c0c10;--panel:#17171f;--line:#2b2b36;--text:#f0f0f5;--muted:#8d8da0;--amber:#ffc95c;--hot:#ff4d55;--violet:#c84bff;--grad:linear-gradient(120deg,var(--amber),var(--hot) 55%,var(--violet))}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;padding:30px 20px 80px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-family:'Archivo Black';text-transform:uppercase;margin-bottom:6px}
+  h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-family:'Archivo Black';font-size:1rem;text-transform:uppercase;margin-bottom:12px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
+  input,select,textarea{background:#0e0e13;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 12px;font:inherit}
+  button{background:#1f1f28;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+  button.primary{background:var(--grad);border:none;color:#14060a}
+  button:hover{border-color:#4a4a5a}
+  video{width:100%;border-radius:10px;background:#000;margin-bottom:10px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .rolerow,.linerow{display:grid;gap:8px;margin-bottom:8px;align-items:center}
+  .rolerow{grid-template-columns:2fr 90px 130px 40px}
+  .linerow{grid-template-columns:70px 70px 110px 2fr 2fr 40px}
+  .tag{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .key{background:#22222c;border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-family:monospace}
+  textarea#out{width:100%;height:260px;font-family:monospace;font-size:.8rem;white-space:pre}
+  .bigtime{font-family:'Archivo Black';font-size:1.6rem;color:var(--amber)}
+  ol{margin-left:20px;color:var(--muted);font-size:.9rem;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><em>Szenen</em>-Editor</h1>
+  <p class="sub">Baue eigene Szenen fürs Synchronstudio — komplett ohne Choicer-Voicer-Mods. Video laden, Lines timen, JSON exportieren, fertig.</p>
+
+  <div class="card">
+    <h2>1 · Video laden</h2>
+    <p class="sub">Dein fertig geschnittenes MP4 (Stimmen per Vocal Remover raus, Musik/SFX drin, unter 25 MB).</p>
+    <input type="file" id="vfile" accept="video/mp4,video/webm">
+    <video id="v" controls playsinline style="margin-top:12px;display:none"></video>
+    <div class="row" style="display:none" id="vctrl">
+      <span class="tag">Zeit:</span><span class="bigtime" id="tnow">0.00s</span>
+      <button id="b-back">−1s</button><button id="b-fwd">+1s</button>
+      <button id="b-slow">🐢 0.5×</button>
+      <span class="tag" id="vdur"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2 · Rollen</h2>
+    <div class="rolerow tag"><span>Name</span><span>Pan L↔R</span><span>Effekt</span><span></span></div>
+    <div id="roles"></div>
+    <button id="b-addrole">+ Rolle</button>
+  </div>
+
+  <div class="card">
+    <h2>3 · Lines timen</h2>
+    <p class="sub">Video abspielen und im richtigen Moment drücken: <span class="key">S</span> = Line <b>startet hier</b> (fügt neue Line ein) · <span class="key">E</span> = Line <b>endet hier</b> (setzt Ende der letzten Line). Danach Text, Übersetzung und Rolle eintragen. Zeiten kannst du jederzeit von Hand nachjustieren.</p>
+    <div class="linerow tag"><span>Start</span><span>Ende</span><span>Rolle</span><span>Text (Original)</span><span>Deutsch</span><span></span></div>
+    <div id="lines"></div>
+    <div class="row"><button id="b-s">S — Line startet</button><button id="b-e">E — Line endet</button></div>
+  </div>
+
+  <div class="card">
+    <h2>4 · Exportieren</h2>
+    <div class="row">
+      <label class="tag">Szenen-ID <input type="text" id="sid" placeholder="meine_szene" style="width:160px"></label>
+      <label class="tag">Titel <input type="text" id="stitle" placeholder="Meine Szene (2 Rollen)" style="width:260px"></label>
+      <button class="primary" id="b-export">JSON erzeugen</button>
+      <button id="b-copy">📋 Kopieren</button>
+    </div>
+    <textarea id="out" readonly placeholder="Hier erscheint dein scenes.json-Eintrag …"></textarea>
+    <h2 style="margin-top:18px">Und dann?</h2>
+    <ol>
+      <li>Deine MP4 in den <b>scenes/</b>-Ordner deines GitHub-Repos hochladen — Dateiname muss zu <b>videoUrl</b> im JSON passen (z. B. <code>scenes/meine_szene.mp4</code>)</li>
+      <li><b>scenes.json</b> im Repo öffnen → Stift-Symbol → den erzeugten Block als neuen Eintrag in die Liste einfügen (Komma zwischen den Einträgen nicht vergessen!) → Commit</li>
+      <li>3–4 Minuten warten → Spiel öffnen → Strg+Shift+R → Szene ist im Dropdown 🎉</li>
+      <li>Optional: Original-Stimmen pro Line (fürs 🗣-Anhören &amp; unbesetzte Rollen) — einzelne MP3s nach <code>scenes/DEINE_ID/lines/01.mp3</code> usw. hochladen und pro Line ein <code>"orig": "scenes/DEINE_ID/lines/01.mp3"</code> ergänzen. Ohne die MP3s funktioniert die Szene trotzdem, nur ohne diese zwei Features.</li>
+    </ol>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const v = $("v");
+const EFFECTS = { none: "Normal", vintage_1990: "Vintage/90er", radio: "Funkgerät", telefon: "Telefon", hall: "Hall" };
+let lines = [];
+
+$("vfile").onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  v.src = URL.createObjectURL(f);
+  v.style.display = ""; $("vctrl").style.display = "flex";
+  v.onloadedmetadata = () => $("vdur").textContent = "Länge: " + v.duration.toFixed(2) + "s";
+  if (!$("sid").value) $("sid").value = f.name.replace(/\.\w+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+};
+setInterval(() => $("tnow").textContent = v.currentTime.toFixed(2) + "s", 100);
+$("b-back").onclick = () => v.currentTime = Math.max(0, v.currentTime - 1);
+$("b-fwd").onclick = () => v.currentTime += 1;
+$("b-slow").onclick = () => { v.playbackRate = v.playbackRate === 1 ? 0.5 : 1; $("b-slow").textContent = v.playbackRate === 1 ? "🐢 0.5×" : "▶ 1×"; };
+
+function addRole(name = "") {
+  const div = document.createElement("div");
+  div.className = "rolerow";
+  div.innerHTML = `<input type="text" placeholder="Charakter ${$("roles").children.length + 1}" value="${name}">
+    <input type="number" min="-1" max="1" step="0.1" value="0">
+    <select>${Object.entries(EFFECTS).map(([k, x]) => `<option value="${k}">${x}</option>`).join("")}</select>
+    <button onclick="this.parentNode.remove();renderLines()">✕</button>`;
+  div.querySelector("input").oninput = renderLines;
+  $("roles").appendChild(div);
+}
+addRole(); addRole();
+$("b-addrole").onclick = () => addRole();
+const roleNames = () => [...$("roles").children].map(r => r.querySelector("input").value || "?");
+
+function mark(type) {
+  const t = Math.round(v.currentTime * 100) / 100;
+  if (type === "s") lines.push({ t, end: null, role: 1, text: "", de: "" });
+  else if (lines.length) lines[lines.length - 1].end = t;
+  renderLines();
+}
+$("b-s").onclick = () => mark("s");
+$("b-e").onclick = () => mark("e");
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.key === "s" || e.key === "S") mark("s");
+  if (e.key === "e" || e.key === "E") mark("e");
+  if (e.key === " ") { e.preventDefault(); v.paused ? v.play() : v.pause(); }
+});
+
+function renderLines() {
+  lines.sort((a, b) => a.t - b.t);
+  const names = roleNames();
+  $("lines").innerHTML = lines.map((l, i) => `
+    <div class="linerow">
+      <input type="number" step="0.01" value="${l.t}" onchange="lines[${i}].t=parseFloat(this.value)">
+      <input type="number" step="0.01" value="${l.end ?? ""}" placeholder="?" onchange="lines[${i}].end=parseFloat(this.value)">
+      <select onchange="lines[${i}].role=parseInt(this.value)">${names.map((n, r) => `<option value="${r + 1}" ${l.role === r + 1 ? "selected" : ""}>${n}</option>`).join("")}</select>
+      <input type="text" value="${(l.text || "").replace(/"/g, "&quot;")}" oninput="lines[${i}].text=this.value">
+      <input type="text" value="${(l.de || "").replace(/"/g, "&quot;")}" oninput="lines[${i}].de=this.value" placeholder="Deutsch">
+      <button onclick="lines.splice(${i},1);renderLines()">✕</button>
+    </div>`).join("");
+}
+
+$("b-export").onclick = () => {
+  const id = $("sid").value || "meine_szene";
+  const roles = [...$("roles").children].map((r, i) => ({
+    id: i + 1,
+    name: r.querySelector("input").value || "Charakter " + (i + 1),
+    pan: parseFloat(r.querySelectorAll("input")[1].value) || 0,
+    effect: r.querySelector("select").value,
+    gain: 1.0
+  }));
+  const dur = v.duration ? Math.round(v.duration * 100) / 100 : 60;
+  const ls = lines.map((l, i) => ({
+    t: l.t,
+    end: l.end ?? (lines[i + 1] ? lines[i + 1].t : dur),
+    chars: [l.role],
+    who: roles[l.role - 1]?.name || "?",
+    text: l.text || "…",
+    de: l.de || l.text || "…"
+  }));
+  const scene = { id, title: $("stitle").value || id, videoUrl: "scenes/" + id + ".mp4", roles, lines: ls };
+  $("out").value = JSON.stringify(scene, null, 2);
+};
+$("b-copy").onclick = () => { $("out").select(); document.execCommand("copy"); $("b-copy").textContent = "✅ Kopiert!"; setTimeout(() => $("b-copy").textContent = "📋 Kopieren", 1500); };
+</script>
+</body>
+</html>
