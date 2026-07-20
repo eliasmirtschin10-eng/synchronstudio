@@ -5,17 +5,28 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.7";
 const PEER_PREFIX = "syncstudio-emvw-";
-// STUN + kostenloses TURN-Relay (Open Relay Project) — nötig, wenn Router die
-// Direktverbindung blocken (klassisch: Freund in anderem Netz hängt bei "Verbinde…")
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
+// ║  Nötig, wenn "Raum gefunden, aber Verbindung kommt nicht durch"   ║
+// ║  (typisch bei DS-Lite/CGNAT, z. B. Vodafone Kabel oder O2).       ║
+// ║                                                                    ║
+// ║  1. Kostenloses Konto auf https://www.metered.ca/stun-turn        ║
+// ║  2. Im Dashboard die 4 "ICE Server"-Zeilen kopieren               ║
+// ║  3. Die MY_TURN-Zeilen unten damit ersetzen (urls/username/       ║
+// ║     credential) — fertig. 50 GB/Monat gratis, für Audio massig.   ║
+// ╚══════════════════════════════════════════════════════════════════╝
+const MY_TURN = [
+  // ▼▼ DIESE 2 ZEILEN durch deine Metered-Daten ersetzen ▼▼
+  { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+];
 const PEER_CONFIG = { config: { iceServers: [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
-  { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
-  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
-] } };
+  ...MY_TURN
+], iceCandidatePoolSize: 4 } };
 const CHUNK_SIZE = 128 * 1024;
 
 // ── State ────────────────────────────────────────────────────
@@ -276,6 +287,15 @@ $("btn-join").onclick = () => {
     }, 15000);
 
     hostConn.on("open", () => { joined = true; hostConn.send({ t: "hello", name: myName }); enterLobby(code); });
+    // Debug: ICE-Status in der Console (F12) verfolgen
+    const watchIce = setInterval(() => {
+      const pc = hostConn.peerConnection;
+      if (!pc) return;
+      console.log("ICE:", pc.iceConnectionState, "| Gathering:", pc.iceGatheringState);
+      if (joined || pc.iceConnectionState === "failed") clearInterval(watchIce);
+      if (pc.iceConnectionState === "failed")
+        status("start-status", "❌ ICE failed — Direktverbindung UND TURN-Relay fehlgeschlagen. Jetzt hilft: eigener TURN-Zugang (steht in client.js ganz oben, 5 Min, gratis).", true);
+    }, 2000);
     hostConn.on("data", (msg) => handleMsg(msg, hostConn));
     hostConn.on("close", () => status("lobby-status", "Verbindung zum Host weg 😬 Seite neu laden.", true));
     hostConn.on("error", (e) => { console.error("conn error", e); status("start-status", "Verbindungsfehler zum Host: " + (e.type || e), true); });
