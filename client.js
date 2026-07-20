@@ -66,8 +66,8 @@ document.addEventListener("click", e => { if (e.target.closest("button:not(:disa
 // MIKROFON — Einstellungen + Processing-Graph
 // Aufnahmen laufen durch: Quelle → Brumm-Filter → Gain → recDest
 // ═════════════════════════════════════════════════════════════
-const micSettings = { deviceId: null, ns: true, ec: true, agc: true, lowcut: true, gain: 1 };
-let micSrcNode = null, micHP = null, micGain = null, recDest = null;
+const micSettings = { deviceId: null, ns: true, ec: true, agc: true, lowcut: true, gain: 1, gate: 0.35 };
+let micSrcNode = null, micHP = null, micGain = null, recDest = null, micGateNode = null, gateAn = null;
 let vizAn = null, vizRAF = null;
 let micReturnScreen = "scr-start";
 
@@ -84,9 +84,14 @@ async function buildMic() {
     if (!recDest) {
       recDest = ctx.createMediaStreamDestination();
       micHP = ctx.createBiquadFilter(); micHP.type = "highpass";
+      micGateNode = ctx.createGain();
       micGain = ctx.createGain();
       vizAn = ctx.createAnalyser(); vizAn.fftSize = 256;
-      micHP.connect(micGain); micGain.connect(recDest); micGain.connect(vizAn);
+      gateAn = ctx.createAnalyser(); gateAn.fftSize = 512;
+      micHP.connect(gateAn);                       // Pegel VOR dem Gate messen
+      micHP.connect(micGateNode); micGateNode.connect(micGain);
+      micGain.connect(recDest); micGain.connect(vizAn);
+      startGateLoop();
     }
     if (micSrcNode) micSrcNode.disconnect();
     micSrcNode = ctx.createMediaStreamSource(micStream);
@@ -104,6 +109,27 @@ function applyMicTuning() {
   micHP.frequency.value = micSettings.lowcut ? 90 : 5;
   micGain.gain.value = micSettings.gain;
 }
+
+// ── Noise Gate: Mikro ist stumm, solange du nicht sprichst ──
+let gateOpen = true;
+function startGateLoop() {
+  const buf = new Float32Array(gateAn.fftSize);
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (!micStream) return;
+    const thr = micSettings.gate * 0.09;            // Slider 0..1 → Schwelle 0..0.09 RMS
+    if (thr <= 0) { if (!gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.01); gateOpen = true; } return; }
+    gateAn.getFloatTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    const rms = Math.sqrt(sum / buf.length);
+    if (rms > thr && !gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.004); gateOpen = true; }
+    else if (rms <= thr * 0.7 && gateOpen) { micGateNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.06); gateOpen = false; }
+    const lamp = $("gate-lamp");
+    if (lamp) lamp.style.background = gateOpen ? "var(--ok)" : "#3a3a46";
+  })();
+}
+
 function recStream() { return recDest.stream; }
 async function ensureMic() { return micStream ? true : buildMic(); }
 
@@ -176,6 +202,7 @@ $("mic-ec").onchange = e => { micSettings.ec = e.target.checked; buildMic(); };
 $("mic-agc").onchange = e => { micSettings.agc = e.target.checked; buildMic(); };
 $("mic-lowcut").onchange = e => { micSettings.lowcut = e.target.checked; applyMicTuning(); };
 $("mic-gain").oninput = e => { micSettings.gain = parseFloat(e.target.value); $("mic-gain-val").textContent = Math.round(micSettings.gain * 100) + "%"; applyMicTuning(); };
+$("mic-gate").oninput = e => { micSettings.gate = parseFloat(e.target.value); $("mic-gate-val").textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%"; };
 // Beim ersten Klick irgendwo den Setup starten (AudioContext braucht eine Geste)
 document.addEventListener("click", function once() { if (document.querySelector("#scr-mic.active") && !micStream) initMicScreen(); }, { once: true });
 

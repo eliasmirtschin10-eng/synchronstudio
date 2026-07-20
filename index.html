@@ -208,6 +208,11 @@
           <label class="small">Aufnahme-Lautstärke (Gain): <span id="mic-gain-val">100%</span></label>
           <input type="range" id="mic-gain" min="0.4" max="2.6" step="0.1" value="1" style="width:100%;accent-color:var(--amber)">
         </div>
+        <div>
+          <label class="small">Noise Gate — schluckt Klicks &amp; Tastatur in Sprechpausen: <span id="mic-gate-val">35%</span>
+            <span id="gate-lamp" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3a3a46;margin-left:6px;vertical-align:middle" title="grün = Gate offen (du bist hörbar)"></span></label>
+          <input type="range" id="mic-gate" min="0" max="1" step="0.05" value="0.35" style="width:100%;accent-color:var(--amber)">
+        </div>
       </div>
       <div class="row" style="margin-top:18px">
         <button class="big" id="btn-mic-record">🎤 Test aufnehmen (3 Sek.)</button>

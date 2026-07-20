@@ -39,7 +39,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "Okay Deb... Don't be dead."
+        "text": "Okay Deb... Don't be dead.",
+        "de": "Okay Deb... sei bitte nicht tot.",
+        "orig": "scenes/dexter/lines/01.mp3"
       },
       {
         "t": 20.86,
@@ -48,7 +50,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "Shit (under breath)"
+        "text": "Shit (under breath)",
+        "de": "Scheiße (leise vor sich hin)",
+        "orig": "scenes/dexter/lines/02.mp3"
       },
       {
         "t": 23.77,
@@ -57,7 +61,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "Surpise Mothafucka'"
+        "text": "Surpise Mothafucka'",
+        "de": "Überraschung, Kumpel!",
+        "orig": "scenes/dexter/lines/03.mp3"
       },
       {
         "t": 27.45,
@@ -66,7 +72,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "You following me now?"
+        "text": "You following me now?",
+        "de": "Verfolgst du mich jetzt?",
+        "orig": "scenes/dexter/lines/04.mp3"
       },
       {
         "t": 28.74,
@@ -75,7 +83,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "Better have a hell of a reason for being here."
+        "text": "Better have a hell of a reason for being here.",
+        "de": "Du hast hoffentlich einen verdammt guten Grund, hier zu sein.",
+        "orig": "scenes/dexter/lines/05.mp3"
       },
       {
         "t": 30.57,
@@ -84,7 +94,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "Lookin for my sister."
+        "text": "Lookin for my sister.",
+        "de": "Ich such meine Schwester.",
+        "orig": "scenes/dexter/lines/06.mp3"
       },
       {
         "t": 31.74,
@@ -93,7 +105,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "In a cargo box?"
+        "text": "In a cargo box?",
+        "de": "In einem Frachtcontainer?",
+        "orig": "scenes/dexter/lines/07.mp3"
       },
       {
         "t": 33.34,
@@ -102,7 +116,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "Yeah i'm kinda working on a theory."
+        "text": "Yeah i'm kinda working on a theory.",
+        "de": "Ja, ich arbeite da so an einer Theorie.",
+        "orig": "scenes/dexter/lines/08.mp3"
       },
       {
         "t": 34.74,
@@ -111,7 +127,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "You forget you work for the fucking cops? We love theories c'mon spin me a story asshole."
+        "text": "You forget you work for the fucking cops? We love theories c'mon spin me a story asshole.",
+        "de": "Hast du vergessen, dass du für die verdammten Cops arbeitest? Wir lieben Theorien — na los, erzähl mir ein Märchen, Arschloch.",
+        "orig": "scenes/dexter/lines/09.mp3"
       },
       {
         "t": 38.42,
@@ -120,7 +138,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "What I do on my time is my business Sgt."
+        "text": "What I do on my time is my business Sgt.",
+        "de": "Was ich in meiner Freizeit mache, ist meine Sache, Sergeant.",
+        "orig": "scenes/dexter/lines/10.mp3"
       },
       {
         "t": 40.13,
@@ -129,7 +149,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "Yeah, me too. And I'm on my time now. There's no liutenant here to save your ass so don't fuck with me Morgan."
+        "text": "Yeah, me too. And I'm on my time now. There's no liutenant here to save your ass so don't fuck with me Morgan.",
+        "de": "Ja, ich auch. Und ich hab gerade Feierabend. Hier ist kein Lieutenant, der deinen Arsch rettet — also leg dich nicht mit mir an, Morgan.",
+        "orig": "scenes/dexter/lines/11.mp3"
       },
       {
         "t": 46.1,
@@ -138,7 +160,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "Alright, you got me."
+        "text": "Alright, you got me.",
+        "de": "Okay, du hast mich erwischt.",
+        "orig": "scenes/dexter/lines/12.mp3"
       },
       {
         "t": 48.19,
@@ -147,7 +171,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "Ordered some furniture from Thailand I was waiting for it to be deli-"
+        "text": "Ordered some furniture from Thailand I was waiting for it to be deli-",
+        "de": "Hab Möbel aus Thailand bestellt, ich hab auf die Lieferung gewar—",
+        "orig": "scenes/dexter/lines/13.mp3"
       },
       {
         "t": 52.04,
@@ -157,7 +183,9 @@
           2
         ],
         "who": "Both",
-        "text": "*angry fighting noises*"
+        "text": "*angry fighting noises*",
+        "de": "*wütende Kampfgeräusche*",
+        "orig": "scenes/dexter/lines/14.mp3"
       },
       {
         "t": 60.46,
@@ -166,7 +194,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "Lab geek my ass."
+        "text": "Lab geek my ass.",
+        "de": "Labor-Nerd, von wegen.",
+        "orig": "scenes/dexter/lines/15.mp3"
       },
       {
         "t": 61.95,
@@ -176,7 +206,9 @@
           2
         ],
         "who": "Both",
-        "text": "*weird snarling*"
+        "text": "*weird snarling*",
+        "de": "*komisches Knurren*",
+        "orig": "scenes/dexter/lines/16.mp3"
       },
       {
         "t": 63.37,
@@ -185,7 +217,9 @@
           3
         ],
         "who": "Random dude",
-        "text": "Hey, the hell's going on over here?! Security I need to get somebody down here right now."
+        "text": "Hey, the hell's going on over here?! Security I need to get somebody down here right now.",
+        "de": "Hey, was zur Hölle ist hier los?! Security, ich brauch sofort jemanden hier unten!",
+        "orig": "scenes/dexter/lines/17.mp3"
       },
       {
         "t": 67.55,
@@ -194,7 +228,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "Miami Metro PD."
+        "text": "Miami Metro PD.",
+        "de": "Miami Metro PD.",
+        "orig": "scenes/dexter/lines/18.mp3"
       },
       {
         "t": 68.8,
@@ -203,7 +239,9 @@
           3
         ],
         "who": "Random dude",
-        "text": "Yeah well is this guy under arrest?"
+        "text": "Yeah well is this guy under arrest?",
+        "de": "Ja und, ist der Typ jetzt verhaftet?",
+        "orig": "scenes/dexter/lines/19.mp3"
       },
       {
         "t": 70.39,
@@ -212,7 +250,9 @@
           1
         ],
         "who": "Dexter",
-        "text": "That's a good question."
+        "text": "That's a good question.",
+        "de": "Gute Frage.",
+        "orig": "scenes/dexter/lines/20.mp3"
       },
       {
         "t": 71.68,
@@ -221,7 +261,9 @@
           2
         ],
         "who": "Doakes",
-        "text": "You're connected to this. I don't know how but i'm gonna find out and some of what I find is gonna stick to yo ass."
+        "text": "You're connected to this. I don't know how but i'm gonna find out and some of what I find is gonna stick to yo ass.",
+        "de": "Du steckst da mit drin. Ich weiß noch nicht wie, aber ich find's raus — und irgendwas davon bleibt an deinem Arsch kleben.",
+        "orig": "scenes/dexter/lines/21.mp3"
       }
     ]
   },
