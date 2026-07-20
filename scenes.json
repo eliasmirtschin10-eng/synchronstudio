@@ -1152,5 +1152,97 @@
         "de": "D macht den Abschluss — Premiere ab in drei, zwei, eins!"
       }
     ]
-  }
-]
+  },
+  {
+  "id": "Backrooms Clark & Dr Mary Kline",
+  "title": "Backrooms Clark & Dr Mary Kline",
+  "videoUrl": "scenes/Backrooms Clark & Dr Mary Kline.mp4",
+  "roles": [
+    {
+      "id": 1,
+      "name": "Clark",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "Dr.  Mary Kline",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 0,
+      "end": 4.55,
+      "chars": [
+        1
+      ],
+      "who": "Clark",
+      "text": "Oder muss ich dann zuhause windeln wechseln, weil du zum aller erstenmal in deinen leben richtig arbeitest?",
+      "de": "Original Ist Deutsch"
+    },
+    {
+      "t": 4.58,
+      "end": 5.2,
+      "chars": [
+        2
+      ],
+      "who": "Dr.  Mary Kline",
+      "text": "Jetzt bist du Grausam...",
+      "de": "Original Ist Deutsch"
+    },
+    {
+      "t": 5.25,
+      "end": 7,
+      "chars": [
+        1
+      ],
+      "who": "Clark",
+      "text": "Ich Bin Ehrlich...",
+      "de": "Original Ist Deutsch"
+    },
+    {
+      "t": 7.06,
+      "end": 9.3,
+      "chars": [
+        1
+      ],
+      "who": "Clark",
+      "text": "Das ist es doch... Was du Immer Wolltest!",
+      "de": "Original Ist Deutsch"
+    },
+    {
+      "t": 10.04,
+      "end": 12.59,
+      "chars": [
+        2
+      ],
+      "who": "Dr.  Mary Kline",
+      "text": "Nur weil du kein Architekt geworden bist, heißt das ni",
+      "de": "Original Ist Deutsch"
+    },
+    {
+      "t": 12.6,
+      "end": 15.02,
+      "chars": [
+        1
+      ],
+      "who": "Clark",
+      "text": "Ich Bin Ein Verfickter Architekt!",
+      "de": "Original Ist Deutsch"
+    },
+    {
+      "t": 15.16,
+      "end": 22.07,
+      "chars": [
+        1
+      ],
+      "who": "Clark",
+      "text": "Ich verkauf doch nur beschissene möbel weil jemand seinen fetten faulen arsch nich hoch bekommt!",
+      "de": "Original Ist Deutsch"
+    }
+  ]
+}
