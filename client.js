@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.7";
+const APP_VERSION = "3.8";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -641,6 +641,11 @@ function handleMsg(msg, conn) {
     case "state": players = msg.players; renderPlayers(); renderRoles(); renderBoothPlayers(); if (document.querySelector("#scr-playback.active")) renderPremStateGuest(); break;
     case "scene": scene = msg.scene; videoBlobUrl = null; voiceTrackBuf = null; voiceTrackTried = false; showScene(scene.videoUrl); break;
     case "settings": match.rounds = msg.rounds; match.round = msg.round; match.autoRoulette = msg.autoRoulette; renderSettingsView(msg); break;
+    case "sceneReset":
+      scene = null; videoBlobUrl = null;
+      $("scene-card").style.display = "none";
+      renderPlayers();
+      break;
     case "wins": Object.assign(mgWins, msg.wins); renderWins(); break;
     case "nextRound":
       match.round = msg.round; players = msg.players;
@@ -859,6 +864,7 @@ const mgWins = {};   // Arena-Siege der Session
 
 function hostSettingsChanged() {
   if (!isHost) return;
+  const prevMode = match.mode;
   match.mode = $("set-mode").value;
   match.rounds = parseInt($("set-rounds").value);
   match.autoRoulette = $("set-roulette").checked;
@@ -868,7 +874,20 @@ function hostSettingsChanged() {
   $("host-scene").style.display = rnd ? "none" : "";
   // WICHTIG: Szenenliste immer (neu) laden, damit das Dropdown im Freien Modus gefüllt ist
   if (!rnd) loadSceneList();
+
+  // FIX: Beim Moduswechsel eine evtl. schon geladene Szene/Rollen zurücksetzen —
+  // sonst bleiben z.B. manuell gewählte Free-Modus-Rollen im Runden-Modus aktiv nutzbar.
+  if (match.mode !== prevMode) {
+    scene = null; localVideoBuf = null; videoBlobUrl = null;
+    players.forEach(p => { p.role = null; p.ready = false; });
+    $("scene-card").style.display = "none";
+    $("btn-go-round").style.display = "none";
+    $("btn-start").style.display = "";
+    broadcast({ t: "sceneReset" });
+  }
+
   broadcastSettings();
+  broadcastState();
 }
 function broadcastSettings() {
   broadcast({ t: "settings", mode: match.mode, rounds: match.rounds, round: match.round, autoRoulette: match.autoRoulette, blind: !!(scene && scene.blind) });
@@ -976,6 +995,7 @@ async function pickRandomScene() {
   scene.blind = $("blind-mode") ? $("blind-mode").checked : false;
   localVideoBuf = null; videoBlobUrl = null;
   rouletteRoles();
+  showScene(scene.videoUrl);   // FIX: Host sah bisher selbst kein Rollen-/Bereit-Feld
   broadcast({ t: "scene", scene });
   broadcastSettings();
   broadcastState();
