@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.6";
+const APP_VERSION = "4.7";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -603,6 +603,16 @@ function burstConfetti() {
   }
 }
 
+
+// ═════════════════════════════════════════════════════════════
+// REDO-FEATURE: eigene Lines auch nach Fertigmelden noch korrigieren
+// (A) jeder spricht nur seine eigenen Lines neu, (B) überschreibt den alten Take,
+// (C) geht nur, solange die Premiere noch nicht offiziell gestartet ist.
+// ═════════════════════════════════════════════════════════════
+let redoMode = null, redoReturnScreen = null;
+let finalTracksData = null;   // Host: letzter kompletter Mix-Datensatz, für Nach-Korrekturen
+let premiereLocked = false;   // true sobald die Premiere offiziell abgespielt wurde
+
 // ═════════════════════════════════════════════════════════════
 // RAUM VERLASSEN — sauberer Reset ohne Seiten-Reload
 // ═════════════════════════════════════════════════════════════
@@ -682,6 +692,7 @@ function handleMsg(msg, conn) {
     case "ready": { const p = players.find(p => p.id === conn.peer); if (p && p.role != null) p.ready = true; broadcastState(); break; }
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
+    case "trackUpdate": applyTrackUpdate(msg.role, msg.lineIdx, msg.startAt, msg.buf); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
     case "rate": collectRating(conn.peer, msg.scores); break;
     case "mg":
@@ -1225,6 +1236,9 @@ function renderLine() {
   $("booth-video").currentTime = l.t;
   $("btn-line-play").disabled = !takes[l.idx] || takes[l.idx] === "SKIP";
   $("btn-line-next").disabled = !takes[l.idx];
+  const prevBtn = $("btn-line-prev");
+  if (prevBtn) { prevBtn.style.display = redoMode !== null ? "none" : ""; prevBtn.disabled = curLine <= 0; }
+  $("btn-line-next").textContent = redoMode !== null ? "✅ Aktualisieren & zurück" : "✅ Passt, weiter";
   const sk = $("btn-line-skip"); if (sk) sk.style.display = lineHasOrig(l) ? "" : "none";
   const og = $("btn-line-orig"); if (og) og.style.display = (lineHasOrig(l) && !scene.blind) ? "" : "none";
   $("rectime-fill").style.width = "0";
@@ -1461,7 +1475,12 @@ $("btn-line-play").onclick = async () => {
   src.onended = () => { if (previewSrc === src) previewSrc = null; v.pause(); };
 };
 
+$("btn-line-prev").onclick = () => {
+  if (redoMode !== null || curLine <= 0) return;
+  curLine--; renderLine(); SFX.click();
+};
 $("btn-line-next").onclick = () => {
+  if (redoMode !== null) { finishRedo(); return; }
   SFX.ok();
   curLine++;
   sendProgress();
@@ -1471,6 +1490,7 @@ $("btn-line-skip").onclick = () => {
   const l = myLines[curLine];
   takes[l.idx] = "SKIP";              // Marker: diese Line behält das Original-Audio
   SFX.ok();
+  if (redoMode !== null) { finishRedo(); return; }
   curLine++;
   sendProgress();
   renderLine();
@@ -1834,6 +1854,7 @@ function backToLobby(keepMatch) {
   if (!keepMatch) { match.round = 1; match.totals = {}; }
   players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; p.prem = false; });
   mixItems = []; collected.clear(); takes = {};
+  finalTracksData = null; premiereLocked = false; redoMode = null;
   pendingRate = false; rateSent = false; ratingDone = false; allRatings.clear(); myStars = {};
   $("rate-card").style.display = "none"; $("rate-rows").innerHTML = ""; $("rate-result").innerHTML = "";
   $("btn-next-round").style.display = "none"; $("btn-rate-submit").disabled = true;
@@ -1946,11 +1967,93 @@ function mgShowResult(game, list) {
 // 8) HOST: Spuren einsammeln → Mix an alle
 // ═════════════════════════════════════════════════════════════
 const collected = new Map();   // role → items
+
+// ── Redo starten: springt für GENAU eine Line zurück in die Booth-Aufnahme ──
+function redoLine(lineIdx, fromScreen) {
+  if (premiereLocked) return;
+  const idxInMyLines = myLines.findIndex(l => l.idx === lineIdx);
+  if (idxInMyLines < 0) return;
+  redoMode = lineIdx;
+  redoReturnScreen = fromScreen;
+  curLine = idxInMyLines;
+  const bv = $("booth-video");
+  bv.src = videoBlobUrl || scene.videoUrl;
+  const rid = myRole();
+  const av = scene.avatars?.[String(rid)];
+  $("booth-avatar").style.display = av ? "" : "none";
+  if (av) $("booth-avatar").src = av;
+  $("booth-rolename").textContent = roleOf(rid).name + " (Korrektur)";
+  setBar("booth-bar", 30);
+  waitCanPlay(bv).then(() => { setBar("booth-bar", 100); $("btn-line-rec").disabled = false; });
+  show("scr-booth");
+  $("onair").classList.add("live");
+  startVizOn("viz");
+  renderLine();
+}
+
+// ── Redo abschließen: aktualisierten Take an den Host schicken, zurück zur Warte-/Premiere-Ansicht ──
+function finishRedo() {
+  const l = myLines[curLine];
+  const buf = takes[l.idx];
+  const startAt = l.t;
+  const lineIdx = l.idx;
+  redoMode = null;
+  cancelAnimationFrame(vizRAF);
+  $("onair").classList.remove("live");
+  const back = redoReturnScreen || "scr-wait";
+  show(back);
+  if (buf && buf !== "SKIP") {
+    if (isHost) applyTrackUpdate(myRole(), lineIdx, startAt, buf);
+    else hostConn.send({ t: "trackUpdate", role: myRole(), lineIdx, startAt, buf });
+  }
+  status(back === "scr-playback" ? "play-status" : "wait-status", "✅ Line aktualisiert! Wird im Endergebnis berücksichtigt.");
+  renderRedoPanel("redo-panel-wait");
+  renderRedoPanel("redo-panel-prem");
+  SFX.done();
+}
+
+// ── Panel mit den eigenen Lines + "Neu aufnehmen"-Button je Line ──
+function renderRedoPanel(containerId) {
+  const el = $(containerId);
+  if (!el) return;
+  if (premiereLocked || !scene || !scene.lines) { el.innerHTML = ""; return; }
+  const rid = myRole();
+  if (rid == null) { el.innerHTML = ""; return; }   // Zuschauer haben nichts zu korrigieren
+  const mine = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.includes(rid));
+  if (!mine.length) { el.innerHTML = ""; return; }
+  const fromScreen = containerId === "redo-panel-wait" ? "scr-wait" : "scr-playback";
+  el.innerHTML = `<div class="tag" style="margin:10px 0 6px">🔁 Eine deiner Lines noch nicht zufrieden?</div>` +
+    mine.map(l => `<div class="row" style="justify-content:space-between;background:#14141b;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:6px;gap:10px">
+      <span style="font-size:.85rem;flex:1">${esc(l.text.slice(0, 55))}${l.text.length > 55 ? "…" : ""}</span>
+      <button class="ghost redo-btn" data-idx="${l.idx}" style="padding:5px 12px;font-size:.8rem;white-space:nowrap">🔁 Neu aufnehmen</button>
+    </div>`).join("");
+  el.querySelectorAll(".redo-btn").forEach(b => b.onclick = () => redoLine(parseInt(b.dataset.idx), fromScreen));
+}
+
+// ── Host: patcht einen einzelnen Take in den bestehenden Mix und verteilt neu ──
+async function applyTrackUpdate(role, lineIdx, startAt, rawBuf) {
+  if (!finalTracksData) return;
+  try {
+    const ctx = getCtx();
+    const ab = await toArrayBuffer(rawBuf);
+    finalTracksData = finalTracksData.map(track => {
+      if (track.role !== role) return track;
+      const items = track.items.filter(it => it.idx !== lineIdx);
+      items.push({ startAt, idx: lineIdx, buf: ab });
+      return { role, items };
+    });
+    if (!finalTracksData.some(t => t.role === role)) finalTracksData.push({ role, items: [{ startAt, idx: lineIdx, buf: ab }] });
+    broadcast({ t: "mix", data: finalTracksData });
+    loadMix(finalTracksData);
+  } catch (e) { console.error("Track-Update fehlgeschlagen:", e); }
+}
+
 function collectTracks(role, items) {
   collected.set(role, items);
   const neededRoles = new Set(players.filter(p => p.role != null).map(p => p.role));
   if (collected.size >= neededRoles.size) {
     const data = [...collected.entries()].map(([r, it]) => ({ role: r, items: it }));
+    finalTracksData = data;   // persistent merken, damit spaetere Redo-Korrekturen darauf aufbauen koennen
     broadcast({ t: "mix", data });
     loadMix(data);
     collected.clear();
@@ -2021,6 +2124,7 @@ async function loadMix(data) {
   $("btn-download").disabled = true;
   if (isHost) { broadcastState(); renderPremState(); }
   else { hostConn.send({ t: "premReady" }); status("play-status", "✅ Fertig geladen — warte, bis der Host die Premiere startet …"); }
+  renderRedoPanel("redo-panel-prem");
   SFX.ok();
 }
 
@@ -2041,6 +2145,8 @@ function renderPremState() {
 }
 
 function premStart() {
+  premiereLocked = true;
+  renderRedoPanel("redo-panel-wait"); renderRedoPanel("redo-panel-prem");
   pendingRate = true;
   $("btn-replay").disabled = false;
   $("btn-download").disabled = false;
@@ -2393,6 +2499,7 @@ $("btn-back").onclick = () => {
 function resetForNewRound() {
   players.forEach(p => { p.ready = false; p.done = 0; p.total = 0; p.prem = false; });
   mixItems = []; collected.clear(); takes = {};
+  finalTracksData = null; premiereLocked = false; redoMode = null;
   pendingRate = false; rateSent = false; allRatings.clear(); myStars = {};
   $("rate-card").style.display = "none";
   $("rate-rows").innerHTML = ""; $("rate-result").innerHTML = "";
