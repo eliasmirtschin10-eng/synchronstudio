@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.1";
+const APP_VERSION = "4.2";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -734,6 +734,10 @@ let sceneList = [];
 
 // ── Schwierigkeitsgrad einer Szene (automatisch berechnet aus Tempo & Zeitfenstern) ──
 function sceneDifficulty(s) {
+  if (s.difficultyOverride) {
+    const map = { easy: { label: "Easy", emoji: "🟢" }, medium: { label: "Medium", emoji: "🟡" }, hard: { label: "Zungenbrecher", emoji: "🔴" } };
+    if (map[s.difficultyOverride]) return map[s.difficultyOverride];
+  }
   if (!s.lines || !s.lines.length) return null;
   const lines = s.lines;
   const dur = Math.max(...lines.map(l => l.end)) - Math.min(...lines.map(l => l.t));
@@ -1050,6 +1054,7 @@ $("btn-mic-test").onclick = async () => {
     const role = scene?.roles.find(r => r.id === me?.role) || { pan: 0, effect: "none", gain: 1 };
     const src = ctx.createBufferSource();
     src.buffer = audio;
+    src.playbackRate.value = effectPitch(role.effect);
     src.connect(buildChain(ctx, role, ctx.destination));
     src.start();
     src.onended = () => status("lobby-status", "So klingst du im Take. Passt? Dann „Bin bereit“.");
@@ -1133,6 +1138,22 @@ let lineRec = null, lineChunks = [], recTimer = null, recStartT = 0, recMax = 0;
 
 function myRole() { return players.find(p => p.id === myId)?.role; }
 function roleOf(id) { return scene.roles.find(r => r.id === id); }
+
+// Findet den frühesten Startzeitpunkt, an dem DIESELBE Rolle danach wieder spricht —
+// nur DAS darf eine laufende Aufnahme beschneiden, nicht die Lines anderer Charaktere.
+function nextSameRoleStart(lineIdx) {
+  const l = scene.lines[lineIdx];
+  const roleSet = new Set(l.chars);
+  let best = null;
+  for (let i = 0; i < scene.lines.length; i++) {
+    if (i === lineIdx) continue;
+    const other = scene.lines[i];
+    if (other.t > l.t + 0.01 && other.chars.some(c => roleSet.has(c))) {
+      if (best === null || other.t < best) best = other.t;
+    }
+  }
+  return best;
+}
 
 function startBooth() {
   const rid = myRole();
@@ -1407,9 +1428,11 @@ $("btn-line-play").onclick = async () => {
   const v = $("booth-video");
   v.pause(); v.currentTime = l.t; v.volume = boothVol * 0.6; v.playbackRate = 1;
   await v.play();
+  const effRole = effectiveRole(roleOf(myRole()), myLines[curLine]);
   const src = ctx.createBufferSource();
   src.buffer = buf;
-  src.connect(buildChain(ctx, roleOf(myRole()), ctx.destination));
+  src.playbackRate.value = effectPitch(effRole.effect);
+  src.connect(buildChain(ctx, effRole, ctx.destination));
   src.start();
   previewSrc = src;
   src.onended = () => { if (previewSrc === src) previewSrc = null; v.pause(); };
@@ -2059,15 +2082,18 @@ async function playMix(saveFile) {
   const off = syncOffsetMs / 1000;
 
   for (const item of mixItems) {
-    const role = item.role != null ? (roleOf(item.role) || { pan: 0, effect: "none", gain: 1 }) : { pan: 0, effect: "none", gain: 1 };
+    let role = item.role != null ? (roleOf(item.role) || { pan: 0, effect: "none", gain: 1 }) : { pan: 0, effect: "none", gain: 1 };
+    if (scene.lines && item.lineIdx != null) role = effectiveRole(role, scene.lines[item.lineIdx]);
     const src = ctx.createBufferSource();
     src.buffer = item.buffer;
+    src.playbackRate.value = effectPitch(role.effect);
     src.connect(buildChain(ctx, role, master));
     // Spur auf ihr Line-Fenster begrenzen → kein Reinlabern in die nächste Line
     let maxDur = item.buffer.duration;
     if (scene.lines && item.lineIdx != null) {
-      const l = scene.lines[item.lineIdx], nx = scene.lines[item.lineIdx + 1];
-      maxDur = Math.min(maxDur, ((nx ? nx.t : l.end + 0.8) - l.t) + 0.25);
+      const l = scene.lines[item.lineIdx];
+      const cutoffT = nextSameRoleStart(item.lineIdx);
+      maxDur = Math.min(maxDur, ((cutoffT != null ? cutoffT : l.end + 0.8) - l.t) + 0.25);
     }
     const when = t0 + item.startAt + off;
     if (when >= ctx.currentTime) src.start(when, 0, maxDur);
@@ -2120,6 +2146,32 @@ function buildChain(ctx, role, dest) {
     case "telefon":
       filt("highpass", 300); filt("lowpass", 3400);
       break;
+    case "megaphone":
+      filt("highpass", 500); filt("lowpass", 2600); filt("peaking", 1500, 2, 8);
+      node = chainShaper(ctx, node, 45);
+      break;
+    case "underwater":
+      filt("lowpass", 700); filt("peaking", 300, 1.5, 4);
+      break;
+    case "helium":
+      filt("highpass", 200); filt("peaking", 3500, 1, 6);
+      break;
+    case "monster":
+      filt("lowpass", 2200); filt("peaking", 150, 1.2, 5);
+      break;
+    case "robot": {
+      const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = 32;
+      const ringGain = ctx.createGain(); ringGain.gain.value = 0.5;
+      const dcOffset = ctx.createGain(); dcOffset.gain.value = 0.5;
+      lfo.connect(ringGain.gain);
+      node.connect(ringGain); node.connect(dcOffset);
+      const merge = ctx.createGain();
+      ringGain.connect(merge); dcOffset.connect(merge);
+      node = merge;
+      try { lfo.start(); } catch {}
+      filt("bandpass", 1800, 0.7);
+      break;
+    }
     case "hall": {
       const dry = ctx.createGain(); dry.gain.value = 0.85;
       const wet = ctx.createGain(); wet.gain.value = 0.4;
@@ -2136,6 +2188,19 @@ function buildChain(ctx, role, dest) {
   node.connect(pan);
   pan.connect(dest);
   return input;
+}
+
+
+// Falls eine einzelne Line einen eigenen Effekt festlegt (z.B. "diese eine Line klingt wie Telefon"),
+// überschreibt das den normalen Rollen-Effekt NUR für diese Line.
+function effectiveRole(role, line) {
+  if (line && line.effect) return { ...role, effect: line.effect };
+  return role;
+}
+function effectPitch(effect) {
+  if (effect === "helium") return 1.35;
+  if (effect === "monster") return 0.72;
+  return 1;
 }
 function chainShaper(ctx, node, amount) { const s = shaper(ctx, amount); node.connect(s); return s; }
 function shaper(ctx, amount) {
