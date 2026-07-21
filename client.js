@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.3";
+const APP_VERSION = "4.4";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -159,6 +159,14 @@ const AVATAR_CHARS = [
   { img: "scenes/invincible/debbie.png", label: "Debbie" },
   { img: "scenes/invincible/mark.png", label: "Mark" },
   { img: "scenes/invincible/nolan.png", label: "Nolan" },
+  { img: "scenes/backroomsdinner/clark.png", label: "Clark" },
+  { img: "scenes/backroomsdinner/mary.png", label: "Mary" },
+  { img: "scenes/jjkdomain/ryo.png", label: "Ryo" },
+  { img: "scenes/jjkdomain/narrator.png", label: "Narrator" },
+  { img: "scenes/jjkdomain/uro.png", label: "Uro" },
+  { img: "scenes/jjkdomain/yuta.png", label: "Yuta" },
+  { img: "scenes/jjkdomain/rika.png", label: "Rika" },
+  { img: "scenes/jjkdomain/kurourushi.png", label: "Kurourushi" },
 ];
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
