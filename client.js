@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.8";
+const APP_VERSION = "3.9";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -142,6 +142,55 @@ try {
 function saveName() { try { localStorage.setItem("ss_name", myName); } catch {} }
 function saveMic() { try { localStorage.setItem("ss_mic", JSON.stringify(micSettings)); } catch {} }
 
+
+// ═════════════════════════════════════════════════════════════
+// PROFILBILD — Emoji oder Szenen-Charakter, frei wählbar, gespeichert
+// ═════════════════════════════════════════════════════════════
+const AVATAR_EMOJIS = ["😎","🔥","💀","🎭","🐻","🤖","👻","🦈","🐸","🎃","👑","🥷","🧛","🦊","🐵","⚡"];
+const AVATAR_CHARS = [
+  { img: "scenes/dexter/dexter.png", label: "Dexter" },
+  { img: "scenes/dexter/doakes.png", label: "Doakes" },
+  { img: "scenes/dexter/random_dude.png", label: "Random Dude" },
+  { img: "scenes/spongebob/spongebob.png", label: "Spongebob" },
+  { img: "scenes/spongebob/patrick.png", label: "Patrick" },
+  { img: "scenes/bigsmoke/big_smoke.png", label: "Big Smoke" },
+  { img: "scenes/bigsmoke/cj.png", label: "CJ" },
+  { img: "scenes/bigsmoke/sweet.png", label: "Sweet" },
+  { img: "scenes/invincible/debbie.png", label: "Debbie" },
+  { img: "scenes/invincible/mark.png", label: "Mark" },
+  { img: "scenes/invincible/nolan.png", label: "Nolan" },
+];
+let myAvatar = null;
+try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
+
+function avatarHTML(p) {
+  const av = p.avatar;
+  if (av && av.type === "char") return `<div class="pavatar pavatar-img" style="background-image:url('${av.value}')"></div>`;
+  if (av && av.type === "emoji") return `<div class="pavatar" style="background:${avatarColor(p.name)}">${av.value}</div>`;
+  const initial = (p.name || "?").trim().charAt(0).toUpperCase() || "?";
+  return `<div class="pavatar" style="background:${avatarColor(p.name)}">${esc(initial)}</div>`;
+}
+
+function renderAvatarPicker() {
+  const grid = $("avatar-grid");
+  if (!grid) return;
+  const emojiHtml = AVATAR_EMOJIS.map(e => `<button class="avatarbtn" data-type="emoji" data-value="${e}">${e}</button>`).join("");
+  const charHtml = AVATAR_CHARS.map(c => `<button class="avatarbtn avatarbtn-img" data-type="char" data-value="${c.img}" style="background-image:url(\'${c.img}\')" title="${esc(c.label)}"></button>`).join("");
+  grid.innerHTML = `<div class="avatar-section-label">Emoji</div><div class="avatar-row">${emojiHtml}</div>
+    <div class="avatar-section-label">Aus unseren Szenen</div><div class="avatar-row">${charHtml}</div>`;
+  grid.querySelectorAll(".avatarbtn").forEach(b => b.onclick = () => {
+    myAvatar = { type: b.dataset.type, value: b.dataset.value };
+    try { localStorage.setItem("ss_avatar", JSON.stringify(myAvatar)); } catch {}
+    grid.querySelectorAll(".avatarbtn").forEach(x => x.classList.remove("chosen"));
+    b.classList.add("chosen");
+    SFX.click();
+  });
+  if (myAvatar) {
+    const sel = grid.querySelector(`.avatarbtn[data-type="${myAvatar.type}"][data-value="${CSS.escape ? CSS.escape(myAvatar.value) : myAvatar.value}"]`);
+    if (sel) sel.classList.add("chosen");
+  }
+}
+
 async function buildMic() {
   try {
     if (micStream) micStream.getTracks().forEach(t => t.stop());
@@ -268,7 +317,13 @@ $("btn-mic-record").onclick = async () => {
   rec.start(); SFX.rec();
   setTimeout(() => { rec.stop(); SFX.stop(); }, 3000);
 };
-$("btn-mic-done").onclick = () => { cancelAnimationFrame(vizRAF); show(micReturnScreen); SFX.ok(); };
+$("btn-mic-done").onclick = () => {
+  cancelAnimationFrame(vizRAF);
+  if (micReturnScreen === "scr-start") { renderAvatarPicker(); show("scr-avatar"); }
+  else show(micReturnScreen);
+  SFX.ok();
+};
+$("btn-avatar-done").onclick = () => { show("scr-start"); SFX.ok(); };
 $("btn-mic-settings").onclick = () => {
   micReturnScreen = document.querySelector(".screen.active")?.id || "scr-start";
   if (micReturnScreen === "scr-mic") return;
@@ -311,7 +366,7 @@ $("btn-create").onclick = () => {
   peer.on("open", () => {
     opened = true;
     myId = peer.id;
-    players = [{ id: myId, name: myName + " (Host)", role: null, ready: false, done: 0, total: 0 }];
+    players = [{ id: myId, name: myName + " (Host)", avatar: myAvatar, role: null, ready: false, done: 0, total: 0 }];
     enterLobby(code);
     loadSceneList();
   });
@@ -349,7 +404,7 @@ $("btn-join").onclick = () => {
       if (!joined) status("start-status", "❌ Raum gefunden, aber die Verbindung zum Host kommt nicht durch. Beide mal: anderes Netz testen (z. B. Handy-Hotspot), VPN aus, Brave-Shields aus.", true);
     }, 15000);
 
-    hostConn.on("open", () => { joined = true; hostConn.send({ t: "hello", name: myName }); enterLobby(code); });
+    hostConn.on("open", () => { joined = true; hostConn.send({ t: "hello", name: myName, avatar: myAvatar }); enterLobby(code); });
     // Debug: ICE-Status in der Console (F12) verfolgen
     const watchIce = setInterval(() => {
       const pc = hostConn.peerConnection;
@@ -384,7 +439,7 @@ try {
 } catch {}
 lobbyAudio.volume = musicVol;
 
-const MUSIC_SCREENS = new Set(["scr-mic", "scr-start", "scr-lobby", "scr-wait", "scr-final"]);
+const MUSIC_SCREENS = new Set(["scr-mic", "scr-avatar", "scr-start", "scr-lobby", "scr-wait", "scr-final"]);
 
 // ── Lobby-Musik-Visualizer: kleine EQ-Bars, solange Musik läuft ──
 let lobbyAn = null, lobbyVizRAF = null;
@@ -606,7 +661,7 @@ function handleMsg(msg, conn) {
     // — beim Host —
     case "hello": {
       if (players.length >= 8) { conn.send({ t: "full", cap: 8 }); setTimeout(() => conn.close(), 500); break; }
-      players.push({ id: conn.peer, name: msg.name, role: null, ready: false, done: 0, total: 0 });
+      players.push({ id: conn.peer, name: msg.name, avatar: msg.avatar || null, role: null, ready: false, done: 0, total: 0 });
       if (scene) { if (localVideoBuf) sendLocalVideo(conn); else conn.send({ t: "scene", scene }); }
       broadcastState();
       break;
@@ -676,6 +731,22 @@ function handleMsg(msg, conn) {
 // 3) SZENEN
 // ═════════════════════════════════════════════════════════════
 let sceneList = [];
+
+// ── Schwierigkeitsgrad einer Szene (automatisch berechnet aus Tempo & Zeitfenstern) ──
+function sceneDifficulty(s) {
+  if (!s.lines || !s.lines.length) return null;
+  const lines = s.lines;
+  const dur = Math.max(...lines.map(l => l.end)) - Math.min(...lines.map(l => l.t));
+  const words = lines.reduce((sum, l) => sum + (l.text || "").split(/\s+/).filter(Boolean).length, 0);
+  const wps = words / Math.max(1, dur);
+  const avgWin = lines.reduce((sum, l) => sum + (l.end - l.t), 0) / lines.length;
+  const avgWords = words / lines.length;
+  const score = wps * 1.4 - avgWin * 0.25 + avgWords * 0.05;
+  if (score < 2.0) return { label: "Easy", emoji: "🟢" };
+  if (score < 3.2) return { label: "Medium", emoji: "🟡" };
+  return { label: "Zungenbrecher", emoji: "🔴" };
+}
+
 async function loadSceneList() {
   const sel = $("scene-select");
   if (!sel) return;
@@ -687,7 +758,10 @@ async function loadSceneList() {
     sceneList = [];
   }
   sel.innerHTML = sceneList.length
-    ? sceneList.map((s, i) => `<option value="${i}">${esc(s.title)} (${s.roles.length} Rollen${s.lines ? ", " + s.lines.length + " Lines" : ""})</option>`).join("")
+    ? sceneList.map((s, i) => {
+        const d = sceneDifficulty(s);
+        return `<option value="${i}">${d ? d.emoji + " " : ""}${esc(s.title)} (${s.roles.length} Rollen${s.lines ? ", " + s.lines.length + " Lines" : ""}${d ? " · " + d.label : ""})</option>`;
+      }).join("")
     : "<option>— Szenen laden… kurz warten &amp; Seite neu laden —</option>";
 }
 
@@ -785,7 +859,8 @@ function receiveVideoChunk(buf) {
 function showScene(src) {
   $("scene-card").style.display = "";
   $("btn-roulette").style.display = isHost ? "" : "none";
-  $("scene-title").textContent = scene.title;
+  const diff = sceneDifficulty(scene);
+  $("scene-title").innerHTML = esc(scene.title) + (diff ? ` <span class="difftag diff-${diff.label.toLowerCase().replace(/[^a-z]/g,"")}">${diff.emoji} ${diff.label}</span>` : "");
   if (src) $("preview").src = src;
   renderRoles();
 }
@@ -800,9 +875,8 @@ function avatarColor(name) {
 function playerCard(p) {
   const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
   const prog = p.total > 0 ? `<div class="pbar"><i style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span class="tag">${p.done}/${p.total} Lines</span>` : "";
-  const initial = (p.name || "?").trim().charAt(0).toUpperCase() || "?";
   return `<div class="player ${p.ready ? "ready" : ""}" data-pid="${p.id}">
-    <div class="pavatar" style="background:${avatarColor(p.name)}">${esc(initial)}</div>
+    ${avatarHTML(p)}
     <div class="pinfo">
       <span class="pname">${esc(p.name)}</span>
       <span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>
