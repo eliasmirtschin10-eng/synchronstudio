@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.7";
+const APP_VERSION = "4.8";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -270,6 +270,110 @@ async function populateDevices() {
     $("mic-device").innerHTML = devs.map(d => `<option value="${d.deviceId}">${esc(d.label || "Mikrofon")}</option>`).join("");
     if (micSettings.deviceId) $("mic-device").value = micSettings.deviceId;
   } catch {}
+}
+
+
+// ── Dual-Waveform: lila = Original-Referenz-Peaks (statisch), blau = eigene Stimme (live während Aufnahme) ──
+const refPeaksCache = new Map();
+async function getRefPeaks(l, cols) {
+  const key = l.idx;
+  if (refPeaksCache.has(key)) return refPeaksCache.get(key);
+  try {
+    const buffer = await getLineOrigBuffer(l);
+    if (!buffer) return null;
+    const raw = buffer.getChannelData(0);
+    const step = Math.max(1, Math.floor(raw.length / cols));
+    const peaks = new Float32Array(cols);
+    for (let i = 0; i < cols; i++) {
+      let max = 0;
+      for (let j = i * step; j < Math.min((i + 1) * step, raw.length); j++) { const a = Math.abs(raw[j]); if (a > max) max = a; }
+      peaks[i] = max;
+    }
+    const result = { peaks, duration: buffer.duration };
+    refPeaksCache.set(key, result);
+    return result;
+  } catch { return null; }
+}
+
+let liveVoicePeaks = null, liveVoiceIdx = 0, currentRefPeaks = null, recording = false;
+function startDualViz(canvasId, l, recMaxSec) {
+  const canvas = $(canvasId), g = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const data = new Uint8Array(vizAn.frequencyBinCount);
+  const COLS = 90;
+  liveVoicePeaks = new Float32Array(COLS);
+  liveVoiceIdx = 0;
+  currentRefPeaks = null;
+  getRefPeaks(l, COLS).then(r => { currentRefPeaks = r; });
+  cancelAnimationFrame(vizRAF);
+  const t0 = performance.now();
+  (function draw() {
+    vizRAF = requestAnimationFrame(draw);
+    const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+    if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
+    g.clearRect(0, 0, W, H);
+    const mid = H / 2, colW = W / COLS;
+
+    // Lila Hintergrund: Original-Referenz, gestaucht auf ihre eigene Dauer relativ zu recMaxSec
+    if (currentRefPeaks) {
+      const refCols = Math.max(1, Math.round(COLS * Math.min(1, currentRefPeaks.duration / recMaxSec)));
+      for (let i = 0; i < refCols; i++) {
+        const srcI = Math.floor(i * currentRefPeaks.peaks.length / refCols);
+        const h = Math.max(1 * dpr, currentRefPeaks.peaks[srcI] * H * 0.85);
+        g.fillStyle = "rgba(200,75,255,.55)";
+        g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.5), h);
+      }
+    }
+
+    // Blaue Live-Aufnahme: aktueller Mikro-Pegel wird fortlaufend als eigener Balken angehängt
+    if (recording) {
+      vizAn.getByteFrequencyData(data);
+      let sum = 0; for (let i = 0; i < 24; i++) sum += data[i];
+      const level = Math.min(1, (sum / 24 / 255) * 1.6);
+      const elapsed = (performance.now() - t0) / 1000;
+      const col = Math.min(COLS - 1, Math.floor((elapsed / recMaxSec) * COLS));
+      liveVoicePeaks[col] = Math.max(liveVoicePeaks[col], level);
+      liveVoiceIdx = col;
+    }
+    for (let i = 0; i <= liveVoiceIdx; i++) {
+      const h = Math.max(1 * dpr, liveVoicePeaks[i] * H * 0.85);
+      g.fillStyle = "rgba(90,170,255,.9)";
+      g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.5), h);
+    }
+    // Fortschritts-Linie
+    if (recording) {
+      const elapsed = Math.min(recMaxSec, (performance.now() - t0) / 1000);
+      const px = (elapsed / recMaxSec) * W;
+      g.fillStyle = "#f0f0f5";
+      g.fillRect(px, 0, Math.max(1, 1.5 * dpr), H);
+    }
+  })();
+}
+
+
+// ── Statische Vorschau der Original-Wellenform, bevor man überhaupt aufnimmt ──
+function drawStaticRefViz() {
+  const canvas = $("viz");
+  if (!canvas) return;
+  const g = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+  if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
+  g.clearRect(0, 0, W, H);
+  if (!currentRefPeaks) return;
+  const mid = H / 2, COLS = currentRefPeaks.peaks.length, colW = W / COLS;
+  for (let i = 0; i < COLS; i++) {
+    const h = Math.max(1 * dpr, currentRefPeaks.peaks[i] * H * 0.85);
+    g.fillStyle = "rgba(200,75,255,.55)";
+    g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.5), h);
+  }
+}
+function previewRefViz(l) {
+  cancelAnimationFrame(vizRAF);
+  currentRefPeaks = null; recording = false;
+  const canvas = $("viz");
+  if (canvas) { const g = canvas.getContext("2d"); g.clearRect(0, 0, canvas.width, canvas.height); }
+  getRefPeaks(l, 90).then(r => { currentRefPeaks = r; drawStaticRefViz(); });
 }
 
 function startVizOn(canvasId) {
@@ -1242,6 +1346,7 @@ function renderLine() {
   const sk = $("btn-line-skip"); if (sk) sk.style.display = lineHasOrig(l) ? "" : "none";
   const og = $("btn-line-orig"); if (og) og.style.display = (lineHasOrig(l) && !scene.blind) ? "" : "none";
   $("rectime-fill").style.width = "0";
+  if (lineHasOrig(l)) previewRefViz(l); else { cancelAnimationFrame(vizRAF); const c = $("viz"); if (c) { const g = c.getContext("2d"); g.clearRect(0,0,c.width,c.height); } }
   status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
 }
 
@@ -1387,6 +1492,8 @@ $("btn-line-rec").onclick = async () => {
     });
     lineRec.start();
     recBusy = false;
+    recording = true;
+    startDualViz("viz", l, recMax);
     SFX.rec();
     $("btn-line-rec").textContent = "⏹ Stopp";
     $("btn-line-rec").classList.add("recording");
@@ -1436,6 +1543,7 @@ function recCountdown() {
 
 function stopLineRec() {
   recBusy = false;
+  recording = false;
   clearInterval(recTimer);
   $("booth-video").pause();
   if (lineRec && lineRec.state === "recording") lineRec.stop();
@@ -1682,14 +1790,23 @@ function showRateCard() {
   }
   $("rate-rows").innerHTML = speakers.map(p => `
     <div class="raterow" data-p="${p.id}">
-      <span><b>${esc(p.name)}</b> <span class="tag">🎭 ${esc(scene.roles.find(r => r.id === p.role)?.name || "")}</span></span>
-      <span>${[1,2,3,4,5].map(n => `<button class="starbtn" data-n="${n}">★</button>`).join("")}</span>
+      ${avatarHTML(p)}
+      <div class="rateinfo">
+        <span class="ratename">${esc(p.name)}</span>
+        <span class="tag">🎭 ${esc(scene.roles.find(r => r.id === p.role)?.name || "")}</span>
+      </div>
+      <div class="starrow">${[1,2,3,4,5].map(n => `<button class="starbtn" data-n="${n}">★</button>`).join("")}</div>
     </div>`).join("");
   $("rate-rows").querySelectorAll(".raterow").forEach(row => {
     row.querySelectorAll(".starbtn").forEach(b => b.onclick = () => {
       const n = parseInt(b.dataset.n);
       myStars[row.dataset.p] = n;
-      row.querySelectorAll(".starbtn").forEach(x => x.classList.toggle("on", parseInt(x.dataset.n) <= n));
+      row.querySelectorAll(".starbtn").forEach(x => {
+        const on = parseInt(x.dataset.n) <= n;
+        x.classList.toggle("on", on);
+        if (on) { x.classList.remove("pop"); void x.offsetWidth; x.classList.add("pop"); }
+      });
+      row.classList.toggle("rated", true);
       $("btn-rate-submit").disabled = Object.keys(myStars).length < speakers.length;
       SFX.click();
     });
@@ -1810,38 +1927,53 @@ function startNewRound() {
 function showFinal(list, rounds, championName) {
   show("scr-final");
   $("leave-btn").style.display = "";
-  const maxSum = Math.max(...list.map(r => r.sum), 0.01);
-  const rows = $("final-rows");
-  rows.innerHTML = list.map((r, i) => `
-    <div class="finalrow ${(championName ? r.name === championName : i === 0) ? "winner" : ""}" style="opacity:0;transition:opacity .5s">
-      <span class="fname">${championName ? (r.name === championName ? "🔪👑 " : "") : (i === 0 ? "👑 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : "")}<b>${esc(r.name)}</b></span>
-      <div class="finalbar-wrap"><div class="finalbar"></div></div>
-      <span class="fscore">0.0 ★</span>
-    </div>`).join("");
+
+  // Bei Battle Royale: Champion steht unabhängig von der Punktsumme immer auf Platz 1
+  let ordered = [...list];
+  if (championName) {
+    ordered.sort((a, b) => (a.name === championName ? -1 : b.name === championName ? 1 : 0));
+  }
+  const top3 = ordered.slice(0, 3);
+  const rest = ordered.slice(3);
+
   $("final-sub").textContent = championName
     ? "🔪 Battle Royale beendet — " + esc(championName) + " hat als Einzige(r) überlebt!"
     : rounds + " Runde" + (rounds > 1 ? "n" : "") + " gespielt — hier ist eure Gesamtwertung:";
+
+  const fillSlot = (slotId, entry) => {
+    const el = $(slotId);
+    if (!entry) { el.style.display = "none"; return; }
+    el.style.display = "";
+    el.classList.remove("show");
+    const p = players.find(pl => pl.id === entry.id);
+    el.querySelector(".p-avatar-wrap").innerHTML = p ? avatarHTML(p) : "";
+    el.querySelector(".p-name").textContent = entry.name;
+    el.querySelector(".p-score").textContent = entry.sum.toFixed(1) + " ★";
+  };
+  fillSlot("podium-1", top3[0]);
+  fillSlot("podium-2", top3[1]);
+  fillSlot("podium-3", top3[2]);
+
+  $("final-rest").innerHTML = rest.map((r, i) => `
+    <div class="finalrow">
+      <span class="tag">${i + 4}.</span>
+      <span class="fname">${esc(r.name)}</span>
+      <span class="fscore">${r.sum.toFixed(1)} ★</span>
+    </div>`).join("");
+
   if (isHost) $("btn-back-lobby").style.display = "";
-  // Gestaffelte Enthüllung: Letzter zuerst, Sieger zuletzt
-  const els = [...rows.children];
-  [...list.keys()].reverse().forEach((idx, step) => {
+
+  // Gestaffelte Enthüllung: 3. Platz -> 2. Platz -> 1. Platz (mit Konfetti), wie bei einer echten Prämierung
+  const reveal = [];
+  if (top3[2]) reveal.push({ id: "podium-3", delay: 300 });
+  if (top3[1]) reveal.push({ id: "podium-2", delay: 900 });
+  if (top3[0]) reveal.push({ id: "podium-1", delay: 1600 });
+  reveal.forEach(({ id, delay }) => {
     setTimeout(() => {
-      const el = els[idx];
-      el.style.opacity = "1";
-      el.querySelector(".finalbar").style.width = Math.round(list[idx].sum / maxSum * 100) + "%";
-      // Zähler hochlaufen lassen
-      const scoreEl = el.querySelector(".fscore");
-      const target = list[idx].sum;
-      const t0 = performance.now();
-      const tick = () => {
-        const p = Math.min(1, (performance.now() - t0) / 900);
-        scoreEl.textContent = (target * p).toFixed(1) + " ★";
-        if (p < 1) requestAnimationFrame(tick);
-      };
-      tick();
+      $(id).classList.add("show");
       SFX.beep();
-      if (idx === 0) setTimeout(() => SFX.done(), 900);
-    }, 700 * step + 400);
+      if (id === "podium-1") { SFX.done(); burstConfetti(); }
+    }, delay);
   });
 }
 
@@ -1870,11 +2002,21 @@ function showRateResult(results, eliminatedName) {
   $("btn-rate-submit").style.display = "none";
   $("btn-rate-force").style.display = "none";
   $("rate-rows").innerHTML = "";
-  $("rate-result").innerHTML = results.map((r, i) => `
-    <div class="raterow" style="${i === 0 ? "border-color:var(--amber);box-shadow:0 0 16px rgba(255,201,92,.25)" : ""}">
-      <span>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(r.name)}</b>${i === 0 ? ' <span class="tag" style="color:var(--amber)">Bester Synchronsprecher des Abends!</span>' : ""}</span>
-      <span style="color:var(--amber);font-weight:700">${r.avg.toFixed(1)} ★ <span class="tag">(${r.votes} Stimmen)</span></span>
-    </div>`).join("") + (eliminatedName ? `<div class="raterow" style="border-color:var(--hot)"><span>🔪 <b>${esc(eliminatedName)}</b> ist raus aus dem Battle Royale!</span></div>` : "");
+  const rows = $("rate-result");
+  rows.innerHTML = results.map((r, i) => {
+    const p = players.find(pl => pl.id === r.id);
+    return `<div class="raterow resultrow ${i === 0 ? "winner" : ""}" style="opacity:0;transform:translateX(-14px)">
+      ${p ? avatarHTML(p) : ""}
+      <div class="rateinfo">
+        <span class="ratename">${i === 0 ? "🏆 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : "• "}${esc(r.name)}</span>
+        ${i === 0 ? '<span class="tag" style="color:var(--amber)">Bester Synchronsprecher!</span>' : `<span class="tag">${r.votes} Stimmen</span>`}
+      </div>
+      <span class="resultscore">${r.avg.toFixed(1)} ★</span>
+    </div>`;
+  }).join("") + (eliminatedName ? `<div class="raterow" style="border-color:var(--hot);opacity:0">🔪 <b>${esc(eliminatedName)}</b> ist raus aus dem Battle Royale!</div>` : "");
+  [...rows.children].forEach((row, i) => {
+    setTimeout(() => { row.style.transition = "opacity .4s, transform .4s"; row.style.opacity = "1"; row.style.transform = "translateX(0)"; }, i * 150);
+  });
   SFX.done();
 }
 
