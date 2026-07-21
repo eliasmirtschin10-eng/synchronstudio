@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.8";
+const APP_VERSION = "4.9";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -167,6 +167,13 @@ const AVATAR_CHARS = [
   { img: "scenes/jjkdomain/yuta.png", label: "Yuta" },
   { img: "scenes/jjkdomain/rika.png", label: "Rika" },
   { img: "scenes/jjkdomain/kurourushi.png", label: "Kurourushi" },
+  { img: "scenes/breakingbad/tuco.png", label: "Tuco" },
+  { img: "scenes/breakingbad/heisenberg.png", label: "Heisenberg" },
+  { img: "scenes/breakingbad/otherguy.png", label: "Anderer Typ" },
+  { img: "scenes/strongest/geto.png", label: "Geto" },
+  { img: "scenes/strongest/gojo.png", label: "Gojo" },
+  { img: "scenes/aibubble/deku.png", label: "Deku" },
+  { img: "scenes/aibubble/tungtung.png", label: "Tung Tung" },
 ];
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
