@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.4";
+const APP_VERSION = "4.5";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -869,6 +869,9 @@ function receiveVideoChunk(buf) {
 }
 
 function showScene(src) {
+  // Robust gegen unsortierte Lines-Arrays (z.B. selbstgebaute Szenen): immer chronologisch sortieren.
+  // Sonst kann der Teleprompter beim "Gleich kommt..."-Hinweis die falsche Person zeigen.
+  if (scene.lines && scene.lines.length) scene.lines.sort((a, b) => a.t - b.t);
   $("scene-card").style.display = "";
   $("btn-roulette").style.display = isHost ? "" : "none";
   const diff = sceneDifficulty(scene);
