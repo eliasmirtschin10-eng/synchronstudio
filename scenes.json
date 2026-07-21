@@ -1360,7 +1360,8 @@
         "text": "Das ist doch völliger Irrsinn, L!",
         "de": "Ist Originalsprache!"
       }
-    ]
+    ],
+    "voiceTrack": "scenes/deathnote_voices.mp3"
   },
   {
     "id": "testplace",
