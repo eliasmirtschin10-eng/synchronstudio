@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.9";
+const APP_VERSION = "4.0";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -953,7 +953,7 @@ function hostSettingsChanged() {
   // sonst bleiben z.B. manuell gewählte Free-Modus-Rollen im Runden-Modus aktiv nutzbar.
   if (match.mode !== prevMode) {
     scene = null; localVideoBuf = null; videoBlobUrl = null;
-    players.forEach(p => { p.role = null; p.ready = false; });
+    players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; });
     $("scene-card").style.display = "none";
     $("btn-go-round").style.display = "none";
     $("btn-start").style.display = "";
@@ -1074,11 +1074,25 @@ async function pickRandomScene() {
   broadcastSettings();
   broadcastState();
 }
+// ── FAIRE Rollenverteilung: wer schon (öfter) Zuschauer war, ist garantiert bevorzugt dran.
+// Bei exakt gleichem Zuschauer-Stand entscheidet der Zufall — sonst nie.
 function rouletteRoles() {
-  const shuffled = [...players].sort(() => Math.random() - 0.5);
   const roleIds = scene.roles.map(r => r.id);
+  const n = Math.min(roleIds.length, players.length);
+
+  const ranked = players.map(p => ({ p, benched: p.timesSpectated || 0, rnd: Math.random() }))
+    .sort((a, b) => b.benched - a.benched || b.rnd - a.rnd);
+
+  const playing = ranked.slice(0, n).map(x => x.p);
+  const spectating = ranked.slice(n).map(x => x.p);
+
   players.forEach(p => { p.role = null; p.ready = false; });
-  shuffled.slice(0, roleIds.length).forEach((p, i) => { p.role = roleIds[i]; });
+  const shuffledPlaying = [...playing].sort(() => Math.random() - 0.5);
+  shuffledPlaying.forEach((p, i) => { p.role = roleIds[i]; });
+
+  // Fairness-Zähler fortschreiben: Bank-Zeit steigt, Spielzeit steigt — Grundlage für die nächste Runde
+  spectating.forEach(p => { p.timesSpectated = (p.timesSpectated || 0) + 1; });
+  playing.forEach(p => { p.timesPlayed = (p.timesPlayed || 0) + 1; });
 }
 
 $("btn-start").onclick = async () => {
@@ -1117,7 +1131,9 @@ function startBooth() {
   if (rid == null) {                      // Zuschauer
     show("scr-wait");
     renderBoothPlayers();
-    status("wait-status", "🍿 Du bist Zuschauer — die Premiere startet automatisch, wenn alle fertig sind.");
+    const me0 = players.find(p => p.id === myId);
+    const bench = me0 ? (me0.timesSpectated || 0) : 0;
+    status("wait-status", "🍿 Du bist Zuschauer — die Premiere startet automatisch, wenn alle fertig sind." + (match.mode === "rounds" ? " (Nächste Runde bist du garantiert bevorzugt dran, " + bench + "x gebankt bisher.)" : ""));
     return;
   }
   myLines = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.includes(rid));
