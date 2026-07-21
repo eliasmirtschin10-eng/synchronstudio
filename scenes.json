@@ -3290,5 +3290,268 @@
         "de": "D macht den Abschluss — Premiere ab in drei, zwei, eins!"
       }
     ]
+  },
+  {
+    "id": "familyguy_crack",
+    "title": "Family Guy — Peter Does Crack (2 Rollen)",
+    "videoUrl": "scenes/familyguy.mp4",
+    "avatars": {
+      "1": "scenes/familyguy/brian.png",
+      "2": "scenes/familyguy/peter.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Brian",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Peter",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 3.829,
+        "end": 5.261,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "Peter, what are you doing?",
+        "de": "Peter, was machst du da?",
+        "orig": "scenes/familyguy/lines/01.mp3"
+      },
+      {
+        "t": 5.261,
+        "end": 6.123,
+        "chars": [
+          2
+        ],
+        "who": "Peter",
+        "text": "Crack.",
+        "de": "Crack.",
+        "orig": "scenes/familyguy/lines/02.mp3"
+      },
+      {
+        "t": 6.123,
+        "end": 7.537,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "What the fuck?!",
+        "de": "Was zur Hölle?!",
+        "orig": "scenes/familyguy/lines/03.mp3"
+      },
+      {
+        "t": 7.537,
+        "end": 9.055,
+        "chars": [
+          2
+        ],
+        "who": "Peter",
+        "text": "Hey, at least I'm not drinking, Brian.",
+        "de": "Hey, wenigstens trink ich nicht, Brian.",
+        "orig": "scenes/familyguy/lines/04.mp3"
+      },
+      {
+        "t": 9.055,
+        "end": 12.508,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "Yeah, this isn't exactly a good substitute. Where'd you get crack?",
+        "de": "Ja, das ist jetzt auch kein guter Ersatz. Wo hast du Crack her?",
+        "orig": "scenes/familyguy/lines/05.mp3"
+      },
+      {
+        "t": 12.508,
+        "end": 13.448,
+        "chars": [
+          2
+        ],
+        "who": "Peter",
+        "text": "From blacks.",
+        "de": "Von Schwarzen.",
+        "orig": "scenes/familyguy/lines/06.mp3"
+      },
+      {
+        "t": 13.448,
+        "end": 13.918,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "What?",
+        "de": "Was?",
+        "orig": "scenes/familyguy/lines/07.mp3"
+      },
+      {
+        "t": 13.918,
+        "end": 16.807,
+        "chars": [
+          2
+        ],
+        "who": "Peter",
+        "text": "Right behind Black's Hardware Store. There's a white guy selling it.",
+        "de": "Direkt hinter Black's Baumarkt. Da verkauft's ein Weißer.",
+        "orig": "scenes/familyguy/lines/08.mp3"
+      },
+      {
+        "t": 16.807,
+        "end": 23.014,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "Look, doing crack is not the way to stop drinking. You need to get to the heart of why you feel the need to drink in the first place.",
+        "de": "Hör zu, Crack rauchen ist nicht der Weg, um mit dem Trinken aufzuhören. Du musst rausfinden, warum du überhaupt trinken willst.",
+        "orig": "scenes/familyguy/lines/09.mp3"
+      },
+      {
+        "t": 23.014,
+        "end": 26.507,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "Look, here, this is the number of a hypnotherapist I want you to see.",
+        "de": "Hier, das ist die Nummer von einem Hypnotherapeuten, zu dem du gehen sollst.",
+        "orig": "scenes/familyguy/lines/10.mp3"
+      },
+      {
+        "t": 26.507,
+        "end": 27.88,
+        "chars": [
+          2
+        ],
+        "who": "Peter",
+        "text": "All right, Brian.",
+        "de": "Okay, Brian.",
+        "orig": "scenes/familyguy/lines/11.mp3"
+      },
+      {
+        "t": 27.88,
+        "end": 33.486,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "Good.",
+        "de": "Gut.",
+        "orig": "scenes/familyguy/lines/12.mp3"
+      },
+      {
+        "t": 33.486,
+        "end": 36.289,
+        "chars": [
+          1
+        ],
+        "who": "Brian",
+        "text": "Hey, Peter, just thought I'd check on y— Oh, my God!",
+        "de": "Hey Peter, ich wollte nur mal nach dir seh— Oh mein Gott!",
+        "orig": "scenes/familyguy/lines/13.mp3"
+      },
+      {
+        "t": 36.289,
+        "end": 39.35,
+        "chars": [
+          2
+        ],
+        "who": "Peter",
+        "text": "Gov'ment came and took my baby!",
+        "de": "Die Regierung kam und hat mein Baby geholt!",
+        "orig": "scenes/familyguy/lines/14.mp3"
+      }
+    ]
+  },
+  {
+    "id": "oppenheimer_final",
+    "title": "Oppenheimer — Final Conversation (Oppenheimer & Einstein)",
+    "videoUrl": "scenes/oppenheimer.mp4",
+    "avatars": {
+      "1": "scenes/oppenheimer/oppenheimer.png",
+      "2": "scenes/oppenheimer/einstein.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Oppenheimer",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Einstein",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.7,
+        "end": 3.966,
+        "chars": [
+          1
+        ],
+        "who": "Oppenheimer",
+        "text": "Albert...",
+        "de": "Albert...",
+        "orig": "scenes/oppenheimer/lines/01.mp3"
+      },
+      {
+        "t": 3.966,
+        "end": 6.933,
+        "chars": [
+          1
+        ],
+        "who": "Oppenheimer",
+        "text": "When I came to you with those calculations-",
+        "de": "Als ich mit diesen Berechnungen zu dir kam-",
+        "orig": "scenes/oppenheimer/lines/02.mp3"
+      },
+      {
+        "t": 6.933,
+        "end": 12.9,
+        "chars": [
+          1
+        ],
+        "who": "Oppenheimer",
+        "text": "We thought we might start a chain reaction that would... destroy the entire world?",
+        "de": "Wir dachten, wir könnten eine Kettenreaktion auslösen, die... die ganze Welt zerstört?",
+        "orig": "scenes/oppenheimer/lines/03.mp3"
+      },
+      {
+        "t": 12.9,
+        "end": 20.833,
+        "chars": [
+          2
+        ],
+        "who": "Einstein",
+        "text": "Hm, I remember it well. What of it?",
+        "de": "Hm, ich erinnere mich gut daran. Was ist damit?",
+        "orig": "scenes/oppenheimer/lines/04.mp3"
+      },
+      {
+        "t": 20.833,
+        "end": 22.82,
+        "chars": [
+          1
+        ],
+        "who": "Oppenheimer",
+        "text": "I believe we did.",
+        "de": "Ich glaube, das haben wir.",
+        "orig": "scenes/oppenheimer/lines/05.mp3"
+      }
+    ]
   }
 ]
