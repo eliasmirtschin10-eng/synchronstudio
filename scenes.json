@@ -1273,6 +1273,107 @@
     ]
   },
   {
+  "id": "szenenf_rsynchrongame_12",
+  "title": "Transformers Szene Auto Verkauf",
+  "videoUrl": "scenes/szenenf_rsynchrongame_12.mp4",
+  "roles": [
+    {
+      "id": 1,
+      "name": "Verkäufer",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "Vater",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 3,
+      "name": "Sohn",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 0,
+      "end": 4.63,
+      "chars": [
+        1
+      ],
+      "who": "Verkäufer",
+      "text": "... Mein Name, (irgendein witz oder so?) Wie Kann ich ihnen helfen!",
+      "de": "Original ist Deutsch!"
+    },
+    {
+      "t": 4.89,
+      "end": 8.3,
+      "chars": [
+        2
+      ],
+      "who": "Vater",
+      "text": "Na also... Mein Sohne man sucht sein Erstes Auto...",
+      "de": "Original ist Deutsch!"
+    },
+    {
+      "t": 8.39,
+      "end": 9.7,
+      "chars": [
+        1
+      ],
+      "who": "Verkäufer",
+      "text": "Und dann kommt ihr zu mir?",
+      "de": "Original ist Deutsch!"
+    },
+    {
+      "t": 9.76,
+      "end": 11,
+      "chars": [
+        3
+      ],
+      "who": "Sohn",
+      "text": "ja... wir mussten...",
+      "de": "Original ist Deutsch!"
+    },
+    {
+      "t": 11.07,
+      "end": 15.46,
+      "chars": [
+        1
+      ],
+      "who": "Verkäufer",
+      "text": "das macht uns zur familie... man nennt mich... und wie nennt man dich?",
+      "de": "Original ist Deutsch!"
+    },
+    {
+      "t": 15.46,
+      "end": 16.5,
+      "chars": [
+        3
+      ],
+      "who": "Sohn",
+      "text": "Sam! (dein Name)",
+      "de": "Original ist Deutsch!"
+    },
+    {
+      "t": 17.02,
+      "end": 18.54,
+      "chars": [
+        1
+      ],
+      "who": "Verkäufer",
+      "text": "Denk dir was aus!",
+      "de": "Original ist Deutsch!"
+    }
+  ],
+  "voiceTrack": "scenes/szenenf_rsynchrongame_12_voices.mp3"
+  },
+  {
     "id": "deathnote",
     "title": "Death Note — Light, L & Misa (3 Rollen)",
     "videoUrl": "scenes/deathnote.mp4",
