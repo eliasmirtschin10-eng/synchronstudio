@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.0";
+const APP_VERSION = "4.1";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -953,6 +953,7 @@ function hostSettingsChanged() {
   // sonst bleiben z.B. manuell gewählte Free-Modus-Rollen im Runden-Modus aktiv nutzbar.
   if (match.mode !== prevMode) {
     scene = null; localVideoBuf = null; videoBlobUrl = null;
+    scenePool = [];
     players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; });
     $("scene-card").style.display = "none";
     $("btn-go-round").style.display = "none";
@@ -1062,14 +1063,21 @@ $("btn-mic-test").onclick = async () => {
 // ═════════════════════════════════════════════════════════════
 
 // Im Runden-Modus: Zufalls-Szene laden + Rollen würfeln (Host)
+// ── FAIRE Szenen-Auswahl: solange nicht alle Szenen dran waren, wird keine wiederholt.
+// Nach einer vollen Runde durch den Pool startet ein neuer, frisch gemischter Durchlauf.
+let scenePool = [];
 async function pickRandomScene() {
   const playable = sceneList.filter(s => s.lines && s.lines.length && s.id !== "testplace");
-  const s = playable[Math.floor(Math.random() * playable.length)];
+  if (!scenePool.length) {
+    scenePool = [...playable].sort(() => Math.random() - 0.5);   // frisch mischen, erst wenn der Stapel leer ist
+  }
+  const s = scenePool.pop();
   scene = JSON.parse(JSON.stringify(s));
   scene.blind = $("blind-mode") ? $("blind-mode").checked : false;
   localVideoBuf = null; videoBlobUrl = null;
+  voiceTrackBuf = null; voiceTrackTried = false;   // FIX: sonst spielt "Original anhören" die Stimmen der VORHERIGEN Szene ab!
   rouletteRoles();
-  showScene(scene.videoUrl);   // FIX: Host sah bisher selbst kein Rollen-/Bereit-Feld
+  showScene(scene.videoUrl);
   broadcast({ t: "scene", scene });
   broadcastSettings();
   broadcastState();
