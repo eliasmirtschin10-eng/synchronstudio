@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.2";
+const APP_VERSION = "4.3";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -707,7 +707,7 @@ function handleMsg(msg, conn) {
       if (msg.scene) { scene = msg.scene; videoBlobUrl = null; backToLobby(true); showScene(scene.videoUrl); renderSettingsView(); status("lobby-status", "🎲 Runde " + match.round + ": neue Szene & Rollen! „Bin bereit“ drücken."); }
       else startNewRound();
       break;
-    case "matchEnd": showFinal(msg.list, msg.rounds); break;
+    case "matchEnd": showFinal(msg.list, msg.rounds, msg.championName); break;
     case "matchLobby": backToLobby(); break;
     case "videoMeta": startVideoReceive(msg); break;
     case "videoChunk": receiveVideoChunk(msg.buf); break;
@@ -717,7 +717,7 @@ function handleMsg(msg, conn) {
     case "tttState": ttt = msg.ttt; renderTTT(); break;
     case "premGo": premStart(); break;
     case "emojiShow": showEmoji(msg.pid, msg.char); break;
-    case "rateResult": showRateResult(msg.results); break;
+    case "rateResult": showRateResult(msg.results, msg.eliminatedName); break;
     case "rxGo": rxRun(msg.delay); break;
     case "tpGo": tpRun(msg.phrase); break;
     case "mgResult": mgShowResult(msg.game, msg.list); break;
@@ -879,11 +879,11 @@ function avatarColor(name) {
 function playerCard(p) {
   const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
   const prog = p.total > 0 ? `<div class="pbar"><i style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span class="tag">${p.done}/${p.total} Lines</span>` : "";
-  return `<div class="player ${p.ready ? "ready" : ""}" data-pid="${p.id}">
+  return `<div class="player ${p.ready ? "ready" : ""}" data-pid="${p.id}" style="${p.eliminated ? "opacity:.5" : ""}">
     ${avatarHTML(p)}
     <div class="pinfo">
       <span class="pname">${esc(p.name)}</span>
-      <span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>
+      ${p.eliminated ? '<span class="prole" style="color:var(--hot)">🔪 eliminiert</span>' : `<span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>`}
       ${p.ready && !p.total ? '<span class="tag" style="color:var(--ok)">bereit</span>' : ""}${prog}
     </div>
   </div>`;
@@ -946,9 +946,9 @@ function hostSettingsChanged() {
   match.mode = $("set-mode").value;
   match.rounds = parseInt($("set-rounds").value);
   match.autoRoulette = $("set-roulette").checked;
-  // Im Runden-Modus ist alles Zufall: Rollenwahl & Szenenwahl werden ausgeblendet
-  const rnd = match.mode === "rounds";
-  $("rounds-opts").style.display = rnd ? "" : "none";
+  // Im Runden- UND Battle-Royale-Modus ist alles Zufall: Rollenwahl & Szenenwahl werden ausgeblendet
+  const rnd = match.mode === "rounds" || match.mode === "elimination";
+  $("rounds-opts").style.display = (match.mode === "rounds") ? "" : "none";
   $("host-scene").style.display = rnd ? "none" : "";
   // WICHTIG: Szenenliste immer (neu) laden, damit das Dropdown im Freien Modus gefüllt ist
   if (!rnd) loadSceneList();
@@ -958,7 +958,7 @@ function hostSettingsChanged() {
   if (match.mode !== prevMode) {
     scene = null; localVideoBuf = null; videoBlobUrl = null;
     scenePool = [];
-    players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; });
+    players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
     $("scene-card").style.display = "none";
     $("btn-go-round").style.display = "none";
     $("btn-start").style.display = "";
@@ -979,9 +979,14 @@ function renderSettingsView(s) {
   const rounds = s ? s.rounds : match.rounds, round = s ? s.round : match.round;
   const rl = s ? s.autoRoulette : match.autoRoulette;
   const bl = s ? s.blind : !!(scene && scene.blind);
-  el.innerHTML = mode === "rounds"
-    ? `🏆 <b>Match · Runde ${round}/${rounds}</b> · 🎲 Zufalls-Szenen &amp; -Rollen · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>')
-    : `🎮 <b>Freies Spiel</b> · Szene &amp; Rollen frei wählbar · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
+  const activeLeft = players.filter(p => !p.eliminated).length;
+  if (mode === "elimination") {
+    el.innerHTML = `🔪 <b>Battle Royale · Runde ${round}</b> · ${activeLeft} noch im Rennen · 🎲 Zufalls-Szenen &amp; -Rollen · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
+  } else if (mode === "rounds") {
+    el.innerHTML = `🏆 <b>Match · Runde ${round}/${rounds}</b> · 🎲 Zufalls-Szenen &amp; -Rollen · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
+  } else {
+    el.innerHTML = `🎮 <b>Freies Spiel</b> · Szene &amp; Rollen frei wählbar · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
+  }
 }
 function renderWins() {
   const el = $("mg-wins");
@@ -1013,12 +1018,17 @@ $("btn-ready").onclick = async () => {
 
 function checkStartable() {
   if (!isHost) return;
-  if (match.mode === "rounds" && !scene) {
+  if ((match.mode === "rounds" || match.mode === "elimination") && !scene) {
     // Match noch nicht gestartet → Button startet das Match
     $("btn-start").style.display = "";
-    $("btn-start").disabled = players.length < 1;
-    $("btn-start").textContent = "🎲 Match starten (" + match.rounds + " Runden)";
-    $("start-hint").textContent = "Zufalls-Szene & zufällige Rollen für alle. Los geht's, sobald du startest!";
+    $("btn-start").disabled = players.length < 2;
+    if (match.mode === "elimination") {
+      $("btn-start").textContent = "🔪 Battle Royale starten (" + players.length + " Spieler)";
+      $("start-hint").textContent = players.length < 2 ? "Mindestens 2 Spieler nötig!" : "Zufalls-Szenen & -Rollen — nach jeder Runde fliegt der Schlechteste raus, bis nur noch einer übrig ist!";
+    } else {
+      $("btn-start").textContent = "🎲 Match starten (" + match.rounds + " Runden)";
+      $("start-hint").textContent = "Zufalls-Szene & zufällige Rollen für alle. Los geht's, sobald du startest!";
+    }
     return;
   }
   $("btn-start").textContent = "🔴 Session starten";
@@ -1091,9 +1101,10 @@ async function pickRandomScene() {
 // Bei exakt gleichem Zuschauer-Stand entscheidet der Zufall — sonst nie.
 function rouletteRoles() {
   const roleIds = scene.roles.map(r => r.id);
-  const n = Math.min(roleIds.length, players.length);
+  const eligible = players.filter(p => !p.eliminated);   // Eliminierte sind für IMMER Zuschauer (Battle Royale)
+  const n = Math.min(roleIds.length, eligible.length);
 
-  const ranked = players.map(p => ({ p, benched: p.timesSpectated || 0, rnd: Math.random() }))
+  const ranked = eligible.map(p => ({ p, benched: p.timesSpectated || 0, rnd: Math.random() }))
     .sort((a, b) => b.benched - a.benched || b.rnd - a.rnd);
 
   const playing = ranked.slice(0, n).map(x => x.p);
@@ -1109,10 +1120,11 @@ function rouletteRoles() {
 }
 
 $("btn-start").onclick = async () => {
-  if (match.mode === "rounds" && !scene) {
+  if ((match.mode === "rounds" || match.mode === "elimination") && !scene) {
     // Match-Kickoff: Zufalls-Szene laden, dann warten auf Bereit
     await pickRandomScene();
-    status("lobby-status", "🎲 Runde 1: Szene &amp; Rollen ausgewürfelt! Alle „Bin bereit“ drücken.");
+    const label = match.mode === "elimination" ? "🔪 Runde 1: Szene &amp; Rollen ausgewürfelt!" : "🎲 Runde 1: Szene &amp; Rollen ausgewürfelt!";
+    status("lobby-status", label + " Alle „Bin bereit“ drücken.");
     $("btn-start").style.display = "none";
     $("btn-go-round").style.display = "";
     return;
@@ -1699,25 +1711,47 @@ function finishRating() {
     .sort((a, b) => b.avg - a.avg);
   // Sterne in die Match-Gesamtwertung übernehmen
   results.forEach(r => { match.totals[r.id] = (match.totals[r.id] || 0) + r.avg; });
-  broadcast({ t: "rateResult", results });
-  showRateResult(results);
+
+  let eliminatedName = null;
+  if (match.mode === "elimination" && results.length > 1) {
+    // Schlechtester Sprecher DIESER Runde fliegt für immer raus (bei Gleichstand: zufällig unter den Schlechtesten)
+    const worstScore = results[results.length - 1].avg;
+    const worstCandidates = results.filter(r => Math.abs(r.avg - worstScore) < 0.0001);
+    const out = worstCandidates[Math.floor(Math.random() * worstCandidates.length)];
+    const p = players.find(pl => pl.id === out.id);
+    if (p) { p.eliminated = true; eliminatedName = p.name; }
+  }
+
+  broadcast({ t: "rateResult", results, eliminatedName });
+  showRateResult(results, eliminatedName);
   allRatings.clear();
+
   // Host-Steuerung: weiter oder Finale
+  const activeLeft = players.filter(p => !p.eliminated).length;
   const btn = $("btn-next-round");
   btn.style.display = "";
-  btn.textContent = match.round < match.rounds ? ("▶ Nächste Runde (" + (match.round + 1) + "/" + match.rounds + ")") : "🏁 Finale anzeigen!";
+  if (match.mode === "elimination") {
+    btn.textContent = activeLeft > 1 ? ("▶ Nächste Runde (" + activeLeft + " noch im Rennen)") : "🏆 Champion küren!";
+  } else {
+    btn.textContent = match.round < match.rounds ? ("▶ Nächste Runde (" + (match.round + 1) + "/" + match.rounds + ")") : "🏁 Finale anzeigen!";
+  }
 }
 
 $("btn-next-round").onclick = async () => {
   if (!isHost) return;
   $("btn-next-round").style.display = "none";
-  if (match.round < match.rounds) {
+
+  const activeLeft = players.filter(p => !p.eliminated).length;
+  const continueMatch = match.mode === "elimination" ? activeLeft > 1 : match.round < match.rounds;
+
+  if (continueMatch) {
     match.round++;
-    if (match.mode === "rounds") {
+    if (match.mode === "rounds" || match.mode === "elimination") {
       // Neue Zufalls-Szene + neue Zufalls-Rollen, zurück in die Lobby zum Bereitmachen
       backToLobby(true);
       await pickRandomScene();
-      status("lobby-status", "🎲 Runde " + match.round + "/" + match.rounds + ": neue Szene &amp; Rollen! Alle „Bin bereit“.");
+      const label = match.mode === "elimination" ? ("🔪 Runde " + match.round + " — " + activeLeft + " noch im Rennen!") : ("🎲 Runde " + match.round + "/" + match.rounds);
+      status("lobby-status", label + ": neue Szene &amp; Rollen! Alle „Bin bereit“.");
       $("btn-go-round").style.display = "";
       broadcast({ t: "nextRound", round: match.round, players, scene });
       return;
@@ -1727,8 +1761,9 @@ $("btn-next-round").onclick = async () => {
   } else {
     const list = Object.entries(match.totals).map(([pid, sum]) => ({ id: pid, name: nameOf(pid), sum }))
       .sort((a, b) => b.sum - a.sum);
-    broadcast({ t: "matchEnd", list, rounds: match.rounds });
-    showFinal(list, match.rounds);
+    const championName = match.mode === "elimination" ? (players.find(p => !p.eliminated)?.name || list[0]?.name) : null;
+    broadcast({ t: "matchEnd", list, rounds: match.rounds, championName });
+    showFinal(list, match.rounds, championName);
   }
 };
 
@@ -1741,18 +1776,20 @@ function startNewRound() {
 }
 
 // ═══ ANIMIERTES FINALE ═══
-function showFinal(list, rounds) {
+function showFinal(list, rounds, championName) {
   show("scr-final");
   $("leave-btn").style.display = "";
   const maxSum = Math.max(...list.map(r => r.sum), 0.01);
   const rows = $("final-rows");
   rows.innerHTML = list.map((r, i) => `
-    <div class="finalrow ${i === 0 ? "winner" : ""}" style="opacity:0;transition:opacity .5s">
-      <span class="fname">${i === 0 ? "👑 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : ""}<b>${esc(r.name)}</b></span>
+    <div class="finalrow ${(championName ? r.name === championName : i === 0) ? "winner" : ""}" style="opacity:0;transition:opacity .5s">
+      <span class="fname">${championName ? (r.name === championName ? "🔪👑 " : "") : (i === 0 ? "👑 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : "")}<b>${esc(r.name)}</b></span>
       <div class="finalbar-wrap"><div class="finalbar"></div></div>
       <span class="fscore">0.0 ★</span>
     </div>`).join("");
-  $("final-sub").textContent = rounds + " Runde" + (rounds > 1 ? "n" : "") + " gespielt — hier ist eure Gesamtwertung:";
+  $("final-sub").textContent = championName
+    ? "🔪 Battle Royale beendet — " + esc(championName) + " hat als Einzige(r) überlebt!"
+    : rounds + " Runde" + (rounds > 1 ? "n" : "") + " gespielt — hier ist eure Gesamtwertung:";
   if (isHost) $("btn-back-lobby").style.display = "";
   // Gestaffelte Enthüllung: Letzter zuerst, Sieger zuletzt
   const els = [...rows.children];
@@ -1797,7 +1834,7 @@ function backToLobby(keepMatch) {
   updateLobbyMusic();
   if (!keepMatch) status("lobby-status", "🏠 Zurück in der Lobby!");
 }
-function showRateResult(results) {
+function showRateResult(results, eliminatedName) {
   $("btn-rate-submit").style.display = "none";
   $("btn-rate-force").style.display = "none";
   $("rate-rows").innerHTML = "";
@@ -1805,7 +1842,7 @@ function showRateResult(results) {
     <div class="raterow" style="${i === 0 ? "border-color:var(--amber);box-shadow:0 0 16px rgba(255,201,92,.25)" : ""}">
       <span>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(r.name)}</b>${i === 0 ? ' <span class="tag" style="color:var(--amber)">Bester Synchronsprecher des Abends!</span>' : ""}</span>
       <span style="color:var(--amber);font-weight:700">${r.avg.toFixed(1)} ★ <span class="tag">(${r.votes} Stimmen)</span></span>
-    </div>`).join("");
+    </div>`).join("") + (eliminatedName ? `<div class="raterow" style="border-color:var(--hot)"><span>🔪 <b>${esc(eliminatedName)}</b> ist raus aus dem Battle Royale!</span></div>` : "");
   SFX.done();
 }
 
@@ -2007,6 +2044,7 @@ $("btn-prem-start").onclick = () => {
 };
 $("btn-replay").onclick = () => playMix(false);
 $("btn-download").onclick = () => playMix(true);
+$("btn-download-audio").onclick = () => exportAudioFast();
 
 const elemSrcMap = new Map();
 function elementSource(ctx, v) {
@@ -2043,6 +2081,87 @@ function applyPremVol() {
   premNodes.vidGain.gain.value = premVol.video;
 }
 
+
+// ── WAV-Encoder (reines JS, keine Bibliothek nötig) ──
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const numFrames = buffer.length;
+  const blockAlign = numChannels * 2;
+  const dataSize = numFrames * blockAlign;
+  const buf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buf);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, "RIFF"); view.setUint32(4, 36 + dataSize, true); writeStr(8, "WAVE");
+  writeStr(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true); view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true);
+  writeStr(36, "data"); view.setUint32(40, dataSize, true);
+  const channels = []; for (let c = 0; c < numChannels; c++) channels.push(buffer.getChannelData(c));
+  let offset = 44;
+  for (let i = 0; i < numFrames; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      const s = Math.max(-1, Math.min(1, channels[c][i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+// ── Schneller Ton-Export: rendert den kompletten Mix OHNE Echtzeit-Warten ──
+async function exportAudioFast() {
+  try {
+    status("play-status", "⚡ Rendere Ton … (dauert nur Sekunden, kein Zuschauen nötig)");
+    const OfflineCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const lastEnd = Math.max(1, ...scene.lines.map(l => l.end)) + 1.5;
+    const offlineCtx = new OfflineCtor(2, Math.ceil(lastEnd * 44100), 44100);
+
+    const master = offlineCtx.createDynamicsCompressor();
+    master.threshold.value = -18; master.knee.value = 20; master.ratio.value = 4; master.attack.value = 0.005; master.release.value = 0.15;
+    master.connect(offlineCtx.destination);
+
+    // Video-eigene Tonspur (Musik/SFX) mit reinrechnen
+    try {
+      const videoBuf = await (await fetch(videoBlobUrl || scene.videoUrl)).arrayBuffer();
+      const videoAudio = await offlineCtx.decodeAudioData(videoBuf.slice(0));
+      const vSrc = offlineCtx.createBufferSource();
+      vSrc.buffer = videoAudio;
+      vSrc.connect(master);
+      vSrc.start(0);
+    } catch (e) { console.warn("Video-Ton nicht verfügbar für Offline-Export:", e); }
+
+    for (const item of mixItems) {
+      let role = item.role != null ? (roleOf(item.role) || { pan: 0, effect: "none", gain: 1 }) : { pan: 0, effect: "none", gain: 1 };
+      if (scene.lines && item.lineIdx != null) role = effectiveRole(role, scene.lines[item.lineIdx]);
+      const src = offlineCtx.createBufferSource();
+      src.buffer = item.buffer;
+      src.playbackRate.value = effectPitch(role.effect);
+      src.connect(buildChain(offlineCtx, role, master));
+      let maxDur = item.buffer.duration;
+      if (scene.lines && item.lineIdx != null) {
+        const l = scene.lines[item.lineIdx];
+        const cutoffT = nextSameRoleStart(item.lineIdx);
+        maxDur = Math.min(maxDur, ((cutoffT != null ? cutoffT : l.end + 0.8) - l.t) + 0.25);
+      }
+      const when = Math.max(0, item.startAt + syncOffsetMs / 1000);
+      src.start(when, 0, maxDur);
+    }
+
+    const rendered = await offlineCtx.startRendering();
+    const blob = audioBufferToWav(rendered);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = (scene?.id || "synchro") + "_ton.wav";
+    a.click();
+    status("play-status", "✅ Ton gespeichert (WAV, sofort)! Einfach auf die Videospur in CapCut/Premiere/AE ziehen.");
+    SFX.done();
+  } catch (e) {
+    console.error("Schneller Ton-Export fehlgeschlagen:", e);
+    status("play-status", "❌ Ton-Export hat nicht geklappt — F12-Konsole für Details.", true);
+  }
+}
+
 async function playMix(saveFile) {
   const ctx = getCtx();
   const v = $("play-video");
@@ -2072,12 +2191,22 @@ async function playMix(saveFile) {
       status("play-status", "✅ Gespeichert! Für TikTok/Insta die .webm in CapCut o. Ä. zu MP4 exportieren.");
       SFX.done();
     };
-    status("play-status", "🔴 Nimmt auf — läuft einmal komplett durch, nicht wegklicken …");
+    status("play-status", "🔴 Nimmt Video auf — läuft einmal in Originallänge durch. Tab kann im Hintergrund bleiben.");
+    $("dl-progress").style.display = "";
   }
 
   v.pause(); v.currentTime = 0;
   await v.play();
-  if (fileRec) fileRec.start();
+  if (fileRec) {
+    fileRec.start();
+    const progInterval = setInterval(() => {
+      const pct = v.duration ? Math.round((v.currentTime / v.duration) * 100) : 0;
+      $("dl-progress-bar").style.width = pct + "%";
+      $("dl-progress-label").textContent = pct + "%";
+      if (v.ended || fileRec.state === "inactive") clearInterval(progInterval);
+    }, 200);
+    v.addEventListener("ended", () => { clearInterval(progInterval); $("dl-progress").style.display = "none"; }, { once: true });
+  }
   const t0 = ctx.currentTime;
   const off = syncOffsetMs / 1000;
 
