@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.6";
+const APP_VERSION = "3.7";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -385,10 +385,48 @@ try {
 lobbyAudio.volume = musicVol;
 
 const MUSIC_SCREENS = new Set(["scr-mic", "scr-start", "scr-lobby", "scr-wait", "scr-final"]);
+
+// ── Lobby-Musik-Visualizer: kleine EQ-Bars, solange Musik läuft ──
+let lobbyAn = null, lobbyVizRAF = null;
+function ensureLobbyAnalyser() {
+  if (lobbyAn) return lobbyAn;
+  try {
+    const ctx = getCtx();
+    const src = ctx.createMediaElementSource(lobbyAudio);
+    lobbyAn = ctx.createAnalyser(); lobbyAn.fftSize = 64;
+    src.connect(lobbyAn); lobbyAn.connect(ctx.destination);
+  } catch (e) { /* schon verbunden (z.B. via elementSource) oder AudioContext noch nicht bereit */ }
+  return lobbyAn;
+}
+function drawLobbyViz() {
+  const canvas = document.getElementById("music-viz");
+  cancelAnimationFrame(lobbyVizRAF);
+  if (!canvas) return;
+  const g = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  (function loop() {
+    lobbyVizRAF = requestAnimationFrame(loop);
+    const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+    if (!W || !H) return;
+    if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
+    g.clearRect(0, 0, W, H);
+    if (!musicOn || lobbyAudio.paused || !lobbyAn) return;
+    const data = new Uint8Array(lobbyAn.frequencyBinCount);
+    lobbyAn.getByteFrequencyData(data);
+    const bars = 16, bw = W / bars;
+    for (let i = 0; i < bars; i++) {
+      const v = data[i * 2] / 255;
+      const h = Math.max(2 * dpr, v * H);
+      g.fillStyle = "rgba(255,201,92,.85)";
+      g.fillRect(i * bw + bw * 0.2, H - h, bw * 0.6, h);
+    }
+  })();
+}
+
 function updateLobbyMusic() {
   const active = document.querySelector(".screen.active")?.id;
   const want = musicOn && MUSIC_SCREENS.has(active);
-  if (want) { lobbyAudio.play().catch(() => {}); }
+  if (want) { ensureLobbyAnalyser(); lobbyAudio.play().catch(() => {}); }
   else { lobbyAudio.pause(); }
   const btn = $("music-toggle");
   if (btn) btn.textContent = musicOn ? "🎵" : "🔇";
@@ -399,6 +437,7 @@ const _origShow = show;
 show = function(id) {
   _origShow(id);
   updateLobbyMusic();
+  if (id === "scr-lobby" || id === "scr-wait") startTipRotation(); else clearInterval(tipTimer);
   // Ingame (Booth/Aufnahme) ruhig halten: keine Ablenkung
   const calm = id === "scr-booth" || id === "scr-record";
   const f = document.getElementById("floaties");
@@ -420,9 +459,86 @@ window.addEventListener("DOMContentLoaded", () => {
     if (musicVol > 0 && !musicOn) { musicOn = true; updateLobbyMusic(); }
   };
   updateLobbyMusic();
+  drawLobbyViz();
 });
 // Autoplay-Freischaltung beim ersten Klick
 document.addEventListener("click", () => { if (musicOn) lobbyAudio.play().catch(() => {}); }, { once: true });
+
+
+// ═════════════════════════════════════════════════════════════
+// EMOJI-REAKTIONEN — synchron bei allen sichtbar, gegen Lobby-Langeweile
+// ═════════════════════════════════════════════════════════════
+function emojiAction(char) {
+  if (isHost) emojiBroadcast(myId, char);
+  else hostConn.send({ t: "emoji", char });
+}
+function emojiBroadcast(pid, char) {
+  broadcast({ t: "emojiShow", pid, char });
+  showEmoji(pid, char);
+}
+function showEmoji(pid, char) {
+  const layer = document.getElementById("emoji-layer");
+  if (!layer) return;
+  const el = document.createElement("div");
+  el.className = "flyemoji";
+  el.style.left = (10 + Math.random() * 80) + "%";
+  el.style.setProperty("--drift", (Math.random() * 60 - 30) + "px");
+  el.textContent = char;
+  const label = document.createElement("span");
+  label.className = "flyemoji-name";
+  label.textContent = nameOf(pid);
+  el.appendChild(label);
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+window.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".emojibtn").forEach(b => b.addEventListener("click", () => { emojiAction(b.dataset.e); SFX.click(); }));
+});
+
+
+// ── Rotierende Tipps/Fun Facts, während man in der Lobby wartet ──
+const LOBBY_TIPS = [
+  "💡 Tipp: Kopfhörer aufsetzen — sonst hört dein Mikro den Video-Sound mit!",
+  "🎲 Rollen-Roulette würfelt die Besetzung zufällig — gut gegen Diskussionen.",
+  "🕶 Blind-Modus: keine Übersetzung, kein Original — reines Improvisieren.",
+  "🐢 Im Editor kannst du Szenen in 0.5× ansehen, um Lippen besser zu timen.",
+  "🎮 Während ihr wartet: TicTacToe, Klick-Battle, Reaktions-Duell und Tipp-Renner warten unten!",
+  "🗣 „Original anhören” zeigt dir die echte Betonung, bevor du aufnimmst.",
+  "⭐ Nach jeder Runde bewertet ihr euch gegenseitig — bester Sprecher kriegt die Krone 👑",
+  "⬇ Das fertige Ergebnis lässt sich als Video speichern — perfekt für TikTok.",
+  "🎨 Baut euch eigene Szenen im Szenen-Editor — kein Choicer-Voicer-Pack nötig.",
+];
+let tipIdx = 0, tipTimer = null;
+function rotateTip() {
+  const el = document.getElementById("lobby-tip");
+  if (!el) return;
+  el.style.opacity = "0";
+  setTimeout(() => { el.textContent = LOBBY_TIPS[tipIdx % LOBBY_TIPS.length]; tipIdx++; el.style.opacity = "1"; }, 300);
+}
+function startTipRotation() {
+  clearInterval(tipTimer);
+  rotateTip();
+  tipTimer = setInterval(rotateTip, 7000);
+}
+
+
+// ── Mini-Konfetti: kleiner Belohnungsmoment beim "Bin bereit" ──
+function burstConfetti() {
+  const layer = document.getElementById("emoji-layer");
+  if (!layer) return;
+  const colors = ["#ffc95c", "#ff4d55", "#c84bff"];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement("div");
+    p.className = "confetti-bit";
+    p.style.left = (40 + Math.random() * 20) + "%";
+    p.style.background = colors[i % colors.length];
+    p.style.setProperty("--dx", (Math.random() * 200 - 100) + "px");
+    p.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
+    p.style.animationDelay = (Math.random() * 0.15) + "s";
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), 1600);
+  }
+}
 
 // ═════════════════════════════════════════════════════════════
 // RAUM VERLASSEN — sauberer Reset ohne Seiten-Reload
@@ -511,6 +627,7 @@ function handleMsg(msg, conn) {
       if (msg.k === "rxScore") mgScore("rx", conn.peer, msg.ms);
       if (msg.k === "tpScore") mgScore("tp", conn.peer, msg.ms);
       break;
+    case "emoji": emojiBroadcast(conn.peer, msg.char); break;
     case "premReady": { const p = players.find(p => p.id === conn.peer); if (p) p.prem = true; broadcastState(); renderPremState(); break; }
     case "cb":
       if (msg.a.k === "start") { broadcast({ t: "cbGo" }); cbRun(); }
@@ -539,6 +656,7 @@ function handleMsg(msg, conn) {
     case "mix": loadMix(msg.data); break;
     case "tttState": ttt = msg.ttt; renderTTT(); break;
     case "premGo": premStart(); break;
+    case "emojiShow": showEmoji(msg.pid, msg.char); break;
     case "rateResult": showRateResult(msg.results); break;
     case "rxGo": rxRun(msg.delay); break;
     case "tpGo": tpRun(msg.phrase); break;
@@ -670,13 +788,21 @@ function showScene(src) {
 // ═════════════════════════════════════════════════════════════
 // 4) LOBBY-UI
 // ═════════════════════════════════════════════════════════════
+function avatarColor(name) {
+  let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return `hsl(${Math.abs(h) % 360}, 70%, 55%)`;
+}
 function playerCard(p) {
   const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
   const prog = p.total > 0 ? `<div class="pbar"><i style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span class="tag">${p.done}/${p.total} Lines</span>` : "";
-  return `<div class="player ${p.ready ? "ready" : ""}">
-    <span class="pname">${esc(p.name)}</span>
-    <span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>
-    ${p.ready && !p.total ? '<span class="tag" style="color:var(--ok)">bereit</span>' : ""}${prog}
+  const initial = (p.name || "?").trim().charAt(0).toUpperCase() || "?";
+  return `<div class="player ${p.ready ? "ready" : ""}" data-pid="${p.id}">
+    <div class="pavatar" style="background:${avatarColor(p.name)}">${esc(initial)}</div>
+    <div class="pinfo">
+      <span class="pname">${esc(p.name)}</span>
+      <span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>
+      ${p.ready && !p.total ? '<span class="tag" style="color:var(--ok)">bereit</span>' : ""}${prog}
+    </div>
   </div>`;
 }
 function renderPlayers() { $("player-list").innerHTML = players.map(playerCard).join(""); }
@@ -784,6 +910,7 @@ $("btn-ready").onclick = async () => {
   else hostConn.send({ t: "ready" });
   status("lobby-status", "✅ Bereit! Warten auf die anderen …");
   SFX.ok();
+  burstConfetti();
 };
 
 function checkStartable() {
