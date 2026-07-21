@@ -2344,163 +2344,495 @@
     ]
   },
   {
-  "id": "hiphophoodszene",
-  "title": "Hip Hop Hood Haben Wir Ein Problem?",
-  "videoUrl": "scenes/hiphophoodszene.mp4",
-  "roles": [
-    {
-      "id": 1,
-      "name": "Ray",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
+    "id": "hiphophoodszene",
+    "title": "Hip Hop Hood Haben Wir Ein Problem?",
+    "videoUrl": "scenes/hiphophoodszene.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Ray",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "ToothPick",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Loc Dog",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 4,
+        "name": "RandomGangstar",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 1.78,
+        "end": 3.3,
+        "chars": [
+          1
+        ],
+        "who": "Ray",
+        "text": "Was soll das Denn werden?!",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 3.91,
+        "end": 9.65,
+        "chars": [
+          2
+        ],
+        "who": "ToothPick",
+        "text": "Hey Na Wie Gehts... Du Alte Pappnase (lache)",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 9.92,
+        "end": 13,
+        "chars": [
+          3
+        ],
+        "who": "Loc Dog",
+        "text": "Hey Stop! Haben wir Ein Problem ToothPick?!",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 13.41,
+        "end": 16.38,
+        "chars": [
+          3
+        ],
+        "who": "Loc Dog",
+        "text": "Ich Fragte... Haben wir ein problem? häää? oder hnhhhh (so ein huhhh)",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 16.9,
+        "end": 22,
+        "chars": [
+          2
+        ],
+        "who": "ToothPick",
+        "text": "Ohja... wir haben ein problem Hier man ein kleines feuer problem hahahahha",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 22.4,
+        "end": 24.66,
+        "chars": [
+          3
+        ],
+        "who": "Loc Dog",
+        "text": "Okay, Wir spielen ein kleines spiel...",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 28.15,
+        "end": 35,
+        "chars": [
+          3
+        ],
+        "who": "Loc Dog",
+        "text": "Ich Hab Gefragt... Haben... Wir... Ein... Pro... Blem??? Huh?",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 35.26,
+        "end": 37.98,
+        "chars": [
+          4
+        ],
+        "who": "RandomGangstar",
+        "text": "Ohhh Ähhhh U... D.. S... S... R???",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 38,
+        "end": 42.1,
+        "chars": [
+          3
+        ],
+        "who": "Loc Dog",
+        "text": "Ihr Bewegt besser eure stinkenden ärsche von hier weg bevor ich hier einen nuklearen holocaust veranstalte!",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 42.24,
+        "end": 44.24,
+        "chars": [
+          2
+        ],
+        "who": "ToothPick",
+        "text": "LOS DU PENNER GIB GAS, GIB GAS",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 44.24,
+        "end": 47,
+        "chars": [
+          2
+        ],
+        "who": "ToothPick",
+        "text": "Das Wird Horishima Und Ni**asaki Werden (muss umschreiben weil sonnst gesperrt es ist das n wort gemeint)",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 47.93,
+        "end": 51.9,
+        "chars": [
+          1
+        ],
+        "who": "Ray",
+        "text": "Haut Bloß Ab und kommt nie wieder!",
+        "de": "Original Ist Deutsch!"
+      }
+    ],
+    "voiceTrack": "scenes/hiphophoodszene_voices.mp3",
+    "difficultyOverride": "medium"
+  },
+  {
+    "id": "breakingbad",
+    "title": "Breaking Bad — This Is Not Meth (3 Rollen)",
+    "videoUrl": "scenes/breakingbad.mp4",
+    "avatars": {
+      "1": "scenes/breakingbad/tuco.png",
+      "2": "scenes/breakingbad/heisenberg.png",
+      "3": "scenes/breakingbad/otherguy.png"
     },
-    {
-      "id": 2,
-      "name": "ToothPick",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    },
-    {
-      "id": 3,
-      "name": "Loc Dog",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    },
-    {
-      "id": 4,
-      "name": "RandomGangstar",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    }
-  ],
-  "lines": [
-    {
-      "t": 1.78,
-      "end": 3.3,
-      "chars": [
-        1
-      ],
-      "who": "Ray",
-      "text": "Was soll das Denn werden?!",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 3.91,
-      "end": 9.65,
-      "chars": [
-        2
-      ],
-      "who": "ToothPick",
-      "text": "Hey Na Wie Gehts... Du Alte Pappnase (lache)",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 9.92,
-      "end": 13,
-      "chars": [
-        3
-      ],
-      "who": "Loc Dog",
-      "text": "Hey Stop! Haben wir Ein Problem ToothPick?!",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 13.41,
-      "end": 16.38,
-      "chars": [
-        3
-      ],
-      "who": "Loc Dog",
-      "text": "Ich Fragte... Haben wir ein problem? häää? oder hnhhhh (so ein huhhh)",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 16.9,
-      "end": 22,
-      "chars": [
-        2
-      ],
-      "who": "ToothPick",
-      "text": "Ohja... wir haben ein problem Hier man ein kleines feuer problem hahahahha",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 22.4,
-      "end": 24.66,
-      "chars": [
-        3
-      ],
-      "who": "Loc Dog",
-      "text": "Okay, Wir spielen ein kleines spiel...",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 28.15,
-      "end": 35,
-      "chars": [
-        3
-      ],
-      "who": "Loc Dog",
-      "text": "Ich Hab Gefragt... Haben... Wir... Ein... Pro... Blem??? Huh?",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 35.26,
-      "end": 37.98,
-      "chars": [
-        4
-      ],
-      "who": "RandomGangstar",
-      "text": "Ohhh Ähhhh U... D.. S... S... R???",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 38,
-      "end": 42.1,
-      "chars": [
-        3
-      ],
-      "who": "Loc Dog",
-      "text": "Ihr Bewegt besser eure stinkenden ärsche von hier weg bevor ich hier einen nuklearen holocaust veranstalte!",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 42.24,
-      "end": 44.24,
-      "chars": [
-        2
-      ],
-      "who": "ToothPick",
-      "text": "LOS DU PENNER GIB GAS, GIB GAS",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 44.24,
-      "end": 47,
-      "chars": [
-        2
-      ],
-      "who": "ToothPick",
-      "text": "Das Wird Horishima Und Ni**asaki Werden (muss umschreiben weil sonnst gesperrt es ist das n wort gemeint)",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 47.93,
-      "end": 51.9,
-      "chars": [
-        1
-      ],
-      "who": "Ray",
-      "text": "Haut Bloß Ab und kommt nie wieder!",
-      "de": "Original Ist Deutsch!"
-    }
-  ],
-  "voiceTrack": "scenes/hiphophoodszene_voices.mp3",
-  "difficultyOverride": "medium"
+    "roles": [
+      {
+        "id": 1,
+        "name": "Tuco",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Heisenberg",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Anderer Typ",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.0,
+        "end": 4.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "Why don't you start talking and tell me what you want?",
+        "de": "Warum fängst du nicht an zu reden und sagst mir, was du willst?",
+        "orig": "scenes/breakingbad/lines/01.mp3"
+      },
+      {
+        "t": 4.0,
+        "end": 6.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "Fifty thousand dollars.",
+        "de": "Fünfzigtausend Dollar.",
+        "orig": "scenes/breakingbad/lines/02.mp3"
+      },
+      {
+        "t": 6.0,
+        "end": 11.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "(Laughing) Oh, man. Fifty G's?",
+        "de": "(lacht) Oh Mann. Fünfzig Riesen?",
+        "orig": "scenes/breakingbad/lines/03.mp3"
+      },
+      {
+        "t": 11.0,
+        "end": 12.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "How you figure that?",
+        "de": "Wie kommst du darauf?",
+        "orig": "scenes/breakingbad/lines/04.mp3"
+      },
+      {
+        "t": 12.0,
+        "end": 15.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "Thirty-five for the pound of meth you stole...",
+        "de": "Fünfunddreißig für das Pfund Meth, das du gestohlen hast...",
+        "orig": "scenes/breakingbad/lines/05.mp3"
+      },
+      {
+        "t": 15.0,
+        "end": 23.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "...and another fifteen for my partner's pain and suffering.",
+        "de": "...und nochmal fünfzehn für Schmerzen und Leiden meines Partners.",
+        "orig": "scenes/breakingbad/lines/06.mp3"
+      },
+      {
+        "t": 23.0,
+        "end": 31.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "Partner.",
+        "de": "Partner.",
+        "orig": "scenes/breakingbad/lines/07.mp3"
+      },
+      {
+        "t": 31.0,
+        "end": 36.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "(Laughing) Oh, yeah, I remember that bitch.",
+        "de": "(lacht) Oh ja, ich erinnere mich an die Schlampe.",
+        "orig": "scenes/breakingbad/lines/08.mp3"
+      },
+      {
+        "t": 36.0,
+        "end": 46.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "So you must be Daddy.",
+        "de": "Dann musst du wohl Daddy sein.",
+        "orig": "scenes/breakingbad/lines/09.mp3"
+      },
+      {
+        "t": 46.0,
+        "end": 49.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "Let me get this straight",
+        "de": "Lass mich das klarstellen",
+        "orig": "scenes/breakingbad/lines/10.mp3"
+      },
+      {
+        "t": 49.0,
+        "end": 53.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "(Chuckle) I steal you dope...",
+        "de": "(kichert) Ich klau dein Zeug...",
+        "orig": "scenes/breakingbad/lines/11.mp3"
+      },
+      {
+        "t": 53.0,
+        "end": 58.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "..I BEAT THIS PISS out of your mule boy...",
+        "de": "...ich TRET DEINEM MAULESEL-JUNGEN DIE SCHEISSE aus dem Leib...",
+        "orig": "scenes/breakingbad/lines/12.mp3"
+      },
+      {
+        "t": 58.0,
+        "end": 68.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "..and then you walk in here and bring me more meth? (Laughing)",
+        "de": "...und dann kommst du hier rein und bringst mir noch mehr Meth? (lacht)",
+        "orig": "scenes/breakingbad/lines/13.mp3"
+      },
+      {
+        "t": 68.0,
+        "end": 71.0,
+        "chars": [
+          3
+        ],
+        "who": "Anderer Typ",
+        "text": "Brilliant.",
+        "de": "Brillant.",
+        "orig": "scenes/breakingbad/lines/14.mp3"
+      },
+      {
+        "t": 71.0,
+        "end": 78.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "You got one part of that wrong.",
+        "de": "Du hast einen Teil davon falsch verstanden.",
+        "orig": "scenes/breakingbad/lines/15.mp3"
+      },
+      {
+        "t": 78.0,
+        "end": 107.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "This is not meth.",
+        "de": "Das hier ist kein Meth.",
+        "orig": "scenes/breakingbad/lines/16.mp3"
+      },
+      {
+        "t": 107.0,
+        "end": 109.3,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "ARE YOU FUCKING NUTS!?",
+        "de": "BIST DU VERDAMMT NOCHMAL BEKLOPPT?!",
+        "orig": "scenes/breakingbad/lines/17.mp3"
+      },
+      {
+        "t": 109.3,
+        "end": 112.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "You wanna find out?",
+        "de": "Willst du's rausfinden?",
+        "orig": "scenes/breakingbad/lines/18.mp3"
+      },
+      {
+        "t": 112.0,
+        "end": 118.3,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "No, no, Gonza, calma. Calma.",
+        "de": "Nein, nein, Gonza, ruhig. Ruhig.",
+        "orig": "scenes/breakingbad/lines/19.mp3"
+      },
+      {
+        "t": 118.3,
+        "end": 123.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "You got balls, I'll give you that.",
+        "de": "Du hast Eier, das muss ich dir lassen.",
+        "orig": "scenes/breakingbad/lines/20.mp3"
+      },
+      {
+        "t": 123.0,
+        "end": 127.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "All right, all right, I'll give you your money.",
+        "de": "Okay, okay, ich geb dir dein Geld.",
+        "orig": "scenes/breakingbad/lines/21.mp3"
+      },
+      {
+        "t": 127.0,
+        "end": 129.7,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "(Moan)",
+        "de": "(stöhnt)",
+        "orig": "scenes/breakingbad/lines/22.mp3"
+      },
+      {
+        "t": 129.7,
+        "end": 135.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "That crystal that your partner brought me...",
+        "de": "Der Kristall, den dein Partner mir gebracht hat...",
+        "orig": "scenes/breakingbad/lines/23.mp3"
+      },
+      {
+        "t": 135.0,
+        "end": 144.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "..it sold faster than ten-dollar ass in TJ.",
+        "de": "...hat sich schneller verkauft als ein Zehn-Dollar-Arsch in TJ.",
+        "orig": "scenes/breakingbad/lines/24.mp3"
+      },
+      {
+        "t": 144.0,
+        "end": 150.0,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "Let's say you bring me another pound next week.",
+        "de": "Sagen wir, du bringst mir nächste Woche noch ein Pfund.",
+        "orig": "scenes/breakingbad/lines/25.mp3"
+      },
+      {
+        "t": 150.0,
+        "end": 155.0,
+        "chars": [
+          2
+        ],
+        "who": "Heisenberg",
+        "text": "Money up front.",
+        "de": "Geld im Voraus.",
+        "orig": "scenes/breakingbad/lines/26.mp3"
+      },
+      {
+        "t": 155.0,
+        "end": 158.34,
+        "chars": [
+          1
+        ],
+        "who": "Tuco",
+        "text": "Money up front.",
+        "de": "Geld im Voraus.",
+        "orig": "scenes/breakingbad/lines/27.mp3"
+      }
+    ]
   },
   {
     "id": "testplace",
