@@ -243,18 +243,58 @@
   }
   @media (prefers-reduced-motion:reduce){.flyemoji,.confetti-bit{animation:none;display:none}}
 
-  .raterow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#14141b;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
-  .starbtn{font-size:1.3rem;padding:4px 8px;background:transparent;border:none;color:#3a3a46;cursor:pointer}
-  .starbtn.on{color:var(--amber);text-shadow:0 0 12px rgba(255,201,92,.5)}
+  .raterow{
+    display:flex;align-items:center;gap:12px;
+    background:linear-gradient(120deg,#171720,#14141b);
+    border:1px solid var(--line);border-radius:12px;padding:12px 16px;
+    transition:border-color .25s, box-shadow .25s, transform .15s;
+  }
+  .raterow:hover{transform:translateY(-1px)}
+  .raterow.rated{border-color:var(--amber);box-shadow:0 0 14px rgba(255,201,92,.18)}
+  .rateinfo{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .ratename{font-weight:700}
+  .starrow{display:flex;gap:2px}
+  .starbtn{font-size:1.5rem;padding:2px 4px;background:transparent;border:none;color:#33333f;cursor:pointer;transition:transform .12s, color .12s}
+  .starbtn:hover{transform:scale(1.15);color:#55555f}
+  .starbtn.on{color:var(--amber);text-shadow:0 0 14px rgba(255,201,92,.6)}
+  .starbtn.pop{animation:starpop .35s ease}
+  @keyframes starpop{0%{transform:scale(1)}40%{transform:scale(1.5) rotate(-8deg)}100%{transform:scale(1)}}
+  .resultrow.winner{border-color:var(--amber);box-shadow:0 0 20px rgba(255,201,92,.3)}
+  .resultscore{font-family:'Archivo Black';color:var(--amber);font-size:1.1rem;white-space:nowrap}
 
-  .finalrow{display:grid;grid-template-columns:180px 1fr 90px;align-items:center;gap:14px;
-    background:#14141b;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
-  .finalrow.winner{border-color:var(--amber);box-shadow:0 0 26px rgba(255,201,92,.3)}
-  .finalrow.winner .fname{font-family:'Archivo Black'}
-  .finalbar-wrap{height:16px;background:#0e0e13;border-radius:99px;overflow:hidden}
-  .finalbar{height:100%;width:0;background:var(--grad);border-radius:99px;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
-  .fscore{font-family:'Archivo Black';color:var(--amber);text-align:right}
-  @media(max-width:600px){.finalrow{grid-template-columns:1fr;gap:8px}}
+  /* 🏆 Podium (Kahoot-artig, im Synchronstudio-Look) */
+  .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin:26px 0 14px;flex-wrap:wrap}
+  .podium-slot{
+    display:flex;flex-direction:column;align-items:center;gap:8px;width:120px;
+    opacity:0;transform:translateY(36px) scale(.9);
+    transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+  }
+  .podium-slot.show{opacity:1;transform:translateY(0) scale(1)}
+  .p-avatar-wrap{width:60px;height:60px}
+  .p-avatar-wrap .pavatar{width:60px;height:60px;font-size:1.4rem;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+  .podium-slot .p-name{font-weight:700;text-align:center;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podium-slot .p-score{font-family:'Archivo Black';color:var(--amber);font-size:.95rem}
+  .podium-pillar{
+    width:110px;border-radius:12px 12px 0 0;border:1px solid var(--line);border-bottom:none;
+    background:
+      radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1.4px) 0 0/10px 10px,
+      linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));
+    display:flex;align-items:flex-start;justify-content:center;padding-top:10px;
+  }
+  #podium-1 .podium-pillar{height:170px;border-color:var(--amber);box-shadow:0 0 30px rgba(255,201,92,.22);
+    background:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1.4px) 0 0/10px 10px, linear-gradient(180deg,rgba(255,201,92,.22),rgba(255,201,92,.04))}
+  #podium-2 .podium-pillar{height:120px}
+  #podium-3 .podium-pillar{height:88px}
+  .podium-rank{font-family:'Archivo Black';font-size:1.8rem;color:var(--muted)}
+  #podium-1 .podium-rank{font-size:2.2rem;filter:drop-shadow(0 0 10px rgba(255,201,92,.6))}
+  #podium-1 .p-avatar-wrap .pavatar{width:72px;height:72px;font-size:1.7rem;box-shadow:0 0 0 3px var(--amber),0 0 22px rgba(255,201,92,.4)}
+  #podium-1{order:2} #podium-2{order:1} #podium-3{order:3}
+  @media(max-width:600px){.podium-wrap{gap:8px} .podium-slot{width:96px} .podium-pillar{width:90px}}
+
+  .finalrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;
+    background:#14141b;border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:.9rem}
+  .finalrow .fname{color:var(--text)}
+  .finalrow .fscore{font-family:'Archivo Black';color:var(--muted)}
 
   /* Profilbild-Auswahl */
   .avatar-section-label{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
@@ -461,6 +501,7 @@
       <video id="booth-video" playsinline preload="auto" style="max-height:260px"></video>
       <div class="bar" id="booth-bar" style="display:none"><i></i></div>
       <canvas class="viz" id="viz"></canvas>
+      <p class="tag" style="margin:2px 0 0"><span style="color:#c84bff">■ Original</span> &nbsp; <span style="color:#5aaaff">■ Deine Stimme</span></p>
       <div class="rectime"><i id="rectime-fill"></i></div>
 
       <div class="row" style="margin-bottom:10px;gap:16px">
@@ -552,8 +593,28 @@
     <div class="card">
       <h2>🏁 Finale — Wer synchronisiert am besten?</h2>
       <p class="sub" id="final-sub"></p>
-      <div id="final-rows" style="display:grid;gap:12px;margin:18px 0"></div>
-      <button class="primary big" id="btn-back-lobby" style="display:none">🏠 Zurück zur Lobby (alle)</button>
+      <div class="podium-wrap" id="podium-wrap">
+        <div class="podium-slot" id="podium-2" style="display:none">
+          <div class="p-avatar-wrap"></div>
+          <span class="p-name"></span>
+          <span class="p-score"></span>
+          <div class="podium-pillar"><span class="podium-rank">2</span></div>
+        </div>
+        <div class="podium-slot" id="podium-1" style="display:none">
+          <div class="p-avatar-wrap"></div>
+          <span class="p-name"></span>
+          <span class="p-score"></span>
+          <div class="podium-pillar"><span class="podium-rank">👑</span></div>
+        </div>
+        <div class="podium-slot" id="podium-3" style="display:none">
+          <div class="p-avatar-wrap"></div>
+          <span class="p-name"></span>
+          <span class="p-score"></span>
+          <div class="podium-pillar"><span class="podium-rank">3</span></div>
+        </div>
+      </div>
+      <div id="final-rest" style="display:grid;gap:8px;margin-top:6px"></div>
+      <button class="primary big" id="btn-back-lobby" style="display:none;margin-top:16px">🏠 Zurück zur Lobby (alle)</button>
       <p class="status" id="final-status"></p>
     </div>
   </section>
