@@ -1822,9 +1822,9 @@
       "t": 40,
       "end": 42,
       "chars": [
-        1
+        4
       ],
-      "who": "Malcolm",
+      "who": "Polizist",
       "text": "Mam, was haben Sie für ein Problem?",
       "de": "Ist Original Sprache!"
     },
@@ -1852,7 +1852,7 @@
     },
     {
       "t": 46,
-      "end": 47,
+      "end": 47.39,
       "chars": [
         4
       ],
