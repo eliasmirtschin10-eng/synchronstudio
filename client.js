@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.3";
+const APP_VERSION = "3.4";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -554,7 +554,7 @@ function handleMsg(msg, conn) {
 // ═════════════════════════════════════════════════════════════
 let sceneList = [];
 async function loadSceneList() {
-  try { sceneList = await (await fetch("scenes.json?v=" + APP_VERSION)).json(); } catch { sceneList = []; }
+  try { sceneList = await (await fetch("scenes.json?t=" + Date.now(), { cache: "no-store" })).json(); } catch { sceneList = []; }
   const sel = $("scene-select");
   sel.innerHTML = sceneList.length
     ? sceneList.map((s, i) => `<option value="${i}">${esc(s.title)} (${s.roles.length} Rollen${s.lines ? ", " + s.lines.length + " Lines" : ""})</option>`).join("")
