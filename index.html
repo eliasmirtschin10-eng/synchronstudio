@@ -384,6 +384,7 @@
           <select id="set-mode">
             <option value="free">🎮 Freies Spiel (Szene &amp; Rollen selbst wählen)</option>
             <option value="rounds">🏆 Match mit Runden (alles Zufall)</option>
+            <option value="elimination">🔪 Battle Royale (schlechtester fliegt jede Runde raus)</option>
           </select>
         </label>
       </div>
@@ -584,9 +585,14 @@
         <input type="range" id="sync-offset" min="-500" max="500" value="0" step="10">
         <span class="tag" id="sync-val">0 ms</span>
       </div>
+      <div class="bar" id="dl-progress" style="display:none">
+        <i id="dl-progress-bar" style="width:0%"></i>
+      </div>
+      <p class="tag" id="dl-progress-label" style="display:none"></p>
       <div class="row" style="margin-top:16px">
         <button class="primary big" id="btn-replay">▶ Nochmal abspielen</button>
-        <button class="big" id="btn-download">⬇ Ergebnis als Video speichern</button>
+        <button class="big" id="btn-download-audio">⚡ Nur Ton speichern (sofort)</button>
+        <button class="big" id="btn-download">⬇ Komplettes Video speichern (dauert Videolänge)</button>
         <button id="btn-again">Neue Runde (gleiche Szene)</button>
         <button id="btn-back">Andere Szene</button>
       </div>
