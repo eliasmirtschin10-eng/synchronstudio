@@ -1273,6 +1273,96 @@
     ]
   },
   {
+    "id": "deathnote",
+    "title": "Death Note — Light, L & Misa (3 Rollen)",
+    "videoUrl": "scenes/deathnote.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "L",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Misa",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Light",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 2.71,
+        "chars": [
+          1
+        ],
+        "who": "L",
+        "text": "Wer wäre über deinen Tod trauriger als Misa?",
+        "de": "Ist Originalsprache!"
+      },
+      {
+        "t": 2.79,
+        "end": 6.88,
+        "chars": [
+          1
+        ],
+        "who": "L",
+        "text": "Du und ich... entweder wir werden sterben oder diesen Kira festnehmen!",
+        "de": "Ist Originalsprache!"
+      },
+      {
+        "t": 6.9,
+        "end": 8,
+        "chars": [
+          1
+        ],
+        "who": "L",
+        "text": "Die Dame wählt...",
+        "de": "Ist Originalsprache!"
+      },
+      {
+        "t": 8.04,
+        "end": 11.9,
+        "chars": [
+          2
+        ],
+        "who": "Misa",
+        "text": "Kiras Festnahme! In einer Welt ohne Light kann ich einfach nicht leben!",
+        "de": "Ist Originalsprache!"
+      },
+      {
+        "t": 12,
+        "end": 12.98,
+        "chars": [
+          1
+        ],
+        "who": "L",
+        "text": "Fabelhafte Wahl...",
+        "de": "Ist Originalsprache!"
+      },
+      {
+        "t": 13,
+        "end": 15.52,
+        "chars": [
+          3
+        ],
+        "who": "Light",
+        "text": "Das ist doch völliger Irrsinn, L!",
+        "de": "Ist Originalsprache!"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
