@@ -198,6 +198,51 @@
   .tttcell:disabled{opacity:1;cursor:default}
   .tttcell:not(:disabled):hover{border-color:var(--amber)}
 
+  /* Avatar-Kreise auf den Spieler-Karten */
+  .player{flex-direction:row !important;align-items:center;gap:12px}
+  .pavatar{
+    width:38px;height:38px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Archivo Black';font-size:1rem;color:#0c0c10;
+    box-shadow:0 0 0 2px rgba(255,255,255,.08);
+  }
+  .pinfo{display:flex;flex-direction:column;gap:3px;min-width:0}
+
+  /* Emoji-Reaktions-Buttons */
+  .emojibtn{padding:6px 10px;font-size:1.1rem;background:#14141b}
+  .emojibtn:hover{transform:scale(1.15) translateY(-2px);border-color:var(--amber)}
+
+  /* Fliegende Emojis */
+  .flyemoji{
+    position:absolute;bottom:8%;font-size:1.8rem;
+    animation:flyup 2.5s ease-out forwards;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  .flyemoji-name{font-size:.6rem;color:var(--muted);background:#0e0e13;padding:1px 6px;border-radius:6px;white-space:nowrap}
+  @keyframes flyup{
+    0%{transform:translateY(0) translateX(0);opacity:0}
+    10%{opacity:1}
+    100%{transform:translateY(-70vh) translateX(var(--drift));opacity:0}
+  }
+
+  /* Konfetti */
+  .confetti-bit{
+    position:absolute;bottom:30%;width:8px;height:8px;border-radius:2px;
+    animation:confetti-fall 1.5s ease-out forwards;
+  }
+  @keyframes confetti-fall{
+    0%{transform:translate(0,0) rotate(0);opacity:1}
+    100%{transform:translate(var(--dx),-40vh) rotate(var(--rot));opacity:0}
+  }
+
+  /* Rotierende Tipp-Zeile */
+  .lobby-tip{
+    margin-top:14px;font-size:.85rem;color:var(--muted);
+    border-left:3px solid var(--violet);padding:6px 12px;
+    transition:opacity .3s;min-height:1.3em;
+  }
+  @media (prefers-reduced-motion:reduce){.flyemoji,.confetti-bit{animation:none;display:none}}
+
   .raterow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#14141b;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
   .starbtn{font-size:1.3rem;padding:4px 8px;background:transparent;border:none;color:#3a3a46;cursor:pointer}
   .starbtn.on{color:var(--amber);text-shadow:0 0 12px rgba(255,201,92,.5)}
@@ -220,6 +265,7 @@
     <div class="row" style="gap:10px;align-items:center">
       <button class="ghost" id="music-toggle" title="Lobby-Musik an/aus" style="font-size:1.1rem;padding:8px 12px">🎵</button>
       <input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.35" title="Musik-Lautstärke" style="width:70px;accent-color:var(--amber)">
+      <canvas id="music-viz" style="width:44px;height:26px"></canvas>
       <button class="ghost" id="btn-mic-settings" title="Mikrofon-Einstellungen" style="font-size:1.1rem">🎚</button>
       <div class="onair" id="onair">On Air</div>
     </div>
@@ -289,6 +335,16 @@
       <div class="roomcode-big" id="lobby-code">0000</div>
       <p class="sub">Schick den Code deinen Leuten. Alle öffnen denselben Link und treten bei.</p>
       <div class="players" id="player-list"></div>
+      <div class="row" style="margin-top:14px;gap:6px" id="emoji-bar">
+        <span class="tag" style="margin-right:4px">Reagieren:</span>
+        <button class="emojibtn" data-e="👍">👍</button>
+        <button class="emojibtn" data-e="😂">😂</button>
+        <button class="emojibtn" data-e="🔥">🔥</button>
+        <button class="emojibtn" data-e="👀">👀</button>
+        <button class="emojibtn" data-e="💀">💀</button>
+        <button class="emojibtn" data-e="🎬">🎬</button>
+      </div>
+      <p class="lobby-tip" id="lobby-tip"></p>
     </div>
 
     <div class="card" id="host-settings" style="display:none">
@@ -513,6 +569,7 @@
 
 </div>
 <div class="floaties" id="floaties"></div>
+<div id="emoji-layer" style="position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden"></div>
 <div class="countdown" id="countdown"><div>3</div></div>
 <script>
   // Schwebende Punkte generieren
