@@ -1364,6 +1364,244 @@
     "voiceTrack": "scenes/deathnote_voices.mp3"
   },
   {
+  "id": "scarymovieszene",
+  "title": "scarymovieszene",
+  "videoUrl": "scenes/scarymovieszene.mp4",
+  "roles": [
+    {
+      "id": 1,
+      "name": "GhostFace",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "Shorty",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    },
+    {
+      "id": 3,
+      "name": "Greg",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    },
+    {
+      "id": 4,
+      "name": "Dookie",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 7.35,
+      "end": 9.3,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "Yo? (bedröhnt/bekifft)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 9.43,
+      "end": 12.12,
+      "chars": [
+        1
+      ],
+      "who": "GhostFace",
+      "text": "Hallo Shorty, Was machst du gerade... (düster)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 12.46,
+      "end": 18.78,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "Nichts... Ich Kiff wie ein blöder und schau bisschen fernsehen...(tot bekifft ausgesprochen) (Nimmt Ein Zug)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 18.89,
+      "end": 20.74,
+      "chars": [
+        1
+      ],
+      "who": "GhostFace",
+      "text": "Bist du Allein? (düster)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 21.03,
+      "end": 22.86,
+      "chars": [
+        3
+      ],
+      "who": "Greg",
+      "text": "WAS GEHT AB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 23.24,
+      "end": 25.04,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "WAS GEHT AB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 25.05,
+      "end": 27.24,
+      "chars": [
+        1
+      ],
+      "who": "GhostFace",
+      "text": "WAS IST DA LOS?! WER IST NOCH DA?!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 27.31,
+      "end": 29,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "Geh mal ans Telefon (kichernd)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 30.21,
+      "end": 31.87,
+      "chars": [
+        3
+      ],
+      "who": "Greg",
+      "text": "WAS GEHT AB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 31.87,
+      "end": 33.32,
+      "chars": [
+        1
+      ],
+      "who": "GhostFace",
+      "text": "WAS GEHT AB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 33.32,
+      "end": 34.84,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "AAAAAAAAAAAAAAAAAAAAAAB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 34.84,
+      "end": 35.5,
+      "chars": [
+        3
+      ],
+      "who": "Greg",
+      "text": "AAAAAAAAAAAAAAAAAAAAAAB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 35.53,
+      "end": 38.3,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "EY JO DOOKIE, geh mal ans Telefon! (ausgesprochen wie Dukiii)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 39,
+      "end": 40,
+      "chars": [
+        4
+      ],
+      "who": "Dookie",
+      "text": "Yo?",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 40.09,
+      "end": 41.45,
+      "chars": [
+        1
+      ],
+      "who": "GhostFace",
+      "text": "WAS GEHT AB!!!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 41.47,
+      "end": 49,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "AAAAAAAAAAAAAAAAAAAAAB! Danach Lachen",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 41.47,
+      "end": 45.9,
+      "chars": [
+        3
+      ],
+      "who": "Greg",
+      "text": "AAAAAAAAAAAAAAAAAAAAAB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 42.23,
+      "end": 46.86,
+      "chars": [
+        4
+      ],
+      "who": "Dookie",
+      "text": "AAAAAAAAAAAAAAAAAAAAAB!",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 49.27,
+      "end": 51.6,
+      "chars": [
+        2
+      ],
+      "who": "Shorty",
+      "text": "Und was machst du so?(bedröhnt)",
+      "de": "Original text ist Deutsch!"
+    },
+    {
+      "t": 51.76,
+      "end": 55.94,
+      "chars": [
+        1
+      ],
+      "who": "GhostFace",
+      "text": "Nichts... nur rumsitzen... aufschlitzen...",
+      "de": "Original text ist Deutsch!"
+    }
+  ],
+  "voiceTrack": "scenes/scarymovieszene_voices.mp3"
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
