@@ -959,84 +959,6 @@
     ]
   },
   {
-    "id": "losbob",
-    "title": "Los & Spongebob — Donut Fries (2 Rollen)",
-    "videoUrl": "scenes/losbob.mp4",
-    "roles": [
-      {
-        "id": 1,
-        "name": "Los",
-        "pan": -0.5,
-        "effect": "none",
-        "gain": 1.0
-      },
-      {
-        "id": 2,
-        "name": "Spongebob",
-        "pan": 0.5,
-        "effect": "none",
-        "gain": 1.0
-      }
-    ],
-    "lines": [
-      {
-        "t": 0.0,
-        "end": 5.99,
-        "chars": [
-          1
-        ],
-        "who": "los",
-        "text": "You woke me up at 6am to take you to dunkin donuts",
-        "de": "Du hast mich um 6 Uhr früh geweckt, damit ich dich zu Dunkin Donuts fahre",
-        "orig": "scenes/losbob/lines/01.mp3"
-      },
-      {
-        "t": 5.99,
-        "end": 8.67,
-        "chars": [
-          2
-        ],
-        "who": "spongebob",
-        "text": "And you still went and got donut fries",
-        "de": "Und du hast dir trotzdem Donut-Fries geholt",
-        "orig": "scenes/losbob/lines/02.mp3"
-      },
-      {
-        "t": 8.67,
-        "end": 17.18,
-        "chars": [
-          1
-        ],
-        "who": "los",
-        "text": "YOU GOT DONUT FRIES YOU FUCKIN LIAR, I dont even know what a donut fry is i walked in and got a bagel",
-        "de": "DU HAST DONUT-FRIES GEHOLT, DU LÜGNER — ich weiß nicht mal, was das sein soll",
-        "orig": "scenes/losbob/lines/03.mp3"
-      },
-      {
-        "t": 17.18,
-        "end": 22.99,
-        "chars": [
-          2
-        ],
-        "who": "spongebob",
-        "text": "YOU SAID THEY and i quote \\",
-        "de": "DU HAST GESAGT, und ich zitiere…",
-        "orig": "scenes/losbob/lines/04.mp3"
-      },
-      {
-        "t": 22.99,
-        "end": 31.45,
-        "chars": [
-          1
-        ],
-        "who": "los",
-        "text": "I never said they smack EVER!",
-        "de": "Ich hab NIE gesagt, dass die smacken!",
-        "orig": "scenes/losbob/lines/05.mp3"
-      }
-    ]
-  },
-  {
     "id": "backrooms",
     "title": "Backrooms — Clark & Dr. Mary Kline (2 Rollen)",
     "videoUrl": "scenes/backrooms.mp4",
@@ -1273,105 +1195,105 @@
     ]
   },
   {
-  "id": "szenenf_rsynchrongame_12",
-  "title": "Transformers Szene Auto Verkauf",
-  "videoUrl": "scenes/szenenf_rsynchrongame_12.mp4",
-  "roles": [
-    {
-      "id": 1,
-      "name": "Verkäufer",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 2,
-      "name": "Vater",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 3,
-      "name": "Sohn",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    }
-  ],
-  "lines": [
-    {
-      "t": 0,
-      "end": 4.63,
-      "chars": [
-        1
-      ],
-      "who": "Verkäufer",
-      "text": "... Mein Name, (irgendein witz oder so?) Wie Kann ich ihnen helfen!",
-      "de": "Original ist Deutsch!"
-    },
-    {
-      "t": 4.89,
-      "end": 8.3,
-      "chars": [
-        2
-      ],
-      "who": "Vater",
-      "text": "Na also... Mein Sohne man sucht sein Erstes Auto...",
-      "de": "Original ist Deutsch!"
-    },
-    {
-      "t": 8.39,
-      "end": 9.7,
-      "chars": [
-        1
-      ],
-      "who": "Verkäufer",
-      "text": "Und dann kommt ihr zu mir?",
-      "de": "Original ist Deutsch!"
-    },
-    {
-      "t": 9.76,
-      "end": 11,
-      "chars": [
-        3
-      ],
-      "who": "Sohn",
-      "text": "ja... wir mussten...",
-      "de": "Original ist Deutsch!"
-    },
-    {
-      "t": 11.07,
-      "end": 15.46,
-      "chars": [
-        1
-      ],
-      "who": "Verkäufer",
-      "text": "das macht uns zur familie... man nennt mich... und wie nennt man dich?",
-      "de": "Original ist Deutsch!"
-    },
-    {
-      "t": 15.46,
-      "end": 16.5,
-      "chars": [
-        3
-      ],
-      "who": "Sohn",
-      "text": "Sam! (dein Name)",
-      "de": "Original ist Deutsch!"
-    },
-    {
-      "t": 17.02,
-      "end": 18.54,
-      "chars": [
-        1
-      ],
-      "who": "Verkäufer",
-      "text": "Denk dir was aus!",
-      "de": "Original ist Deutsch!"
-    }
-  ],
-  "voiceTrack": "scenes/szenenf_rsynchrongame_12_voices.mp3"
+    "id": "szenenf_rsynchrongame_12",
+    "title": "Transformers Szene Auto Verkauf",
+    "videoUrl": "scenes/szenenf_rsynchrongame_12.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Verkäufer",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Vater",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Sohn",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 4.63,
+        "chars": [
+          1
+        ],
+        "who": "Verkäufer",
+        "text": "... Mein Name, (irgendein witz oder so?) Wie Kann ich ihnen helfen!",
+        "de": "Original ist Deutsch!"
+      },
+      {
+        "t": 4.89,
+        "end": 8.3,
+        "chars": [
+          2
+        ],
+        "who": "Vater",
+        "text": "Na also... Mein Sohne man sucht sein Erstes Auto...",
+        "de": "Original ist Deutsch!"
+      },
+      {
+        "t": 8.39,
+        "end": 9.7,
+        "chars": [
+          1
+        ],
+        "who": "Verkäufer",
+        "text": "Und dann kommt ihr zu mir?",
+        "de": "Original ist Deutsch!"
+      },
+      {
+        "t": 9.76,
+        "end": 11,
+        "chars": [
+          3
+        ],
+        "who": "Sohn",
+        "text": "ja... wir mussten...",
+        "de": "Original ist Deutsch!"
+      },
+      {
+        "t": 11.07,
+        "end": 15.46,
+        "chars": [
+          1
+        ],
+        "who": "Verkäufer",
+        "text": "das macht uns zur familie... man nennt mich... und wie nennt man dich?",
+        "de": "Original ist Deutsch!"
+      },
+      {
+        "t": 15.46,
+        "end": 16.5,
+        "chars": [
+          3
+        ],
+        "who": "Sohn",
+        "text": "Sam! (dein Name)",
+        "de": "Original ist Deutsch!"
+      },
+      {
+        "t": 17.02,
+        "end": 18.54,
+        "chars": [
+          1
+        ],
+        "who": "Verkäufer",
+        "text": "Denk dir was aus!",
+        "de": "Original ist Deutsch!"
+      }
+    ],
+    "voiceTrack": "scenes/szenenf_rsynchrongame_12_voices.mp3"
   },
   {
     "id": "deathnote",
@@ -1465,424 +1387,424 @@
     "voiceTrack": "scenes/deathnote_voices.mp3"
   },
   {
-  "id": "scarymovieszene",
-  "title": "Scary Movie 1 - Ghostface, Shorty, Greg Und Dookie",
-  "videoUrl": "scenes/scarymovieszene.mp4",
-  "roles": [
-    {
-      "id": 1,
-      "name": "GhostFace",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    },
-    {
-      "id": 2,
-      "name": "Shorty",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    },
-    {
-      "id": 3,
-      "name": "Greg",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    },
-    {
-      "id": 4,
-      "name": "Dookie",
-      "pan": 0,
-      "effect": "vintage_1990",
-      "gain": 1
-    }
-  ],
-  "lines": [
-    {
-      "t": 7.35,
-      "end": 9.3,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "Yo? (bedröhnt/bekifft)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 9.43,
-      "end": 12.12,
-      "chars": [
-        1
-      ],
-      "who": "GhostFace",
-      "text": "Hallo Shorty, Was machst du gerade... (düster)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 12.46,
-      "end": 18.78,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "Nichts... Ich Kiff wie ein blöder und schau bisschen fernsehen...(tot bekifft ausgesprochen) (Nimmt Ein Zug)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 18.89,
-      "end": 20.74,
-      "chars": [
-        1
-      ],
-      "who": "GhostFace",
-      "text": "Bist du Allein? (düster)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 21.03,
-      "end": 22.86,
-      "chars": [
-        3
-      ],
-      "who": "Greg",
-      "text": "WAS GEHT AB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 23.24,
-      "end": 25.04,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "WAS GEHT AB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 25.05,
-      "end": 27.24,
-      "chars": [
-        1
-      ],
-      "who": "GhostFace",
-      "text": "WAS IST DA LOS?! WER IST NOCH DA?!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 27.31,
-      "end": 29,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "Geh mal ans Telefon (kichernd)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 30.21,
-      "end": 31.87,
-      "chars": [
-        3
-      ],
-      "who": "Greg",
-      "text": "WAS GEHT AB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 31.87,
-      "end": 33.32,
-      "chars": [
-        1
-      ],
-      "who": "GhostFace",
-      "text": "WAS GEHT AB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 33.32,
-      "end": 34.84,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "AAAAAAAAAAAAAAAAAAAAAAB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 34.84,
-      "end": 35.5,
-      "chars": [
-        3
-      ],
-      "who": "Greg",
-      "text": "AAAAAAAAAAAAAAAAAAAAAAB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 35.53,
-      "end": 38.3,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "EY JO DOOKIE, geh mal ans Telefon! (ausgesprochen wie Dukiii)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 39,
-      "end": 40,
-      "chars": [
-        4
-      ],
-      "who": "Dookie",
-      "text": "Yo?",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 40.09,
-      "end": 41.45,
-      "chars": [
-        1
-      ],
-      "who": "GhostFace",
-      "text": "WAS GEHT AB!!!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 41.47,
-      "end": 49,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "AAAAAAAAAAAAAAAAAAAAAB! Danach Lachen",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 41.47,
-      "end": 45.9,
-      "chars": [
-        3
-      ],
-      "who": "Greg",
-      "text": "AAAAAAAAAAAAAAAAAAAAAB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 42.23,
-      "end": 46.86,
-      "chars": [
-        4
-      ],
-      "who": "Dookie",
-      "text": "AAAAAAAAAAAAAAAAAAAAAB!",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 49.27,
-      "end": 51.6,
-      "chars": [
-        2
-      ],
-      "who": "Shorty",
-      "text": "Und was machst du so?(bedröhnt)",
-      "de": "Original text ist Deutsch!"
-    },
-    {
-      "t": 51.76,
-      "end": 55.94,
-      "chars": [
-        1
-      ],
-      "who": "GhostFace",
-      "text": "Nichts... nur rumsitzen... aufschlitzen...",
-      "de": "Original text ist Deutsch!"
-    }
-  ],
-  "voiceTrack": "scenes/scarymovieszene_voices.mp3"
+    "id": "scarymovieszene",
+    "title": "Scary Movie 1 - Ghostface, Shorty, Greg Und Dookie",
+    "videoUrl": "scenes/scarymovieszene.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "GhostFace",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Shorty",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Greg",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      },
+      {
+        "id": 4,
+        "name": "Dookie",
+        "pan": 0,
+        "effect": "vintage_1990",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 7.35,
+        "end": 9.3,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "Yo? (bedröhnt/bekifft)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 9.43,
+        "end": 12.12,
+        "chars": [
+          1
+        ],
+        "who": "GhostFace",
+        "text": "Hallo Shorty, Was machst du gerade... (düster)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 12.46,
+        "end": 18.78,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "Nichts... Ich Kiff wie ein blöder und schau bisschen fernsehen...(tot bekifft ausgesprochen) (Nimmt Ein Zug)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 18.89,
+        "end": 20.74,
+        "chars": [
+          1
+        ],
+        "who": "GhostFace",
+        "text": "Bist du Allein? (düster)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 21.03,
+        "end": 22.86,
+        "chars": [
+          3
+        ],
+        "who": "Greg",
+        "text": "WAS GEHT AB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 23.24,
+        "end": 25.04,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "WAS GEHT AB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 25.05,
+        "end": 27.24,
+        "chars": [
+          1
+        ],
+        "who": "GhostFace",
+        "text": "WAS IST DA LOS?! WER IST NOCH DA?!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 27.31,
+        "end": 29,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "Geh mal ans Telefon (kichernd)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 30.21,
+        "end": 31.87,
+        "chars": [
+          3
+        ],
+        "who": "Greg",
+        "text": "WAS GEHT AB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 31.87,
+        "end": 33.32,
+        "chars": [
+          1
+        ],
+        "who": "GhostFace",
+        "text": "WAS GEHT AB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 33.32,
+        "end": 34.84,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "AAAAAAAAAAAAAAAAAAAAAAB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 34.84,
+        "end": 35.5,
+        "chars": [
+          3
+        ],
+        "who": "Greg",
+        "text": "AAAAAAAAAAAAAAAAAAAAAAB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 35.53,
+        "end": 38.3,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "EY JO DOOKIE, geh mal ans Telefon! (ausgesprochen wie Dukiii)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 39,
+        "end": 40,
+        "chars": [
+          4
+        ],
+        "who": "Dookie",
+        "text": "Yo?",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 40.09,
+        "end": 41.45,
+        "chars": [
+          1
+        ],
+        "who": "GhostFace",
+        "text": "WAS GEHT AB!!!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 41.47,
+        "end": 49,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "AAAAAAAAAAAAAAAAAAAAAB! Danach Lachen",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 41.47,
+        "end": 45.9,
+        "chars": [
+          3
+        ],
+        "who": "Greg",
+        "text": "AAAAAAAAAAAAAAAAAAAAAB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 42.23,
+        "end": 46.86,
+        "chars": [
+          4
+        ],
+        "who": "Dookie",
+        "text": "AAAAAAAAAAAAAAAAAAAAAB!",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 49.27,
+        "end": 51.6,
+        "chars": [
+          2
+        ],
+        "who": "Shorty",
+        "text": "Und was machst du so?(bedröhnt)",
+        "de": "Original text ist Deutsch!"
+      },
+      {
+        "t": 51.76,
+        "end": 55.94,
+        "chars": [
+          1
+        ],
+        "who": "GhostFace",
+        "text": "Nichts... nur rumsitzen... aufschlitzen...",
+        "de": "Original text ist Deutsch!"
+      }
+    ],
+    "voiceTrack": "scenes/scarymovieszene_voices.mp3"
   },
   {
-  "id": "ahauntedhousecompressed",
-  "title": "A Haunted House Kisha und Malcom am Kiffen mit dem Geist",
-  "videoUrl": "scenes/ahauntedhousecompressed.mp4",
-  "roles": [
-    {
-      "id": 1,
-      "name": "Malcolm",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 2,
-      "name": "Kisha",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 3,
-      "name": "Geist",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 4,
-      "name": "Polizist",
-      "pan": 0,
-      "effect": "telefon",
-      "gain": 1
-    }
-  ],
-  "lines": [
-    {
-      "t": 0,
-      "end": 2,
-      "chars": [
-        1
-      ],
-      "who": "Malcolm",
-      "text": "Ich bin dicht.",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 8.68,
-      "end": 12.8,
-      "chars": [
-        3
-      ],
-      "who": "Geist",
-      "text": "(kein dialoug hier kannst dir was ausdenken oder skippen geist hebt die flunte auf)",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 2,
-      "end": 3,
-      "chars": [
-        1
-      ],
-      "who": "Malcolm",
-      "text": "Schnauf Geräusch",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 19,
-      "end": 20,
-      "chars": [
-        3
-      ],
-      "who": "Geist",
-      "text": "Auspusten",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 28,
-      "end": 29,
-      "chars": [
-        2
-      ],
-      "who": "Kisha",
-      "text": "Oh!",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 29,
-      "end": 30,
-      "chars": [
-        1
-      ],
-      "who": "Malcolm",
-      "text": "Shit.",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 32,
-      "end": 37,
-      "chars": [
-        4
-      ],
-      "who": "Polizist",
-      "text": "LL County, Notrufzentrale, um welchen Notfall handelt es sich?",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 37,
-      "end": 40,
-      "chars": [
-        2
-      ],
-      "who": "Kisha",
-      "text": "3... 3 Menschen!",
-      "de": "Ist Original Sprache!",
-      "effect": "telefon"
-    },
-    {
-      "t": 40,
-      "end": 42,
-      "chars": [
-        4
-      ],
-      "who": "Polizist",
-      "text": "Mam, was haben Sie für ein Problem?",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 42,
-      "end": 44,
-      "chars": [
-        2
-      ],
-      "who": "Kisha",
-      "text": "3 Menschen sind tot!",
-      "de": "Ist Original Sprache!",
-      "effect": "telefon"
-    },
-    {
-      "t": 44,
-      "end": 46,
-      "chars": [
-        2
-      ],
-      "who": "Kisha",
-      "text": "Ich, hab sie umgebracht!",
-      "de": "Ist Original Sprache!",
-      "effect": "telefon"
-    },
-    {
-      "t": 46,
-      "end": 47.39,
-      "chars": [
-        4
-      ],
-      "who": "Polizist",
-      "text": "Wer hat sie umgebracht?",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 47.4,
-      "end": 50,
-      "chars": [
-        1
-      ],
-      "who": "Malcolm",
-      "text": "Mein Schwanz!",
-      "de": "Ist Original Sprache!"
-    },
-    {
-      "t": 50,
-      "end": 53,
-      "chars": [
-        1
-      ],
-      "who": "Malcolm",
-      "text": "Er ist drauf reingefallen!",
-      "de": "Ist Original Sprache!"
-    }
-  ],
-  "voiceTrack": "scenes/ahauntedhousecompressed_voices.mp3",
-  "difficultyOverride": "medium"
+    "id": "ahauntedhousecompressed",
+    "title": "A Haunted House Kisha und Malcom am Kiffen mit dem Geist",
+    "videoUrl": "scenes/ahauntedhousecompressed.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Malcolm",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Kisha",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Geist",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 4,
+        "name": "Polizist",
+        "pan": 0,
+        "effect": "telefon",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 2,
+        "chars": [
+          1
+        ],
+        "who": "Malcolm",
+        "text": "Ich bin dicht.",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 8.68,
+        "end": 12.8,
+        "chars": [
+          3
+        ],
+        "who": "Geist",
+        "text": "(kein dialoug hier kannst dir was ausdenken oder skippen geist hebt die flunte auf)",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 2,
+        "end": 3,
+        "chars": [
+          1
+        ],
+        "who": "Malcolm",
+        "text": "Schnauf Geräusch",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 19,
+        "end": 20,
+        "chars": [
+          3
+        ],
+        "who": "Geist",
+        "text": "Auspusten",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 28,
+        "end": 29,
+        "chars": [
+          2
+        ],
+        "who": "Kisha",
+        "text": "Oh!",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 29,
+        "end": 30,
+        "chars": [
+          1
+        ],
+        "who": "Malcolm",
+        "text": "Shit.",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 32,
+        "end": 37,
+        "chars": [
+          4
+        ],
+        "who": "Polizist",
+        "text": "LL County, Notrufzentrale, um welchen Notfall handelt es sich?",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 37,
+        "end": 40,
+        "chars": [
+          2
+        ],
+        "who": "Kisha",
+        "text": "3... 3 Menschen!",
+        "de": "Ist Original Sprache!",
+        "effect": "telefon"
+      },
+      {
+        "t": 40,
+        "end": 42,
+        "chars": [
+          4
+        ],
+        "who": "Polizist",
+        "text": "Mam, was haben Sie für ein Problem?",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 42,
+        "end": 44,
+        "chars": [
+          2
+        ],
+        "who": "Kisha",
+        "text": "3 Menschen sind tot!",
+        "de": "Ist Original Sprache!",
+        "effect": "telefon"
+      },
+      {
+        "t": 44,
+        "end": 46,
+        "chars": [
+          2
+        ],
+        "who": "Kisha",
+        "text": "Ich, hab sie umgebracht!",
+        "de": "Ist Original Sprache!",
+        "effect": "telefon"
+      },
+      {
+        "t": 46,
+        "end": 47.39,
+        "chars": [
+          4
+        ],
+        "who": "Polizist",
+        "text": "Wer hat sie umgebracht?",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 47.4,
+        "end": 50,
+        "chars": [
+          1
+        ],
+        "who": "Malcolm",
+        "text": "Mein Schwanz!",
+        "de": "Ist Original Sprache!"
+      },
+      {
+        "t": 50,
+        "end": 53,
+        "chars": [
+          1
+        ],
+        "who": "Malcolm",
+        "text": "Er ist drauf reingefallen!",
+        "de": "Ist Original Sprache!"
+      }
+    ],
+    "voiceTrack": "scenes/ahauntedhousecompressed_voices.mp3",
+    "difficultyOverride": "medium"
   },
   {
     "id": "backroomsdinner",
