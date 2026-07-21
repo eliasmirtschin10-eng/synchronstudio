@@ -1703,6 +1703,188 @@
   "voiceTrack": "scenes/scarymovieszene_voices.mp3"
   },
   {
+  "id": "ahauntedhousecompressed",
+  "title": "A Haunted House Kisha und Malcom am Kiffen mit dem Geist",
+  "videoUrl": "scenes/ahauntedhousecompressed.mp4",
+  "roles": [
+    {
+      "id": 1,
+      "name": "Malcolm",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "Kisha",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 3,
+      "name": "Geist",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 4,
+      "name": "Polizist",
+      "pan": 0,
+      "effect": "telefon",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 0,
+      "end": 2,
+      "chars": [
+        1
+      ],
+      "who": "Malcolm",
+      "text": "Ich bin dicht.",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 8.68,
+      "end": 12.8,
+      "chars": [
+        3
+      ],
+      "who": "Geist",
+      "text": "(kein dialoug hier kannst dir was ausdenken oder skippen geist hebt die flunte auf)",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 2,
+      "end": 3,
+      "chars": [
+        1
+      ],
+      "who": "Malcolm",
+      "text": "Schnauf Geräusch",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 19,
+      "end": 20,
+      "chars": [
+        3
+      ],
+      "who": "Geist",
+      "text": "Auspusten",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 28,
+      "end": 29,
+      "chars": [
+        2
+      ],
+      "who": "Kisha",
+      "text": "Oh!",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 29,
+      "end": 30,
+      "chars": [
+        1
+      ],
+      "who": "Malcolm",
+      "text": "Shit.",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 32,
+      "end": 37,
+      "chars": [
+        4
+      ],
+      "who": "Polizist",
+      "text": "LL County, Notrufzentrale, um welchen Notfall handelt es sich?",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 37,
+      "end": 40,
+      "chars": [
+        2
+      ],
+      "who": "Kisha",
+      "text": "3... 3 Menschen!",
+      "de": "Ist Original Sprache!",
+      "effect": "telefon"
+    },
+    {
+      "t": 40,
+      "end": 42,
+      "chars": [
+        1
+      ],
+      "who": "Malcolm",
+      "text": "Mam, was haben Sie für ein Problem?",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 42,
+      "end": 44,
+      "chars": [
+        2
+      ],
+      "who": "Kisha",
+      "text": "3 Menschen sind tot!",
+      "de": "Ist Original Sprache!",
+      "effect": "telefon"
+    },
+    {
+      "t": 44,
+      "end": 46,
+      "chars": [
+        2
+      ],
+      "who": "Kisha",
+      "text": "Ich, hab sie umgebracht!",
+      "de": "Ist Original Sprache!",
+      "effect": "telefon"
+    },
+    {
+      "t": 46,
+      "end": 47,
+      "chars": [
+        4
+      ],
+      "who": "Polizist",
+      "text": "Wer hat sie umgebracht?",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 47.4,
+      "end": 50,
+      "chars": [
+        1
+      ],
+      "who": "Malcolm",
+      "text": "Mein Schwanz!",
+      "de": "Ist Original Sprache!"
+    },
+    {
+      "t": 50,
+      "end": 53,
+      "chars": [
+        1
+      ],
+      "who": "Malcolm",
+      "text": "Er ist drauf reingefallen!",
+      "de": "Ist Original Sprache!"
+    }
+  ],
+  "voiceTrack": "scenes/ahauntedhousecompressed_voices.mp3",
+  "difficultyOverride": "medium"
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
