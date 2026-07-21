@@ -1885,6 +1885,543 @@
   "difficultyOverride": "medium"
   },
   {
+    "id": "backroomsdinner",
+    "title": "Backrooms — Dinner Scene: Clark & Mary (2 Rollen)",
+    "videoUrl": "scenes/backroomsdinner.mp4",
+    "avatars": {
+      "1": "scenes/backroomsdinner/clark.png",
+      "2": "scenes/backroomsdinner/mary.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Clark",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Mary",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.55,
+        "end": 4.44,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "I said someone has to get off her fat ass and work around here.",
+        "de": "Ich hab gesagt, jemand muss endlich von seinem fetten Arsch aufstehen und hier arbeiten.",
+        "orig": "scenes/backroomsdinner/lines/01.mp3"
+      },
+      {
+        "t": 4.44,
+        "end": 6.82,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "Just because you didn't get to be an architect do-",
+        "de": "Nur weil du kein Architekt geworden bist, heißt das noch la—",
+        "orig": "scenes/backroomsdinner/lines/02.mp3"
+      },
+      {
+        "t": 6.82,
+        "end": 10.01,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "I am a fucking architect.",
+        "de": "Ich bin ein verfickter Architekt.",
+        "orig": "scenes/backroomsdinner/lines/03.mp3"
+      },
+      {
+        "t": 10.01,
+        "end": 15.09,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "I'm just stuck selling shit furniture, 'cause someone won't get a job.",
+        "de": "Ich verkauf doch nur Scheiß-Möbel, weil jemand sich keinen Job sucht.",
+        "orig": "scenes/backroomsdinner/lines/04.mp3"
+      },
+      {
+        "t": 15.09,
+        "end": 16.11,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "I'm not your wife!",
+        "de": "Ich bin nicht deine Frau!",
+        "orig": "scenes/backroomsdinner/lines/05.mp3"
+      },
+      {
+        "t": 16.11,
+        "end": 18.09,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "S- Stay in charac-",
+        "de": "B— Bleib in deiner Roll—",
+        "orig": "scenes/backroomsdinner/lines/06.mp3"
+      },
+      {
+        "t": 18.09,
+        "end": 19.1,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "Stay in charact-",
+        "de": "Bleib in der Rolle—",
+        "orig": "scenes/backroomsdinner/lines/07.mp3"
+      },
+      {
+        "t": 19.1,
+        "end": 20.11,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "I've never even met her!",
+        "de": "Ich hab sie nie getroffen!",
+        "orig": "scenes/backroomsdinner/lines/08.mp3"
+      },
+      {
+        "t": 20.11,
+        "end": 21.16,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "STAY IN CHARACTER!",
+        "de": "BLEIB IN DER ROLLE!",
+        "orig": "scenes/backroomsdinner/lines/09.mp3"
+      },
+      {
+        "t": 21.16,
+        "end": 26.05,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "FUCK YOU!",
+        "de": "FICK DICH!",
+        "orig": "scenes/backroomsdinner/lines/10.mp3"
+      },
+      {
+        "t": 26.05,
+        "end": 27.23,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "What did you say?",
+        "de": "Was hast du gesagt?",
+        "orig": "scenes/backroomsdinner/lines/11.mp3"
+      },
+      {
+        "t": 27.23,
+        "end": 30.18,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "You wanna know the real reason your wife left you?",
+        "de": "Willst du den wahren Grund wissen, warum deine Frau dich verlassen hat?",
+        "orig": "scenes/backroomsdinner/lines/12.mp3"
+      },
+      {
+        "t": 30.18,
+        "end": 37.22,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "It wasn't the drinking! Or the stumbling home at all hours of the night!",
+        "de": "Es lag nicht am Trinken! Oder daran, dass du nachts betrunken heimkamst!",
+        "orig": "scenes/backroomsdinner/lines/13.mp3"
+      },
+      {
+        "t": 37.22,
+        "end": 40.06,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "Nothing's ever your fault, is it?!",
+        "de": "Nie ist irgendwas deine Schuld, oder?!",
+        "orig": "scenes/backroomsdinner/lines/14.mp3"
+      },
+      {
+        "t": 40.06,
+        "end": 48,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "You drink too much? Blame your job. You hate your job? Blame me.",
+        "de": "Du trinkst zu viel? Schuld ist der Job. Du hasst den Job? Schuld bin ich.",
+        "orig": "scenes/backroomsdinner/lines/15.mp3"
+      },
+      {
+        "t": 48,
+        "end": 58,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "You attack me and tie me up?! Blame your brain! You are your own worst enemy!",
+        "de": "Du greifst mich an und fesselst mich?! Schuld ist dein Gehirn! Du bist dein eigener größter Feind!",
+        "orig": "scenes/backroomsdinner/lines/16.mp3"
+      },
+      {
+        "t": 58,
+        "end": 60.19,
+        "chars": [
+          1
+        ],
+        "who": "Clark",
+        "text": "You saying this is my fault.",
+        "de": "Du sagst, das hier ist meine Schuld.",
+        "orig": "scenes/backroomsdinner/lines/17.mp3"
+      },
+      {
+        "t": 60.19,
+        "end": 69.94,
+        "chars": [
+          2
+        ],
+        "who": "Mary",
+        "text": "Yes! But it's just the way you're wired isn't it?! ISN'T IT?!",
+        "de": "Ja! Aber so bist du eben gestrickt, oder?! ODER NICHT?!",
+        "orig": "scenes/backroomsdinner/lines/18.mp3"
+      }
+    ]
+  },
+  {
+    "id": "jjkdomain",
+    "title": "Jujutsu Kaisen — 3-Way Domain Clash (6 Rollen)",
+    "videoUrl": "scenes/jjkdomain.mp4",
+    "avatars": {
+      "1": "scenes/jjkdomain/ryo.png",
+      "2": "scenes/jjkdomain/narrator.png",
+      "3": "scenes/jjkdomain/uro.png",
+      "4": "scenes/jjkdomain/yuta.png",
+      "5": "scenes/jjkdomain/rika.png",
+      "6": "scenes/jjkdomain/kurourushi.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Ryo",
+        "pan": -0.6,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Narrator",
+        "pan": 0,
+        "effect": "hall",
+        "gain": 1
+      },
+      {
+        "id": 3,
+        "name": "Uro",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 4,
+        "name": "Yuta",
+        "pan": -0.3,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 5,
+        "name": "Rika",
+        "pan": 0.3,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 6,
+        "name": "Kurourushi",
+        "pan": 0.6,
+        "effect": "monster",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 1.39,
+        "end": 11.77,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "Mrghghhaa",
+        "de": "Mrghghhaa",
+        "orig": "scenes/jjkdomain/lines/01.mp3"
+      },
+      {
+        "t": 11.77,
+        "end": 14.1,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "Quit your whining.",
+        "de": "Hör auf zu jammern.",
+        "orig": "scenes/jjkdomain/lines/02.mp3"
+      },
+      {
+        "t": 14.1,
+        "end": 16.92,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "Because at this point",
+        "de": "Denn an diesem Punkt",
+        "orig": "scenes/jjkdomain/lines/03.mp3"
+      },
+      {
+        "t": 16.92,
+        "end": 24.45,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "WORDS ARE MEANINGLESS!",
+        "de": "SIND WORTE BEDEUTUNGSLOS!",
+        "orig": "scenes/jjkdomain/lines/04.mp3"
+      },
+      {
+        "t": 24.45,
+        "end": 26.45,
+        "chars": [
+          4
+        ],
+        "who": "Yuta",
+        "text": "Domain Expansion",
+        "de": "Domain Expansion",
+        "orig": "scenes/jjkdomain/lines/05.mp3"
+      },
+      {
+        "t": 24.45,
+        "end": 26.45,
+        "chars": [
+          3
+        ],
+        "who": "Uro",
+        "text": "Domain Expansion",
+        "de": "Domain Expansion",
+        "orig": "scenes/jjkdomain/lines/06.mp3"
+      },
+      {
+        "t": 24.45,
+        "end": 28.58,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "Domain Expansion",
+        "de": "Domain Expansion",
+        "orig": "scenes/jjkdomain/lines/07.mp3"
+      },
+      {
+        "t": 28.58,
+        "end": 32,
+        "chars": [
+          5
+        ],
+        "who": "Rika",
+        "text": "Yuutaa? GIVE HIM BACK!",
+        "de": "Yuutaa? GIB IHN ZURÜCK!",
+        "orig": "scenes/jjkdomain/lines/08.mp3"
+      },
+      {
+        "t": 32,
+        "end": 36.44,
+        "chars": [
+          3
+        ],
+        "who": "Uro",
+        "text": "Even if it tries to penetrate the barrier later",
+        "de": "Selbst wenn er später versucht, die Barriere zu durchdringen",
+        "orig": "scenes/jjkdomain/lines/09.mp3"
+      },
+      {
+        "t": 36.44,
+        "end": 38.65,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "I ain't gonna drag this out.",
+        "de": "Ich werd das hier nicht in die Länge ziehen.",
+        "orig": "scenes/jjkdomain/lines/10.mp3"
+      },
+      {
+        "t": 38.65,
+        "end": 41.16,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "Let's settle this, nice and sweet",
+        "de": "Lass uns das schön und sauber klären",
+        "orig": "scenes/jjkdomain/lines/11.mp3"
+      },
+      {
+        "t": 41.16,
+        "end": 45.03,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "At that moment, the black devil of the modern age.",
+        "de": "In diesem Moment, der schwarze Teufel der Moderne.",
+        "orig": "scenes/jjkdomain/lines/12.mp3"
+      },
+      {
+        "t": 45.03,
+        "end": 50.3,
+        "chars": [
+          6
+        ],
+        "who": "Kurourushi",
+        "text": "I told you, I like the taste of IRON",
+        "de": "Ich hab's dir gesagt, ich mag den Geschmack von EISEN",
+        "orig": "scenes/jjkdomain/lines/13.mp3"
+      },
+      {
+        "t": 50.3,
+        "end": 53.26,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "Flew into the barriers",
+        "de": "Flog in die Barrieren",
+        "orig": "scenes/jjkdomain/lines/14.mp3"
+      },
+      {
+        "t": 53.26,
+        "end": 55.26,
+        "chars": [
+          4
+        ],
+        "who": "Yuta",
+        "text": "*Gasp",
+        "de": "*Keucht",
+        "orig": "scenes/jjkdomain/lines/15.mp3"
+      },
+      {
+        "t": 53.26,
+        "end": 55.26,
+        "chars": [
+          3
+        ],
+        "who": "Uro",
+        "text": "*Gasp",
+        "de": "*Keucht",
+        "orig": "scenes/jjkdomain/lines/16.mp3"
+      },
+      {
+        "t": 53.26,
+        "end": 54.24,
+        "chars": [
+          1
+        ],
+        "who": "Ryo",
+        "text": "*Gasp",
+        "de": "*Keucht",
+        "orig": "scenes/jjkdomain/lines/17.mp3"
+      },
+      {
+        "t": 54.24,
+        "end": 55.8,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "*Kurourushi",
+        "de": "*Kurourushi",
+        "orig": "scenes/jjkdomain/lines/18.mp3"
+      },
+      {
+        "t": 55.8,
+        "end": 60.61,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "had completed parthenogenesis before going dormant",
+        "de": "hatte die Parthenogenese abgeschlossen, bevor er in Ruhezustand ging",
+        "orig": "scenes/jjkdomain/lines/19.mp3"
+      },
+      {
+        "t": 60.61,
+        "end": 64.75,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "So Kurourushi was still alive and well as a cursed spirit",
+        "de": "Also war Kurourushi noch am Leben, als Fluchgeist",
+        "orig": "scenes/jjkdomain/lines/20.mp3"
+      },
+      {
+        "t": 64.75,
+        "end": 69.56,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "The complex forces of their domains had been keeping them apart",
+        "de": "Die komplexen Kräfte ihrer Domains hatten sie bisher auseinandergehalten",
+        "orig": "scenes/jjkdomain/lines/21.mp3"
+      },
+      {
+        "t": 69.56,
+        "end": 73.39,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "But this intruder was unexpected",
+        "de": "Aber dieser Eindringling war unerwartet",
+        "orig": "scenes/jjkdomain/lines/22.mp3"
+      },
+      {
+        "t": 73.39,
+        "end": 82.9,
+        "chars": [
+          2
+        ],
+        "who": "Narrator",
+        "text": "And so the barriers... collapsed",
+        "de": "Und so... brachen die Barrieren zusammen",
+        "orig": "scenes/jjkdomain/lines/23.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
