@@ -2835,6 +2835,346 @@
     ]
   },
   {
+    "id": "strongest",
+    "title": "Jujutsu Kaisen — Are You the Strongest? (2 Rollen)",
+    "videoUrl": "scenes/strongest.mp4",
+    "avatars": {
+      "1": "scenes/strongest/geto.png",
+      "2": "scenes/strongest/gojo.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Geto",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Gojo",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.44,
+        "end": 2.91,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "You're so arrogant",
+        "de": "Du bist so arrogant",
+        "orig": "scenes/strongest/lines/01.mp3"
+      },
+      {
+        "t": 2.91,
+        "end": 4.71,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Huuuhhh?",
+        "de": "Häähh?",
+        "orig": "scenes/strongest/lines/02.mp3"
+      },
+      {
+        "t": 4.71,
+        "end": 10.16,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "You could do it yourself, couldn't you Satoru?",
+        "de": "Du könntest es doch selbst tun, oder Satoru?",
+        "orig": "scenes/strongest/lines/03.mp3"
+      },
+      {
+        "t": 10.16,
+        "end": 13.11,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "Yet you would try to convince someone else",
+        "de": "Und trotzdem würdest du versuchen, jemand anderen zu überzeugen",
+        "orig": "scenes/strongest/lines/04.mp3"
+      },
+      {
+        "t": 13.11,
+        "end": 15.45,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "That it's impossible to do something",
+        "de": "Dass es unmöglich ist, etwas zu tun",
+        "orig": "scenes/strongest/lines/05.mp3"
+      },
+      {
+        "t": 15.45,
+        "end": 20.5,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "Which is possible for you",
+        "de": "Das für dich möglich wäre",
+        "orig": "scenes/strongest/lines/06.mp3"
+      },
+      {
+        "t": 20.5,
+        "end": 24.0,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "Do you think you're the strongest because you're Satoru",
+        "de": "Denkst du, du bist der Stärkste, weil du Satoru bist",
+        "orig": "scenes/strongest/lines/07.mp3"
+      },
+      {
+        "t": 24.0,
+        "end": 26.72,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "Or are you Satoru Gojo because you are the strongest",
+        "de": "Oder bist du Satoru Gojo, weil du der Stärkste bist",
+        "orig": "scenes/strongest/lines/08.mp3"
+      },
+      {
+        "t": 26.72,
+        "end": 28.75,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Just what are you trying to say?",
+        "de": "Was willst du damit überhaupt sagen?",
+        "orig": "scenes/strongest/lines/09.mp3"
+      },
+      {
+        "t": 28.75,
+        "end": 31.87,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "If I were able to become you for a moment",
+        "de": "Wenn ich für einen Moment du sein könnte",
+        "orig": "scenes/strongest/lines/10.mp3"
+      },
+      {
+        "t": 31.87,
+        "end": 35.61,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "This foolish idea would become a lot more grounded in reality",
+        "de": "Würde diese dumme Idee viel realistischer werden",
+        "orig": "scenes/strongest/lines/11.mp3"
+      },
+      {
+        "t": 35.61,
+        "end": 37.3,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Hnghhh...",
+        "de": "Hnghhh...",
+        "orig": "scenes/strongest/lines/12.mp3"
+      },
+      {
+        "t": 37.3,
+        "end": 38.98,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "i've made my decision",
+        "de": "Ich hab meine Entscheidung getroffen",
+        "orig": "scenes/strongest/lines/13.mp3"
+      },
+      {
+        "t": 38.98,
+        "end": 43.79,
+        "chars": [
+          1
+        ],
+        "who": "Geto",
+        "text": "Now it's just a matter of doing the best I can to achieve it",
+        "de": "Jetzt geht's nur noch darum, mein Bestes zu geben, um es zu erreichen",
+        "orig": "scenes/strongest/lines/14.mp3"
+      },
+      {
+        "t": 43.79,
+        "end": 45.1,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Hnggh *breathes heavily*",
+        "de": "Hnggh *atmet schwer*",
+        "orig": "scenes/strongest/lines/15.mp3"
+      },
+      {
+        "t": 45.1,
+        "end": 48.56,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Grunting Noise I guess",
+        "de": "Ein Knurr-Geräusch, schätze ich",
+        "orig": "scenes/strongest/lines/16.mp3"
+      }
+    ]
+  },
+  {
+    "id": "aibubble",
+    "title": "Popped the AI Bubble — Deku & Tung Tung (2 Rollen)",
+    "videoUrl": "scenes/aibubble.mp4",
+    "avatars": {
+      "1": "scenes/aibubble/deku.png",
+      "2": "scenes/aibubble/tungtung.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Deku",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Tung Tung",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.13,
+        "end": 2.0,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "It's finally over",
+        "de": "Es ist endlich vorbei",
+        "orig": "scenes/aibubble/lines/01.mp3"
+      },
+      {
+        "t": 2.0,
+        "end": 4.12,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "We popped the AI bubble",
+        "de": "Wir haben die KI-Blase zum Platzen gebracht",
+        "orig": "scenes/aibubble/lines/02.mp3"
+      },
+      {
+        "t": 4.12,
+        "end": 6.46,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "Look Triple T...",
+        "de": "Schau, Triple T...",
+        "orig": "scenes/aibubble/lines/03.mp3"
+      },
+      {
+        "t": 6.46,
+        "end": 8.89,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "Triple T...",
+        "de": "Triple T...",
+        "orig": "scenes/aibubble/lines/04.mp3"
+      },
+      {
+        "t": 8.89,
+        "end": 11.07,
+        "chars": [
+          2
+        ],
+        "who": "Tung Tung",
+        "text": "Triple T...",
+        "de": "Triple T...",
+        "orig": "scenes/aibubble/lines/05.mp3"
+      },
+      {
+        "t": 11.07,
+        "end": 11.4,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "What...",
+        "de": "Was...",
+        "orig": "scenes/aibubble/lines/06.mp3"
+      },
+      {
+        "t": 11.4,
+        "end": 16.76,
+        "chars": [
+          2
+        ],
+        "who": "Tung Tung",
+        "text": "I'll always be... Tung Tung... Sa-Here",
+        "de": "Ich werde immer... Tung Tung... Sa-Hier sein",
+        "orig": "scenes/aibubble/lines/07.mp3"
+      },
+      {
+        "t": 16.76,
+        "end": 20.83,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "Triple T... NOOOOOOOoooOOOO",
+        "de": "Triple T... NEEEEEEEIIIIIN",
+        "orig": "scenes/aibubble/lines/08.mp3"
+      },
+      {
+        "t": 20.83,
+        "end": 25.98,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "TUUUUUUUNGGG TUUUUUUUUUUUNNNNNGGGG",
+        "de": "TUUUUUUUNG TUUUUUUUUUUUNNNNNG",
+        "orig": "scenes/aibubble/lines/09.mp3"
+      },
+      {
+        "t": 25.98,
+        "end": 33.51,
+        "chars": [
+          1
+        ],
+        "who": "Deku",
+        "text": "Scream your tungs out",
+        "de": "Schrei deine Tungs raus",
+        "orig": "scenes/aibubble/lines/10.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
