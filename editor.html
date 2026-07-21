@@ -23,7 +23,7 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
   .rolerow,.linerow{display:grid;gap:8px;margin-bottom:8px;align-items:center}
   .rolerow{grid-template-columns:2fr 90px 130px 40px}
-  .linerow{grid-template-columns:70px 70px 110px 2fr 2fr 40px}
+  .linerow{grid-template-columns:70px 70px 110px 2fr 2fr 110px 40px}
   .tag{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .key{background:#22222c;border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-family:monospace}
   textarea#out{width:100%;height:260px;font-family:monospace;font-size:.8rem;white-space:pre}
@@ -35,6 +35,18 @@
 <div class="wrap">
   <h1><em>Szenen</em>-Editor</h1>
   <p class="sub">Baue eigene Szenen fürs Synchronstudio — komplett ohne Choicer-Voicer-Mods. Video laden, Lines timen, JSON exportieren, fertig.</p>
+
+  <div class="card">
+    <h2>0 · Alte Szene importieren (optional)</h2>
+    <p class="sub">Schon eine Szene im JSON? Hier reinpasten oder .json laden — dann sind Rollen &amp; Lines automatisch ausgefüllt. Danach nur noch die Stimmen-Spur-Option unten anhaken und neu exportieren.</p>
+    <textarea id="importbox" placeholder='Hier deinen scenes.json-Block einfügen, z. B. { "id": "deathnote", "title": ... }' style="width:100%;height:110px;font-family:monospace;font-size:.8rem;margin-bottom:10px"></textarea>
+    <div class="row">
+      <button class="primary" id="b-import">📥 JSON importieren</button>
+      <label class="tag" style="cursor:pointer">📂 oder .json-Datei <input type="file" id="importfile" accept=".json,application/json" style="display:none"></label>
+      <label class="tag" style="cursor:pointer">🎬 oder .srt-Untertitel <input type="file" id="srtfile" accept=".srt" style="display:none"></label>
+      <span class="tag" id="import-status"></span>
+    </div>
+  </div>
 
   <div class="card">
     <h2>1 · Video laden</h2>
@@ -59,7 +71,7 @@
   <div class="card">
     <h2>3 · Lines timen</h2>
     <p class="sub">Video abspielen und im richtigen Moment drücken: <span class="key">S</span> = Line <b>startet hier</b> (fügt neue Line ein) · <span class="key">E</span> = Line <b>endet hier</b> (setzt Ende der letzten Line). Danach Text, Übersetzung und Rolle eintragen. Zeiten kannst du jederzeit von Hand nachjustieren.</p>
-    <div class="linerow tag"><span>Start</span><span>Ende</span><span>Rolle</span><span>Text (Original)</span><span>Deutsch</span><span></span></div>
+    <div class="linerow tag"><span>Start</span><span>Ende</span><span>Rolle</span><span>Text (Original)</span><span>Deutsch</span><span>Effekt (opt.)</span><span></span></div>
     <div id="lines"></div>
     <div class="row"><button id="b-s">S — Line startet</button><button id="b-e">E — Line endet</button></div>
   </div>
@@ -69,23 +81,37 @@
     <div class="row">
       <label class="tag">Szenen-ID <input type="text" id="sid" placeholder="meine_szene" style="width:160px"></label>
       <label class="tag">Titel <input type="text" id="stitle" placeholder="Meine Szene (2 Rollen)" style="width:260px"></label>
+      <label class="tag">Schwierigkeit
+        <select id="difficulty">
+          <option value="auto" selected>🤖 Automatisch berechnen</option>
+          <option value="easy">🟢 Easy</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="hard">🔴 Zungenbrecher</option>
+        </select>
+      </label>
       <button class="primary" id="b-export">JSON erzeugen</button>
       <button id="b-copy">📋 Kopieren</button>
     </div>
+    <label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-top:12px;color:var(--muted);font-size:.9rem">
+      <input type="checkbox" id="usevoice" style="width:17px;height:17px;accent-color:var(--amber)">
+      🗣 Ich lade eine <b>Stimmen-Spur</b> hoch (eine lange Datei mit allen Original-Stimmen) — dann gibt's „Original anhören" &amp; Original-Stimmen für unbesetzte Rollen, ohne einzeln zu schneiden
+    </label>
     <textarea id="out" readonly placeholder="Hier erscheint dein scenes.json-Eintrag …"></textarea>
     <h2 style="margin-top:18px">Und dann?</h2>
     <ol>
       <li>Deine MP4 in den <b>scenes/</b>-Ordner deines GitHub-Repos hochladen — Dateiname muss zu <b>videoUrl</b> im JSON passen (z. B. <code>scenes/meine_szene.mp4</code>)</li>
       <li><b>scenes.json</b> im Repo öffnen → Stift-Symbol → den erzeugten Block als neuen Eintrag in die Liste einfügen (Komma zwischen den Einträgen nicht vergessen!) → Commit</li>
       <li>3–4 Minuten warten → Spiel öffnen → Strg+Shift+R → Szene ist im Dropdown 🎉</li>
-      <li>Optional: Original-Stimmen pro Line (fürs 🗣-Anhören &amp; unbesetzte Rollen) — einzelne MP3s nach <code>scenes/DEINE_ID/lines/01.mp3</code> usw. hochladen und pro Line ein <code>"orig": "scenes/DEINE_ID/lines/01.mp3"</code> ergänzen. Ohne die MP3s funktioniert die Szene trotzdem, nur ohne diese zwei Features.</li>
+      <li><b>🗣 Stimmen-Spur (einfachster Weg):</b> Setz oben den Haken „Ich lade eine Stimmen-Spur hoch". Dann brauchst du nur EINE Datei: die komplette Original-Tonspur mit allen Stimmen (die Tonspur MIT Stimmen, z. B. direkt aus dem Clip gezogen). Speichere sie als <code>DEINE_ID_voices.mp3</code> und lade sie neben dein Video in den <code>scenes/</code>-Ordner. Das Spiel schneidet sich die einzelnen Lines automatisch anhand deiner Zeiten raus — kein manuelles Schneiden nötig! Beim „Szene ansehen" hörst du nur Musik/SFX, beim „🗣 Original anhören" die echte Stimme.</li>
+      <li>Alternativ (Profi): Original-Stimmen pro Line einzeln — MP3s nach <code>scenes/DEINE_ID/lines/01.mp3</code> hochladen und pro Line <code>"orig": "..."</code> ergänzen.</li>
     </ol>
   </div>
 </div>
 <script>
 const $ = id => document.getElementById(id);
 const v = $("v");
-const EFFECTS = { none: "Normal", vintage_1990: "Vintage/90er", radio: "Funkgerät", telefon: "Telefon", hall: "Hall" };
+const EFFECTS = { none: "Normal", vintage_1990: "Vintage/90er", radio: "Funkgerät", telefon: "Telefon", hall: "Hall",
+  megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter" };
 let lines = [];
 
 $("vfile").onchange = e => {
@@ -140,9 +166,101 @@ function renderLines() {
       <select onchange="lines[${i}].role=parseInt(this.value)">${names.map((n, r) => `<option value="${r + 1}" ${l.role === r + 1 ? "selected" : ""}>${n}</option>`).join("")}</select>
       <input type="text" value="${(l.text || "").replace(/"/g, "&quot;")}" oninput="lines[${i}].text=this.value">
       <input type="text" value="${(l.de || "").replace(/"/g, "&quot;")}" oninput="lines[${i}].de=this.value" placeholder="Deutsch">
+      <select onchange="lines[${i}].effect=this.value||null" title="Überschreibt den Rollen-Effekt NUR für diese eine Line, z.B. wenn der Charakter hier gerade telefoniert.">
+        <option value="">(Rollen-Standard)</option>
+        ${Object.entries(EFFECTS).map(([k, x]) => `<option value="${k}" ${l.effect === k ? "selected" : ""}>${x}</option>`).join("")}
+      </select>
       <button onclick="lines.splice(${i},1);renderLines()">✕</button>
     </div>`).join("");
 }
+
+function importScene(obj) {
+  try {
+    if (Array.isArray(obj)) obj = obj[0];   // falls jemand ein ganzes Array reinwirft
+    if (!obj || !obj.roles || !obj.lines) throw new Error("Kein gültiger Szenen-Block (roles/lines fehlen)");
+    // Felder füllen
+    $("sid").value = obj.id || "";
+    $("stitle").value = obj.title || "";
+    // Rollen neu aufbauen
+    $("roles").innerHTML = "";
+    obj.roles.forEach(r => {
+      addRole(r.name || "");
+      const row = $("roles").lastChild;
+      row.querySelectorAll("input")[1].value = r.pan ?? 0;
+      const sel = row.querySelector("select");
+      sel.value = r.effect || "none";
+    });
+    if (!obj.roles.length) { addRole(); addRole(); }
+    // Lines neu aufbauen
+    lines = obj.lines.map(l => ({
+      t: l.t, end: l.end,
+      role: Array.isArray(l.chars) ? l.chars[0] : 1,
+      text: l.text || "", de: l.de || "", effect: l.effect || null
+    }));
+    renderLines();
+    // Stimmen-Spur-Haken setzen, falls vorhanden
+    if (obj.voiceTrack) $("usevoice").checked = true;
+    if (obj.difficultyOverride) $("difficulty").value = obj.difficultyOverride;
+    $("import-status").textContent = "✅ Importiert: " + obj.roles.length + " Rollen, " + obj.lines.length + " Lines";
+    $("import-status").style.color = "var(--amber)";
+  } catch (e) {
+    $("import-status").textContent = "❌ " + e.message;
+    $("import-status").style.color = "var(--hot)";
+  }
+}
+$("b-import").onclick = () => {
+  const txt = $("importbox").value.trim();
+  if (!txt) { $("import-status").textContent = "Erst JSON einfügen!"; return; }
+  try { importScene(JSON.parse(txt)); }
+  catch (e) { $("import-status").textContent = "❌ Kein gültiges JSON — Komma/Klammer checken"; $("import-status").style.color = "var(--hot)"; }
+};
+$("importfile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { importScene(JSON.parse(r.result)); } catch { $("import-status").textContent = "❌ Datei ist kein gültiges JSON"; $("import-status").style.color = "var(--hot)"; } };
+  r.readAsText(f);
+};
+
+
+// ── SRT-Untertitel importieren: baut daraus Lines mit t/end/text (Rolle noch manuell zuweisen) ──
+function parseSRT(text) {
+  const blocks = text.replace(/\r/g, "").trim().split(/\n\n+/);
+  const toSec = (ts) => {
+    const m = ts.match(/(\d+):(\d+):(\d+)[,.](\d+)/);
+    if (!m) return 0;
+    return (+m[1]) * 3600 + (+m[2]) * 60 + (+m[3]) + (+m[4]) / 1000;
+  };
+  const out = [];
+  for (const block of blocks) {
+    const rows = block.split("\n").filter(Boolean);
+    const timeRow = rows.find(r => r.includes("-->"));
+    if (!timeRow) continue;
+    const [startRaw, endRaw] = timeRow.split("-->").map(s => s.trim());
+    const textRows = rows.slice(rows.indexOf(timeRow) + 1);
+    const text = textRows.join(" ").replace(/<[^>]+>/g, "").trim();
+    if (!text) continue;
+    out.push({ t: Math.round(toSec(startRaw) * 100) / 100, end: Math.round(toSec(endRaw) * 100) / 100, role: 1, text, de: "" });
+  }
+  return out;
+}
+$("srtfile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const parsed = parseSRT(r.result);
+      if (!parsed.length) throw new Error("Keine Untertitel gefunden — ist das eine gültige .srt-Datei?");
+      lines = parsed;
+      renderLines();
+      $("import-status").textContent = "✅ " + parsed.length + " Untertitel importiert — jetzt jeder Line die passende Rolle zuweisen!";
+      $("import-status").style.color = "var(--amber)";
+    } catch (err) {
+      $("import-status").textContent = "❌ " + err.message;
+      $("import-status").style.color = "var(--hot)";
+    }
+  };
+  r.readAsText(f, "utf-8");
+};
 
 $("b-export").onclick = () => {
   const id = $("sid").value || "meine_szene";
@@ -154,15 +272,21 @@ $("b-export").onclick = () => {
     gain: 1.0
   }));
   const dur = v.duration ? Math.round(v.duration * 100) / 100 : 60;
-  const ls = lines.map((l, i) => ({
-    t: l.t,
-    end: l.end ?? (lines[i + 1] ? lines[i + 1].t : dur),
-    chars: [l.role],
-    who: roles[l.role - 1]?.name || "?",
-    text: l.text || "…",
-    de: l.de || l.text || "…"
-  }));
+  const ls = lines.map((l, i) => {
+    const line = {
+      t: l.t,
+      end: l.end ?? (lines[i + 1] ? lines[i + 1].t : dur),
+      chars: [l.role],
+      who: roles[l.role - 1]?.name || "?",
+      text: l.text || "…",
+      de: l.de || l.text || "…"
+    };
+    if (l.effect) line.effect = l.effect;   // Line-eigener Effekt überschreibt nur diese eine Zeile
+    return line;
+  });
   const scene = { id, title: $("stitle").value || id, videoUrl: "scenes/" + id + ".mp4", roles, lines: ls };
+  if ($("usevoice").checked) scene.voiceTrack = "scenes/" + id + "_voices.mp3";
+  if ($("difficulty").value !== "auto") scene.difficultyOverride = $("difficulty").value;
   $("out").value = JSON.stringify(scene, null, 2);
 };
 $("b-copy").onclick = () => { $("out").select(); document.execCommand("copy"); $("b-copy").textContent = "✅ Kopiert!"; setTimeout(() => $("b-copy").textContent = "📋 Kopieren", 1500); };
