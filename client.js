@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "3.4";
+const APP_VERSION = "3.5";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -554,11 +554,18 @@ function handleMsg(msg, conn) {
 // ═════════════════════════════════════════════════════════════
 let sceneList = [];
 async function loadSceneList() {
-  try { sceneList = await (await fetch("scenes.json?t=" + Date.now(), { cache: "no-store" })).json(); } catch { sceneList = []; }
   const sel = $("scene-select");
+  if (!sel) return;
+  try {
+    const res = await fetch("scenes.json?t=" + Date.now(), { cache: "no-store" });
+    sceneList = await res.json();
+  } catch (e) {
+    console.error("scenes.json laden fehlgeschlagen:", e);
+    sceneList = [];
+  }
   sel.innerHTML = sceneList.length
     ? sceneList.map((s, i) => `<option value="${i}">${esc(s.title)} (${s.roles.length} Rollen${s.lines ? ", " + s.lines.length + " Lines" : ""})</option>`).join("")
-    : "<option>— keine Szenen in scenes.json —</option>";
+    : "<option>— Szenen laden… kurz warten &amp; Seite neu laden —</option>";
 }
 
 $("btn-load-scene").onclick = () => {
@@ -733,6 +740,8 @@ function hostSettingsChanged() {
   const rnd = match.mode === "rounds";
   $("rounds-opts").style.display = rnd ? "" : "none";
   $("host-scene").style.display = rnd ? "none" : "";
+  // WICHTIG: Szenenliste immer (neu) laden, damit das Dropdown im Freien Modus gefüllt ist
+  if (!rnd) loadSceneList();
   broadcastSettings();
 }
 function broadcastSettings() {
