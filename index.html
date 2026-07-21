@@ -477,6 +477,7 @@
         ⏱ 3-Sek.-Countdown vor der Aufnahme (kein Maus-Klick im Take)
       </label>
       <div class="boothbtns">
+        <button class="big ghost" id="btn-line-prev">⬅ Vorherige</button>
         <button class="big" id="btn-line-scene">🎬 Szene ansehen</button>
         <button class="big" id="btn-line-orig" style="display:none">🗣 Original anhören</button>
         <button class="big primary" id="btn-line-rec">⏺ Aufnehmen</button>
@@ -498,6 +499,7 @@
       <h2>🎙 Warten auf die Premiere</h2>
       <p class="sub" id="wait-status">Warte, bis alle fertig eingesprochen haben — dann startet die Premiere automatisch.</p>
       <div class="players" id="wait-players"></div>
+      <div id="redo-panel-wait" style="margin-top:12px"></div>
       <p class="sub" id="mg-wins" style="margin-top:12px;margin-bottom:0"></p>
     </div>
     <div class="card">
@@ -573,6 +575,7 @@
       </div>
       <div class="bar" id="prem-bar" style="display:none"><i></i></div>
       <p class="status" id="prem-status"></p>
+      <div id="redo-panel-prem" style="margin-top:8px"></div>
       <button class="primary big" id="btn-prem-start" style="display:none" disabled>🎬 Premiere für alle starten</button>
       <div class="prompter" id="play-prompter"></div>
       <div class="row" style="margin-top:12px;gap:14px">

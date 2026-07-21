@@ -53,10 +53,18 @@
     <p class="sub">Dein fertig geschnittenes MP4 (Stimmen per Vocal Remover raus, Musik/SFX drin, unter 25 MB).</p>
     <input type="file" id="vfile" accept="video/mp4,video/webm">
     <video id="v" controls playsinline style="margin-top:12px;display:none"></video>
+    <canvas id="waveform" style="width:100%;height:70px;display:none;margin-top:8px;border-radius:8px;background:#0a0a0e;cursor:pointer"></canvas>
+    <p class="tag" id="wave-status" style="margin-top:4px"></p>
     <div class="row" style="display:none" id="vctrl">
       <span class="tag">Zeit:</span><span class="bigtime" id="tnow">0.00s</span>
-      <button id="b-back">−1s</button><button id="b-fwd">+1s</button>
+      <button id="b-frame-back" title="1 Frame zurück (Taste: ←)">⏴ Frame</button>
+      <button id="b-back01" title="0,1 Sek. zurück (Taste: Shift+←)">−0.1s</button>
+      <button id="b-back">−1s</button>
+      <button id="b-fwd">+1s</button>
+      <button id="b-fwd01" title="0,1 Sek. vor (Taste: Shift+→)">+0.1s</button>
+      <button id="b-frame-fwd" title="1 Frame vor (Taste: →)">Frame ⏵</button>
       <button id="b-slow">🐢 0.5×</button>
+      <label class="tag" style="margin-left:6px">FPS <input type="number" id="fps" value="30" min="1" max="120" style="width:56px;padding:4px 6px"></label>
       <span class="tag" id="vdur"></span>
     </div>
   </div>
@@ -114,6 +122,8 @@ const EFFECTS = { none: "Normal", vintage_1990: "Vintage/90er", radio: "Funkger�
   megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter" };
 let lines = [];
 
+let waveformPeaks = null, waveformDuration = 0;
+
 $("vfile").onchange = e => {
   const f = e.target.files[0];
   if (!f) return;
@@ -121,11 +131,96 @@ $("vfile").onchange = e => {
   v.style.display = ""; $("vctrl").style.display = "flex";
   v.onloadedmetadata = () => $("vdur").textContent = "Länge: " + v.duration.toFixed(2) + "s";
   if (!$("sid").value) $("sid").value = f.name.replace(/\.\w+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  decodeWaveform(f);
 };
 setInterval(() => $("tnow").textContent = v.currentTime.toFixed(2) + "s", 100);
+
+const fps = () => Math.max(1, parseFloat($("fps").value) || 30);
 $("b-back").onclick = () => v.currentTime = Math.max(0, v.currentTime - 1);
 $("b-fwd").onclick = () => v.currentTime += 1;
+$("b-back01").onclick = () => v.currentTime = Math.max(0, v.currentTime - 0.1);
+$("b-fwd01").onclick = () => v.currentTime += 0.1;
+$("b-frame-back").onclick = () => v.currentTime = Math.max(0, v.currentTime - 1 / fps());
+$("b-frame-fwd").onclick = () => v.currentTime += 1 / fps();
 $("b-slow").onclick = () => { v.playbackRate = v.playbackRate === 1 ? 0.5 : 1; $("b-slow").textContent = v.playbackRate === 1 ? "🐢 0.5×" : "▶ 1×"; };
+
+// ── Waveform: Audiospur einmal dekodieren, als Balken zeichnen, Playhead + Line-Marker + Klick-zum-Springen ──
+async function decodeWaveform(file) {
+  const canvas = $("waveform");
+  try {
+    $("wave-status").textContent = "🔊 Wellenform wird berechnet …";
+    const buf = await file.arrayBuffer();
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const audio = await ctx.decodeAudioData(buf.slice(0));
+    waveformDuration = audio.duration;
+    const raw = audio.getChannelData(0);
+    const COLS = 1400;
+    const peaks = new Float32Array(COLS);
+    const step = Math.floor(raw.length / COLS) || 1;
+    for (let i = 0; i < COLS; i++) {
+      let max = 0;
+      const start = i * step;
+      for (let j = start; j < Math.min(start + step, raw.length); j++) {
+        const a = Math.abs(raw[j]);
+        if (a > max) max = a;
+      }
+      peaks[i] = max;
+    }
+    waveformPeaks = peaks;
+    canvas.style.display = "";
+    $("wave-status").textContent = "Klick in die Wellenform, um zu springen. Kleine Striche unten = deine gesetzten Lines.";
+    drawWaveform();
+  } catch (e) {
+    $("wave-status").textContent = "⚠ Wellenform konnte nicht berechnet werden (Video-Timing funktioniert trotzdem normal).";
+    console.warn("Waveform-Fehler:", e);
+  }
+}
+
+function drawWaveform() {
+  const canvas = $("waveform");
+  if (!waveformPeaks || !canvas.offsetWidth) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+  if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
+  const g = canvas.getContext("2d");
+  g.clearRect(0, 0, W, H);
+  const mid = H / 2;
+  const n = waveformPeaks.length;
+  const bw = W / n;
+  for (let i = 0; i < n; i++) {
+    const h = Math.max(1, waveformPeaks[i] * H * 0.9);
+    const grad = g.createLinearGradient(0, mid - h / 2, 0, mid + h / 2);
+    grad.addColorStop(0, "#ffc95c"); grad.addColorStop(1, "#c84bff");
+    g.fillStyle = grad;
+    g.fillRect(i * bw, mid - h / 2, Math.max(1, bw - dpr * 0.3), h);
+  }
+  // Line-Marker (Start jeder gesetzten Line) als kleine Striche am unteren Rand
+  if (waveformDuration > 0) {
+    g.fillStyle = "#ff4d55";
+    lines.forEach(l => {
+      const x = (l.t / waveformDuration) * W;
+      g.fillRect(x, H - 6 * dpr, 2 * dpr, 6 * dpr);
+    });
+    // Playhead
+    const px = (v.currentTime / waveformDuration) * W;
+    g.fillStyle = "#f0f0f5";
+    g.fillRect(px, 0, Math.max(1, 1.5 * dpr), H);
+  }
+}
+setInterval(drawWaveform, 80);
+$("waveform").addEventListener("click", e => {
+  if (!waveformDuration) return;
+  const rect = $("waveform").getBoundingClientRect();
+  const frac = (e.clientX - rect.left) / rect.width;
+  v.currentTime = Math.max(0, Math.min(waveformDuration, frac * waveformDuration));
+});
+
+// ── Tastenkürzel für Frame-genaues Springen (zusätzlich zu S/E/Leertaste weiter unten) ──
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); v.currentTime = Math.max(0, v.currentTime - (e.shiftKey ? 0.1 : 1 / fps())); }
+  if (e.key === "ArrowRight") { e.preventDefault(); v.currentTime += (e.shiftKey ? 0.1 : 1 / fps()); }
+});
 
 function addRole(name = "") {
   const div = document.createElement("div");
@@ -140,6 +235,7 @@ function addRole(name = "") {
 addRole(); addRole();
 $("b-addrole").onclick = () => addRole();
 const roleNames = () => [...$("roles").children].map(r => r.querySelector("input").value || "?");
+
 
 function mark(type) {
   const t = Math.round(v.currentTime * 100) / 100;
@@ -161,7 +257,7 @@ function renderLines() {
   const names = roleNames();
   $("lines").innerHTML = lines.map((l, i) => `
     <div class="linerow">
-      <input type="number" step="0.01" value="${l.t}" onchange="lines[${i}].t=parseFloat(this.value)">
+      <input type="number" step="0.01" value="${l.t}" onchange="lines[${i}].t=parseFloat(this.value);renderLines()">
       <input type="number" step="0.01" value="${l.end ?? ""}" placeholder="?" onchange="lines[${i}].end=parseFloat(this.value)">
       <select onchange="lines[${i}].role=parseInt(this.value)">${names.map((n, r) => `<option value="${r + 1}" ${l.role === r + 1 ? "selected" : ""}>${n}</option>`).join("")}</select>
       <input type="text" value="${(l.text || "").replace(/"/g, "&quot;")}" oninput="lines[${i}].text=this.value">
