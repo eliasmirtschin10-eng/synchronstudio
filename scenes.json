@@ -2344,6 +2344,165 @@
     ]
   },
   {
+  "id": "hiphophoodszene",
+  "title": "Hip Hop Hood Haben Wir Ein Problem?",
+  "videoUrl": "scenes/hiphophoodszene.mp4",
+  "roles": [
+    {
+      "id": 1,
+      "name": "Ray",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "ToothPick",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    },
+    {
+      "id": 3,
+      "name": "Loc Dog",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    },
+    {
+      "id": 4,
+      "name": "RandomGangstar",
+      "pan": 0,
+      "effect": "vintage_1990",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 1.78,
+      "end": 3.3,
+      "chars": [
+        1
+      ],
+      "who": "Ray",
+      "text": "Was soll das Denn werden?!",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 3.91,
+      "end": 9.65,
+      "chars": [
+        2
+      ],
+      "who": "ToothPick",
+      "text": "Hey Na Wie Gehts... Du Alte Pappnase (lache)",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 9.92,
+      "end": 13,
+      "chars": [
+        3
+      ],
+      "who": "Loc Dog",
+      "text": "Hey Stop! Haben wir Ein Problem ToothPick?!",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 13.41,
+      "end": 16.38,
+      "chars": [
+        3
+      ],
+      "who": "Loc Dog",
+      "text": "Ich Fragte... Haben wir ein problem? häää? oder hnhhhh (so ein huhhh)",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 16.9,
+      "end": 22,
+      "chars": [
+        2
+      ],
+      "who": "ToothPick",
+      "text": "Ohja... wir haben ein problem Hier man ein kleines feuer problem hahahahha",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 22.4,
+      "end": 24.66,
+      "chars": [
+        3
+      ],
+      "who": "Loc Dog",
+      "text": "Okay, Wir spielen ein kleines spiel...",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 28.15,
+      "end": 35,
+      "chars": [
+        3
+      ],
+      "who": "Loc Dog",
+      "text": "Ich Hab Gefragt... Haben... Wir... Ein... Pro... Blem??? Huh?",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 35.26,
+      "end": 37.98,
+      "chars": [
+        4
+      ],
+      "who": "RandomGangstar",
+      "text": "Ohhh Ähhhh U... D.. S... S... R???",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 38,
+      "end": 42.1,
+      "chars": [
+        3
+      ],
+      "who": "Loc Dog",
+      "text": "Ihr Bewegt besser eure stinkenden ärsche von hier weg bevor ich hier einen nuklearen holocaust veranstalte!",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 42.24,
+      "end": 44.24,
+      "chars": [
+        2
+      ],
+      "who": "ToothPick",
+      "text": "LOS DU PENNER GIB GAS, GIB GAS",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 44.24,
+      "end": 47,
+      "chars": [
+        2
+      ],
+      "who": "ToothPick",
+      "text": "Das Wird Horishima Und Ni**asaki Werden (muss umschreiben weil sonnst gesperrt es ist das n wort gemeint)",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 47.93,
+      "end": 51.9,
+      "chars": [
+        1
+      ],
+      "who": "Ray",
+      "text": "Haut Bloß Ab und kommt nie wieder!",
+      "de": "Original Ist Deutsch!"
+    }
+  ],
+  "voiceTrack": "scenes/hiphophoodszene_voices.mp3",
+  "difficultyOverride": "medium"
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
