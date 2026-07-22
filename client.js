@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "4.9";
+const APP_VERSION = "5.0";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -174,6 +174,11 @@ const AVATAR_CHARS = [
   { img: "scenes/strongest/gojo.png", label: "Gojo" },
   { img: "scenes/aibubble/deku.png", label: "Deku" },
   { img: "scenes/aibubble/tungtung.png", label: "Tung Tung" },
+  { img: "scenes/chickenjockey/steve.png", label: "Steve" },
+  { img: "scenes/chickenjockey/garret.png", label: "Garret" },
+  { img: "scenes/chickenjockey/jockey.png", label: "Chicken Jockey" },
+  { img: "scenes/godfather/peter.png", label: "Peter" },
+  { img: "scenes/godfather/familie.png", label: "Lois" },
 ];
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
@@ -1471,6 +1476,7 @@ $("btn-line-rec").onclick = async () => {
   }
   recBusy = { t: performance.now() };
   ["btn-line-scene","btn-line-play","btn-line-next","btn-line-skip","btn-line-orig"].forEach(id => { const el = $(id); if (el) el.disabled = true; });
+  status("booth-status", "🎯 Bereite Aufnahme vor …");
   try {
     if ($("rec-timer").checked) await recCountdown();
     const l = myLines[curLine];
