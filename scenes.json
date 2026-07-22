@@ -3728,129 +3728,1188 @@
     ]
   },
   {
-  "id": "dexterdoakesamhafen",
-  "title": "Dexter Doakes Konfrontation",
-  "videoUrl": "scenes/dexterdoakesamhafen.mp4",
-  "roles": [
-    {
-      "id": 1,
-      "name": "Dexter",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
+    "id": "dexterdoakesamhafen",
+    "title": "Dexter Doakes Konfrontation",
+    "videoUrl": "scenes/dexterdoakesamhafen.mp4",
+    "roles": [
+      {
+        "id": 1,
+        "name": "Dexter",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      },
+      {
+        "id": 2,
+        "name": "Doakes",
+        "pan": 0,
+        "effect": "none",
+        "gain": 1
+      }
+    ],
+    "lines": [
+      {
+        "t": 0,
+        "end": 1.86,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Ich bin gut in der Zeit...",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 4.94,
+        "end": 8.32,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Das Wars Arschloch!... Es Ist Vorbei!",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 15.82,
+        "end": 17.9,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Wie haben sie mich gefunden?",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 17.96,
+        "end": 19.84,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "GPS-Sender an ihrem Boot...",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 20.1,
+        "end": 24.8,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Herr Gott Morgan! Herr Gott im himmel, sie sind der Bayharbor Metzger",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 24.99,
+        "end": 26.35,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Ehrlich ich hasse diesen Namen",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 26.63,
+        "end": 28.04,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Herr Gott Man...",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 28.1,
+        "end": 29.28,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Das Sagten Sie Schon...",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 29.32,
+        "end": 32.34,
+        "chars": [
+          2
+        ],
+        "who": "Doakes",
+        "text": "Ich wusste das sie nicht ganz dich sind... aber das hier?",
+        "de": "Original Ist Deutsch!"
+      },
+      {
+        "t": 32.61,
+        "end": 40.23,
+        "chars": [
+          1
+        ],
+        "who": "Dexter",
+        "text": "Was soll ich sagen... sie hatten vollkommen recht... ich habe ihnen nie ein vorwurf deswegen gemacht... mache ich auch jetzt nicht",
+        "de": "Original Ist Deutsch!"
+      }
+    ],
+    "voiceTrack": "scenes/dexterdoakesamhafen_voices.mp3",
+    "difficultyOverride": "medium"
+  },
+  {
+    "id": "tojigojo",
+    "title": "Jujutsu Kaisen — Toji vs Gojo (3 Rollen)",
+    "videoUrl": "scenes/tojigojo.mp4",
+    "avatars": {
+      "1": "scenes/tojigojo/toji.png",
+      "2": "scenes/tojigojo/gojo.png",
+      "3": "scenes/tojigojo/curse.png"
     },
-    {
-      "id": 2,
-      "name": "Doakes",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    }
-  ],
-  "lines": [
-    {
-      "t": 0,
-      "end": 1.86,
-      "chars": [
-        1
-      ],
-      "who": "Dexter",
-      "text": "Ich bin gut in der Zeit...",
-      "de": "Original Ist Deutsch!"
+    "roles": [
+      {
+        "id": 1,
+        "name": "Toji",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Gojo",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Curse",
+        "pan": 0.0,
+        "effect": "monster",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 5.35,
+        "end": 9.37,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "Hmph...",
+        "de": "Hmph...",
+        "orig": "scenes/tojigojo/lines/01.mp3"
+      },
+      {
+        "t": 9.37,
+        "end": 13.46,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "huh...",
+        "de": "häh...",
+        "orig": "scenes/tojigojo/lines/02.mp3"
+      },
+      {
+        "t": 13.46,
+        "end": 17.7,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Hey there... it's been a while huh?",
+        "de": "Na sowas... ist eine Weile her, hm?",
+        "orig": "scenes/tojigojo/lines/03.mp3"
+      },
+      {
+        "t": 17.7,
+        "end": 19.55,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "Are you for real?",
+        "de": "Ist das dein Ernst?",
+        "orig": "scenes/tojigojo/lines/04.mp3"
+      },
+      {
+        "t": 19.55,
+        "end": 21.74,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "I'm for real real",
+        "de": "Ich mein's total ernst",
+        "orig": "scenes/tojigojo/lines/05.mp3"
+      },
+      {
+        "t": 21.74,
+        "end": 24.68,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "I'm still alive and kicking",
+        "de": "Ich bin immer noch quicklebendig",
+        "orig": "scenes/tojigojo/lines/06.mp3"
+      },
+      {
+        "t": 24.68,
+        "end": 27.2,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "Reversed Cursed Technique...",
+        "de": "Umgekehrte Fluchtechnik...",
+        "orig": "scenes/tojigojo/lines/07.mp3"
+      },
+      {
+        "t": 27.2,
+        "end": 29.22,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Exactly",
+        "de": "Genau",
+        "orig": "scenes/tojigojo/lines/08.mp3"
+      },
+      {
+        "t": 29.22,
+        "end": 35.65,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "When you stabbed me through the throat I gave up on countera-",
+        "de": "Als du mir die Kehle durchbohrt hast, hab ich Konter aufgegeben-",
+        "orig": "scenes/tojigojo/lines/09.mp3"
+      },
+      {
+        "t": 35.65,
+        "end": 38.0,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Cursed energy is negative energy",
+        "de": "Fluchenergie ist negative Energie",
+        "orig": "scenes/tojigojo/lines/10.mp3"
+      },
+      {
+        "t": 38.0,
+        "end": 40.6,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "While it can enhance the body. It can't regenerate it",
+        "de": "Sie kann den Körper verstärken. Aber nicht regenerieren",
+        "orig": "scenes/tojigojo/lines/11.mp3"
+      },
+      {
+        "t": 40.6,
+        "end": 45.89,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "So you multiply that negative energy against itself to create...",
+        "de": "Also multiplizierst du diese negative Energie mit sich selbst, um zu erschaffen...",
+        "orig": "scenes/tojigojo/lines/12.mp3"
+      },
+      {
+        "t": 45.89,
+        "end": 48.23,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "*Breathes* That's the reversed cursed technique!",
+        "de": "*atmet* Das ist die umgekehrte Fluchtechnik!",
+        "orig": "scenes/tojigojo/lines/13.mp3"
+      },
+      {
+        "t": 48.23,
+        "end": 50.1,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Easier said than done!",
+        "de": "Leichter gesagt als getan!",
+        "orig": "scenes/tojigojo/lines/14.mp3"
+      },
+      {
+        "t": 50.1,
+        "end": 52.49,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "I could never do that till now!",
+        "de": "Das konnte ich bis jetzt nie!",
+        "orig": "scenes/tojigojo/lines/15.mp3"
+      },
+      {
+        "t": 52.49,
+        "end": 54.5,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "And I couldn't understand anything the one person who could-",
+        "de": "Und ich konnte nichts von dem verstehen, was die eine Person, die es konnte-",
+        "orig": "scenes/tojigojo/lines/16.mp3"
+      },
+      {
+        "t": 54.5,
+        "end": 58.0,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "Somethings off, he's blabbing on and on",
+        "de": "Irgendwas stimmt nicht, der labert und labert",
+        "orig": "scenes/tojigojo/lines/17.mp3"
+      },
+      {
+        "t": 58.0,
+        "end": 59.99,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "Is he high?",
+        "de": "Ist der high?",
+        "orig": "scenes/tojigojo/lines/18.mp3"
+      },
+      {
+        "t": 59.99,
+        "end": 62.74,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "I finally grasped it on the verge of death",
+        "de": "Ich hab's endlich begriffen, kurz vor dem Tod",
+        "orig": "scenes/tojigojo/lines/19.mp3"
+      },
+      {
+        "t": 62.74,
+        "end": 65.16,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "The true essence of cursed energy",
+        "de": "Die wahre Essenz der Fluchenergie",
+        "orig": "scenes/tojigojo/lines/20.mp3"
+      },
+      {
+        "t": 65.16,
+        "end": 68.42,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "The reason you're going to lose is because you didn't chop m-",
+        "de": "Der Grund, warum du verlieren wirst, ist, weil du mich nicht zerhackt hast-",
+        "orig": "scenes/tojigojo/lines/21.mp3"
+      },
+      {
+        "t": 68.42,
+        "end": 72.35,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "And because you didn't use that cursed tool when you stabbed-",
+        "de": "Und weil du das verfluchte Werkzeug nicht benutzt hast, als du zugestochen hast-",
+        "orig": "scenes/tojigojo/lines/22.mp3"
+      },
+      {
+        "t": 72.35,
+        "end": 74.66,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "I'm gonna lose",
+        "de": "Ich werd verlieren",
+        "orig": "scenes/tojigojo/lines/23.mp3"
+      },
+      {
+        "t": 74.66,
+        "end": 76.89,
+        "chars": [
+          3
+        ],
+        "who": "Curse",
+        "text": "Blehghh eheheh heee",
+        "de": "Blehghh eheheh heee",
+        "orig": "scenes/tojigojo/lines/24.mp3"
+      },
+      {
+        "t": 76.89,
+        "end": 79.14,
+        "chars": [
+          1
+        ],
+        "who": "Toji",
+        "text": "Our fight is just getting started...",
+        "de": "Unser Kampf fängt gerade erst an...",
+        "orig": "scenes/tojigojo/lines/25.mp3"
+      },
+      {
+        "t": 79.14,
+        "end": 82.62,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Ohhhh... is that right? You could be right!",
+        "de": "Ohhhh... ist das so? Du könntest recht haben!",
+        "orig": "scenes/tojigojo/lines/26.mp3"
+      },
+      {
+        "t": 82.62,
+        "end": 91.71,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "YOU'RE SO RIGHT!",
+        "de": "DU HAST SO RECHT!",
+        "orig": "scenes/tojigojo/lines/27.mp3"
+      },
+      {
+        "t": 91.71,
+        "end": 97.42,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Guurrhhhhh",
+        "de": "Guurrhhhhh",
+        "orig": "scenes/tojigojo/lines/28.mp3"
+      },
+      {
+        "t": 97.42,
+        "end": 101.78,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Cursed technique reversal",
+        "de": "Fluchtechnik-Umkehrung",
+        "orig": "scenes/tojigojo/lines/29.mp3"
+      },
+      {
+        "t": 101.78,
+        "end": 111.68,
+        "chars": [
+          2
+        ],
+        "who": "Gojo",
+        "text": "Red...",
+        "de": "Rot...",
+        "orig": "scenes/tojigojo/lines/30.mp3"
+      }
+    ]
+  },
+  {
+    "id": "whodecided",
+    "title": "Seven Deadly Sins — Who Decided That? (3 Rollen)",
+    "videoUrl": "scenes/whodecided.mp4",
+    "avatars": {
+      "1": "scenes/whodecided/escanor.png",
+      "2": "scenes/whodecided/estarossa.png",
+      "3": "scenes/whodecided/zeldris.png"
     },
-    {
-      "t": 4.94,
-      "end": 8.32,
-      "chars": [
-        2
-      ],
-      "who": "Doakes",
-      "text": "Das Wars Arschloch!... Es Ist Vorbei!",
-      "de": "Original Ist Deutsch!"
+    "roles": [
+      {
+        "id": 1,
+        "name": "Escanor",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Estarossa",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Zeldris",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 3.55,
+        "end": 5.89,
+        "chars": [
+          2
+        ],
+        "who": "Estarossa",
+        "text": "Hnng... Nhnng",
+        "de": "Hnng... Nhnng",
+        "orig": "scenes/whodecided/lines/01.mp3"
+      },
+      {
+        "t": 5.89,
+        "end": 9.24,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "My attacks have no effect on you?",
+        "de": "Meine Angriffe zeigen keine Wirkung bei dir?",
+        "orig": "scenes/whodecided/lines/02.mp3"
+      },
+      {
+        "t": 9.24,
+        "end": 11.34,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "Who decided that?",
+        "de": "Wer hat das entschieden?",
+        "orig": "scenes/whodecided/lines/03.mp3"
+      },
+      {
+        "t": 11.34,
+        "end": 14.07,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "Your darkness swallowed up my sun?",
+        "de": "Deine Dunkelheit hat meine Sonne verschluckt?",
+        "orig": "scenes/whodecided/lines/04.mp3"
+      },
+      {
+        "t": 14.07,
+        "end": 16.0,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "Who decided that?",
+        "de": "Wer hat das entschieden?",
+        "orig": "scenes/whodecided/lines/05.mp3"
+      },
+      {
+        "t": 16.0,
+        "end": 18.18,
+        "chars": [
+          2
+        ],
+        "who": "Estarossa",
+        "text": "I never saw his attack coming",
+        "de": "Ich hab seinen Angriff nicht kommen sehen",
+        "orig": "scenes/whodecided/lines/06.mp3"
+      },
+      {
+        "t": 18.18,
+        "end": 20.6,
+        "chars": [
+          2
+        ],
+        "who": "Estarossa",
+        "text": "Who the hell is this guy anyway?",
+        "de": "Wer zur Hölle ist dieser Kerl überhaupt?",
+        "orig": "scenes/whodecided/lines/07.mp3"
+      },
+      {
+        "t": 20.6,
+        "end": 26.23,
+        "chars": [
+          2
+        ],
+        "who": "Estarossa",
+        "text": "His power level's soaring even higher than it was before",
+        "de": "Sein Kraftlevel steigt noch höher als vorher",
+        "orig": "scenes/whodecided/lines/08.mp3"
+      },
+      {
+        "t": 26.23,
+        "end": 29.56,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "And now for Cruel Sun",
+        "de": "Und jetzt zur Grausamen Sonne",
+        "orig": "scenes/whodecided/lines/09.mp3"
+      },
+      {
+        "t": 29.56,
+        "end": 34.72,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "I will be the one... to decide",
+        "de": "Ich werde derjenige sein... der entscheidet",
+        "orig": "scenes/whodecided/lines/10.mp3"
+      },
+      {
+        "t": 34.72,
+        "end": 36.0,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "Die...",
+        "de": "Stirb...",
+        "orig": "scenes/whodecided/lines/11.mp3"
+      },
+      {
+        "t": 36.0,
+        "end": 38.37,
+        "chars": [
+          2
+        ],
+        "who": "Estarossa",
+        "text": "WuuuaAhhhHhHhhHHHHHhhh",
+        "de": "WuuuaAhhhHhHhhHHHHHhhh",
+        "orig": "scenes/whodecided/lines/12.mp3"
+      },
+      {
+        "t": 38.37,
+        "end": 41.39,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "Hrhnnngggg",
+        "de": "Hrhnnngggg",
+        "orig": "scenes/whodecided/lines/13.mp3"
+      },
+      {
+        "t": 41.39,
+        "end": 48.79,
+        "chars": [
+          2
+        ],
+        "who": "Estarossa",
+        "text": "Escanor you bastaaAAAARRRRRRD",
+        "de": "Escanor, du MistkeeeERRRRLL",
+        "orig": "scenes/whodecided/lines/14.mp3"
+      },
+      {
+        "t": 48.79,
+        "end": 51.77,
+        "chars": [
+          3
+        ],
+        "who": "Zeldris",
+        "text": "Brother! NooooOOOOOoooOOOO",
+        "de": "Bruder! NEEEEEIIIIIiiiiin",
+        "orig": "scenes/whodecided/lines/15.mp3"
+      },
+      {
+        "t": 51.77,
+        "end": 62.83,
+        "chars": [
+          1
+        ],
+        "who": "Escanor",
+        "text": "*Painful Grunt*",
+        "de": "*schmerzvolles Grunzen*",
+        "orig": "scenes/whodecided/lines/16.mp3"
+      }
+    ]
+  },
+  {
+    "id": "marriedcouple",
+    "title": "More Than a Married Couple — Ohrloch stechen (2 Rollen)",
+    "videoUrl": "scenes/marriedcouple.mp4",
+    "avatars": {
+      "1": "scenes/marriedcouple/shiori.png",
+      "2": "scenes/marriedcouple/jiro.png"
     },
-    {
-      "t": 15.82,
-      "end": 17.9,
-      "chars": [
-        1
-      ],
-      "who": "Dexter",
-      "text": "Wie haben sie mich gefunden?",
-      "de": "Original Ist Deutsch!"
+    "roles": [
+      {
+        "id": 1,
+        "name": "Shiori",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Jiro",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.0,
+        "end": 3.11,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Wanna practice with me?",
+        "de": "Willst du mit mir üben?",
+        "orig": "scenes/marriedcouple/lines/01.mp3"
+      },
+      {
+        "t": 3.11,
+        "end": 4.52,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Augh~",
+        "de": "Augh~",
+        "orig": "scenes/marriedcouple/lines/02.mp3"
+      },
+      {
+        "t": 4.52,
+        "end": 6.69,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "I'm having a hard time getting it in..",
+        "de": "Ich tu mich schwer, es reinzubekommen..",
+        "orig": "scenes/marriedcouple/lines/03.mp3"
+      },
+      {
+        "t": 6.69,
+        "end": 9.98,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "It's fine! I mean this is your first time isn't it?",
+        "de": "Passt schon! Ich meine, es ist doch dein erstes Mal, oder?",
+        "orig": "scenes/marriedcouple/lines/04.mp3"
+      },
+      {
+        "t": 9.98,
+        "end": 10.96,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Uhh... yeah.",
+        "de": "Ähh... ja.",
+        "orig": "scenes/marriedcouple/lines/05.mp3"
+      },
+      {
+        "t": 10.96,
+        "end": 14.85,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "It'll be great... Just try and take it slow and gentle..",
+        "de": "Wird schon toll... versuch's einfach langsam und sanft..",
+        "orig": "scenes/marriedcouple/lines/06.mp3"
+      },
+      {
+        "t": 14.85,
+        "end": 15.26,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Mmmh..",
+        "de": "Mmmh..",
+        "orig": "scenes/marriedcouple/lines/07.mp3"
+      },
+      {
+        "t": 15.26,
+        "end": 20.96,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "That's it... Trace around the edge super softly.. And when you feel it, just push it through.",
+        "de": "Genau so... Fahr ganz sachte am Rand entlang.. Und wenn du's spürst, einfach durchdrücken.",
+        "orig": "scenes/marriedcouple/lines/08.mp3"
+      },
+      {
+        "t": 20.96,
+        "end": 26.33,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "In my opinion, there is no need to rush anything. It's best to go steady.",
+        "de": "Meiner Meinung nach muss man nichts überstürzen. Am besten geht man's ruhig an.",
+        "orig": "scenes/marriedcouple/lines/09.mp3"
+      },
+      {
+        "t": 26.33,
+        "end": 28.68,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "I think I get it.. Like this?",
+        "de": "Ich glaub ich hab's.. So?",
+        "orig": "scenes/marriedcouple/lines/10.mp3"
+      },
+      {
+        "t": 28.68,
+        "end": 30.67,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Yup! It's in there now~",
+        "de": "Jap! Jetzt ist es drin~",
+        "orig": "scenes/marriedcouple/lines/11.mp3"
+      },
+      {
+        "t": 30.67,
+        "end": 33.44,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Good... Now keep it there and slowly press!",
+        "de": "Gut... jetzt halt es da und drück langsam!",
+        "orig": "scenes/marriedcouple/lines/12.mp3"
+      },
+      {
+        "t": 33.44,
+        "end": 36.53,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Augh~! Don't rush silly!",
+        "de": "Augh~! Nicht hetzen, Dummerchen!",
+        "orig": "scenes/marriedcouple/lines/13.mp3"
+      },
+      {
+        "t": 36.53,
+        "end": 39.34,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "That's perfect...",
+        "de": "Das ist perfekt...",
+        "orig": "scenes/marriedcouple/lines/14.mp3"
+      },
+      {
+        "t": 39.34,
+        "end": 41.97,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Aegh!",
+        "de": "Aegh!",
+        "orig": "scenes/marriedcouple/lines/15.mp3"
+      },
+      {
+        "t": 41.97,
+        "end": 44.6,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Aaaa... huh!",
+        "de": "Aaaa... huh!",
+        "orig": "scenes/marriedcouple/lines/16.mp3"
+      },
+      {
+        "t": 44.6,
+        "end": 49.0,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Awww.. ful. Well that was quick..",
+        "de": "Awww.. Na sowas. Das ging aber schnell..",
+        "orig": "scenes/marriedcouple/lines/17.mp3"
+      },
+      {
+        "t": 49.0,
+        "end": 52.05,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Auwaa! Oh my gosh, I'm so sorry!",
+        "de": "Auwaa! Oh mein Gott, tut mir so leid!",
+        "orig": "scenes/marriedcouple/lines/18.mp3"
+      },
+      {
+        "t": 52.05,
+        "end": 56.14,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Ahahaha! You gave yourself a little mustache!~ Ahahahaha!!",
+        "de": "Ahahaha! Du hast dir da 'nen kleinen Schnurrbart verpasst!~ Ahahahaha!!",
+        "orig": "scenes/marriedcouple/lines/19.mp3"
+      },
+      {
+        "t": 56.14,
+        "end": 59.91,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Don't laugh! You've got it all over your face too by the way",
+        "de": "Lach nicht! Du hast's übrigens auch überall im Gesicht",
+        "orig": "scenes/marriedcouple/lines/20.mp3"
+      },
+      {
+        "t": 59.91,
+        "end": 61.99,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Wait I do? Wheree?!",
+        "de": "Warte, echt? Woo?!",
+        "orig": "scenes/marriedcouple/lines/21.mp3"
+      },
+      {
+        "t": 61.99,
+        "end": 65.94,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Well it's not where you're wiping haha! Chill or you'll make it worse!",
+        "de": "Naja, nicht da, wo du wischst haha! Beruhig dich, sonst wird's schlimmer!",
+        "orig": "scenes/marriedcouple/lines/22.mp3"
+      },
+      {
+        "t": 65.94,
+        "end": 72.46,
+        "chars": [
+          1
+        ],
+        "who": "Shiori",
+        "text": "Aaaa! I'm embarrassed! Please.. Just wipe it off! Help Jiro!",
+        "de": "Aaaa! Mir ist das so peinlich! Bitte.. wisch's einfach ab! Hilf mir, Jiro!",
+        "orig": "scenes/marriedcouple/lines/23.mp3"
+      },
+      {
+        "t": 72.46,
+        "end": 76.09,
+        "chars": [
+          2
+        ],
+        "who": "Jiro",
+        "text": "Nghh!! Hmmmm~!",
+        "de": "Nghh!! Hmmmm~!",
+        "orig": "scenes/marriedcouple/lines/24.mp3"
+      }
+    ]
+  },
+  {
+    "id": "potatochip",
+    "title": "Death Note — Potato Chip (2 Rollen)",
+    "videoUrl": "scenes/potatochip.mp4",
+    "avatars": {
+      "1": "scenes/potatochip/light.png",
+      "2": "scenes/potatochip/ryuk.png"
     },
-    {
-      "t": 17.96,
-      "end": 19.84,
-      "chars": [
-        2
-      ],
-      "who": "Doakes",
-      "text": "GPS-Sender an ihrem Boot...",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 20.1,
-      "end": 24.8,
-      "chars": [
-        2
-      ],
-      "who": "Doakes",
-      "text": "Herr Gott Morgan! Herr Gott im himmel, sie sind der Bayharbor Metzger",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 24.99,
-      "end": 26.35,
-      "chars": [
-        1
-      ],
-      "who": "Dexter",
-      "text": "Ehrlich ich hasse diesen Namen",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 26.63,
-      "end": 28.04,
-      "chars": [
-        2
-      ],
-      "who": "Doakes",
-      "text": "Herr Gott Man...",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 28.1,
-      "end": 29.28,
-      "chars": [
-        1
-      ],
-      "who": "Dexter",
-      "text": "Das Sagten Sie Schon...",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 29.32,
-      "end": 32.34,
-      "chars": [
-        2
-      ],
-      "who": "Doakes",
-      "text": "Ich wusste das sie nicht ganz dich sind... aber das hier?",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 32.61,
-      "end": 40.23,
-      "chars": [
-        1
-      ],
-      "who": "Dexter",
-      "text": "Was soll ich sagen... sie hatten vollkommen recht... ich habe ihnen nie ein vorwurf deswegen gemacht... mache ich auch jetzt nicht",
-      "de": "Original Ist Deutsch!"
-    }
-  ],
-  "voiceTrack": "scenes/dexterdoakesamhafen_voices.mp3",
-  "difficultyOverride": "medium"
+    "roles": [
+      {
+        "id": 1,
+        "name": "Light",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Ryuk",
+        "pan": 0.5,
+        "effect": "monster",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.0,
+        "end": 2.8,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "I've been through worse than this before.",
+        "de": "Ich hab schon Schlimmeres durchgemacht als das hier.",
+        "orig": "scenes/potatochip/lines/01.mp3"
+      },
+      {
+        "t": 2.8,
+        "end": 8.0,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "Just stay calm... I can get through this.",
+        "de": "Bleib einfach ruhig... ich schaff das schon.",
+        "orig": "scenes/potatochip/lines/02.mp3"
+      },
+      {
+        "t": 8.0,
+        "end": 10.14,
+        "chars": [
+          2
+        ],
+        "who": "Ryuk",
+        "text": "Heh heh heh... humans really are fascinating.",
+        "de": "Heh heh heh... Menschen sind wirklich faszinierend.",
+        "orig": "scenes/potatochip/lines/03.mp3"
+      },
+      {
+        "t": 10.14,
+        "end": 15.16,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "From the moment I picked up that notebook...",
+        "de": "Seit dem Moment, in dem ich das Notizbuch aufgehoben hab...",
+        "orig": "scenes/potatochip/lines/04.mp3"
+      },
+      {
+        "t": 15.16,
+        "end": 20.39,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "...this became my destiny. There's no turning back now.",
+        "de": "...war das mein Schicksal. Es gibt jetzt kein Zurück mehr.",
+        "orig": "scenes/potatochip/lines/05.mp3"
+      },
+      {
+        "t": 20.39,
+        "end": 24.68,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "Everything is going exactly according to my plan.",
+        "de": "Alles läuft genau nach meinem Plan.",
+        "orig": "scenes/potatochip/lines/06.mp3"
+      },
+      {
+        "t": 24.68,
+        "end": 26.9,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "My own father, pointing a gun at me...",
+        "de": "Mein eigener Vater, richtet eine Waffe auf mich...",
+        "orig": "scenes/potatochip/lines/07.mp3"
+      },
+      {
+        "t": 26.9,
+        "end": 33.09,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "...and still, I came out on top.",
+        "de": "...und trotzdem hab ich am Ende gewonnen.",
+        "orig": "scenes/potatochip/lines/08.mp3"
+      },
+      {
+        "t": 33.09,
+        "end": 36.88,
+        "chars": [
+          2
+        ],
+        "who": "Ryuk",
+        "text": "You really do enjoy this, don't you, Light?",
+        "de": "Du genießt das wirklich, oder, Light?",
+        "orig": "scenes/potatochip/lines/09.mp3"
+      },
+      {
+        "t": 36.88,
+        "end": 44.33,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "I am justice. I'm the one who'll create a new world.",
+        "de": "Ich bin die Gerechtigkeit. Ich bin derjenige, der eine neue Welt erschaffen wird.",
+        "orig": "scenes/potatochip/lines/10.mp3"
+      },
+      {
+        "t": 44.33,
+        "end": 47.17,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "A god doesn't need to explain himself to anyone.",
+        "de": "Ein Gott muss sich vor niemandem rechtfertigen.",
+        "orig": "scenes/potatochip/lines/11.mp3"
+      },
+      {
+        "t": 47.17,
+        "end": 51.29,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "Not to the police... not even to my own family.",
+        "de": "Nicht vor der Polizei... nicht mal vor meiner eigenen Familie.",
+        "orig": "scenes/potatochip/lines/12.mp3"
+      },
+      {
+        "t": 51.29,
+        "end": 56.95,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "I've won again. Just like I always do.",
+        "de": "Ich hab wieder gewonnen. Wie immer.",
+        "orig": "scenes/potatochip/lines/13.mp3"
+      },
+      {
+        "t": 56.95,
+        "end": 64.22,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "There's nothing left that can stop me now.",
+        "de": "Es gibt jetzt nichts mehr, das mich aufhalten kann.",
+        "orig": "scenes/potatochip/lines/14.mp3"
+      },
+      {
+        "t": 64.22,
+        "end": 77.04,
+        "chars": [
+          1
+        ],
+        "who": "Light",
+        "text": "I'll take a potato chip... AND EAT IT!",
+        "de": "Ich nehme mir einen Kartoffelchip... UND ESSE IHN!",
+        "orig": "scenes/potatochip/lines/15.mp3"
+      }
+    ]
   },
   {
     "id": "testplace",
