@@ -1807,138 +1807,6 @@
     "difficultyOverride": "medium"
   },
   {
-  "id": "superbadmclovin",
-  "title": "Superbad - McLovin, Evan Und Seth",
-  "videoUrl": "scenes/superbadmclovin.mp4",
-  "roles": [
-    {
-      "id": 1,
-      "name": "Mc Lovin",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 2,
-      "name": "Evan",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    },
-    {
-      "id": 3,
-      "name": "Seth",
-      "pan": 0,
-      "effect": "none",
-      "gain": 1
-    }
-  ],
-  "lines": [
-    {
-      "t": 0,
-      "end": 1.99,
-      "chars": [
-        2
-      ],
-      "who": "Evan",
-      "text": "Fogel bist du schonmal jemanden Begegnet der Mohammed Heißt?",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 2,
-      "end": 4.2,
-      "chars": [
-        1
-      ],
-      "who": "Mc Lovin",
-      "text": "Du vielleicht schonmal jemanden der Mc Lovin Heißt? (Stolz Nerdy)",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 4.22,
-      "end": 6.53,
-      "chars": [
-        3
-      ],
-      "who": "Seth",
-      "text": "Nein!, Deswegen ist es ja auch so ein beschissener Name!",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 6.62,
-      "end": 7.48,
-      "chars": [
-        1
-      ],
-      "who": "Mc Lovin",
-      "text": "Leck Mich Doch?",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 7.5,
-      "end": 8.1,
-      "chars": [
-        3
-      ],
-      "who": "Seth",
-      "text": "Gib Mal her",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 8.12,
-      "end": 13.22,
-      "chars": [
-        3
-      ],
-      "who": "Seth",
-      "text": "Okay... Also erstens du siehst da aus wie ein zukünftiger Kinder Schänder, und zweitens wo istn dein vorname?",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 13.31,
-      "end": 14.9,
-      "chars": [
-        3
-      ],
-      "who": "Seth",
-      "text": "Da Steht Nur McLovin!!!???",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 15.15,
-      "end": 19.09,
-      "chars": [
-        2
-      ],
-      "who": "Evan",
-      "text": "Was... Ein Name?... Nur Ein Name? für wen hälst du dich (seil? sag einfach jesus oder so ein scheiß)",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 19.35,
-      "end": 23.54,
-      "chars": [
-        3
-      ],
-      "who": "Seth",
-      "text": "Fogel, hier steht drauf das du 25 bist, um alk zu kaufen muss man nur 21 sein!",
-      "de": "Original Ist Deutsch!"
-    },
-    {
-      "t": 23.74,
-      "end": 34.71,
-      "chars": [
-        1
-      ],
-      "who": "Mc Lovin",
-      "text": "Jajaja pass mal auf scharmhaar perücke, jeden tag gehen hier hunderte kids mit ihren gefaketen ausweisen in die getränkte märkte und auf jeden steht das sie 21 sind... wie viel 21 jährige soll es denn geben, das nennt man strategie alter",
-      "de": "Original Ist Deutsch!"
-    }
-  ],
-  "voiceTrack": "scenes/superbadmclovin_voices.mp3",
-  "difficultyOverride": "easy"
-  },
-  {
     "id": "backroomsdinner",
     "title": "Backrooms — Dinner Scene: Clark & Mary (2 Rollen)",
     "videoUrl": "scenes/backroomsdinner.mp4",
@@ -3307,6 +3175,164 @@
     ]
   },
   {
+    "id": "chickenjockey",
+    "title": "Chicken Jockey — Fight Club (3 Rollen)",
+    "videoUrl": "scenes/chickenjockey.mp4",
+    "avatars": {
+      "1": "scenes/chickenjockey/steve.png",
+      "2": "scenes/chickenjockey/garret.png",
+      "3": "scenes/chickenjockey/jockey.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Steve",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Garret",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Chicken Jockey",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.0,
+        "end": 3.58,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "You got this gar gar!",
+        "de": "Du schaffst das, Kleiner!",
+        "orig": "scenes/chickenjockey/lines/01.mp3"
+      },
+      {
+        "t": 3.58,
+        "end": 5.92,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "Reach down DEEP",
+        "de": "Grab tief rein",
+        "orig": "scenes/chickenjockey/lines/02.mp3"
+      },
+      {
+        "t": 5.92,
+        "end": 8.73,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "I have no idea",
+        "de": "Ich hab keine Ahnung",
+        "orig": "scenes/chickenjockey/lines/03.mp3"
+      },
+      {
+        "t": 8.73,
+        "end": 9.87,
+        "chars": [
+          2
+        ],
+        "who": "Garret",
+        "text": "What's going on Steve.",
+        "de": "Was geht hier ab, Steve.",
+        "orig": "scenes/chickenjockey/lines/04.mp3"
+      },
+      {
+        "t": 9.87,
+        "end": 12.93,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "It's some kind of sadistic Vindicator fight club.",
+        "de": "Das ist irgend so ein sadistischer Vindicator-Kampfclub.",
+        "orig": "scenes/chickenjockey/lines/05.mp3"
+      },
+      {
+        "t": 12.93,
+        "end": 15.12,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "I've heard of these but i've never seen one.",
+        "de": "Ich hab von sowas gehört, aber noch nie eins gesehen.",
+        "orig": "scenes/chickenjockey/lines/06.mp3"
+      },
+      {
+        "t": 15.12,
+        "end": 17.19,
+        "chars": [
+          2
+        ],
+        "who": "Garret",
+        "text": "They want me to fight the chicken?",
+        "de": "Die wollen, dass ich gegen das Huhn kämpfe?",
+        "orig": "scenes/chickenjockey/lines/07.mp3"
+      },
+      {
+        "t": 17.19,
+        "end": 37.87,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "It's a fight to the death kid!",
+        "de": "Das ist ein Kampf auf Leben und Tod, Kleiner!",
+        "orig": "scenes/chickenjockey/lines/08.mp3"
+      },
+      {
+        "t": 37.87,
+        "end": 43.01,
+        "chars": [
+          3,
+          2
+        ],
+        "who": "Chicken Jockey+Garret",
+        "text": "hehehehe bok (baby noises) RAAAAH (Garett) AH!",
+        "de": "hehehehe bok (Baby-Geräusche) RAAAAH (Garret) AH!",
+        "orig": "scenes/chickenjockey/lines/09.mp3"
+      },
+      {
+        "t": 43.01,
+        "end": 44.57,
+        "chars": [
+          1
+        ],
+        "who": "Steve",
+        "text": "CHICKEN JOCKEY!",
+        "de": "CHICKEN JOCKEY!",
+        "orig": "scenes/chickenjockey/lines/10.mp3"
+      },
+      {
+        "t": 44.57,
+        "end": 49.09,
+        "chars": [
+          3,
+          2
+        ],
+        "who": "Chicken Jockey+Garret",
+        "text": "(Chicken Jockey Noises) (Garett) AH AH!",
+        "de": "(Chicken-Jockey-Geräusche) (Garret) AH AH!",
+        "orig": "scenes/chickenjockey/lines/11.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
@@ -3420,269 +3446,6 @@
         "who": "Tester D",
         "text": "D macht den Abschluss — Premiere ab in drei, zwei, eins!",
         "de": "D macht den Abschluss — Premiere ab in drei, zwei, eins!"
-      }
-    ]
-  },
-  {
-    "id": "familyguy_crack",
-    "title": "Family Guy — Peter Does Crack (2 Rollen)",
-    "videoUrl": "scenes/familyguy.mp4",
-    "avatars": {
-      "1": "scenes/familyguy/brian.png",
-      "2": "scenes/familyguy/peter.png"
-    },
-    "roles": [
-      {
-        "id": 1,
-        "name": "Brian",
-        "pan": -0.5,
-        "effect": "none",
-        "gain": 1.0
-      },
-      {
-        "id": 2,
-        "name": "Peter",
-        "pan": 0.5,
-        "effect": "none",
-        "gain": 1.0
-      }
-    ],
-    "lines": [
-      {
-        "t": 3.829,
-        "end": 5.261,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "Peter, what are you doing?",
-        "de": "Peter, was machst du da?",
-        "orig": "scenes/familyguy/lines/01.mp3"
-      },
-      {
-        "t": 5.261,
-        "end": 6.123,
-        "chars": [
-          2
-        ],
-        "who": "Peter",
-        "text": "Crack.",
-        "de": "Crack.",
-        "orig": "scenes/familyguy/lines/02.mp3"
-      },
-      {
-        "t": 6.123,
-        "end": 7.537,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "What the fuck?!",
-        "de": "Was zur Hölle?!",
-        "orig": "scenes/familyguy/lines/03.mp3"
-      },
-      {
-        "t": 7.537,
-        "end": 9.055,
-        "chars": [
-          2
-        ],
-        "who": "Peter",
-        "text": "Hey, at least I'm not drinking, Brian.",
-        "de": "Hey, wenigstens trink ich nicht, Brian.",
-        "orig": "scenes/familyguy/lines/04.mp3"
-      },
-      {
-        "t": 9.055,
-        "end": 12.508,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "Yeah, this isn't exactly a good substitute. Where'd you get crack?",
-        "de": "Ja, das ist jetzt auch kein guter Ersatz. Wo hast du Crack her?",
-        "orig": "scenes/familyguy/lines/05.mp3"
-      },
-      {
-        "t": 12.508,
-        "end": 13.448,
-        "chars": [
-          2
-        ],
-        "who": "Peter",
-        "text": "From blacks.",
-        "de": "Von Schwarzen.",
-        "orig": "scenes/familyguy/lines/06.mp3"
-      },
-      {
-        "t": 13.448,
-        "end": 13.918,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "What?",
-        "de": "Was?",
-        "orig": "scenes/familyguy/lines/07.mp3"
-      },
-      {
-        "t": 13.918,
-        "end": 16.807,
-        "chars": [
-          2
-        ],
-        "who": "Peter",
-        "text": "Right behind Black's Hardware Store. There's a white guy selling it.",
-        "de": "Direkt hinter Black's Baumarkt. Da verkauft's ein Weißer.",
-        "orig": "scenes/familyguy/lines/08.mp3"
-      },
-      {
-        "t": 16.807,
-        "end": 23.014,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "Look, doing crack is not the way to stop drinking. You need to get to the heart of why you feel the need to drink in the first place.",
-        "de": "Hör zu, Crack rauchen ist nicht der Weg, um mit dem Trinken aufzuhören. Du musst rausfinden, warum du überhaupt trinken willst.",
-        "orig": "scenes/familyguy/lines/09.mp3"
-      },
-      {
-        "t": 23.014,
-        "end": 26.507,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "Look, here, this is the number of a hypnotherapist I want you to see.",
-        "de": "Hier, das ist die Nummer von einem Hypnotherapeuten, zu dem du gehen sollst.",
-        "orig": "scenes/familyguy/lines/10.mp3"
-      },
-      {
-        "t": 26.507,
-        "end": 27.88,
-        "chars": [
-          2
-        ],
-        "who": "Peter",
-        "text": "All right, Brian.",
-        "de": "Okay, Brian.",
-        "orig": "scenes/familyguy/lines/11.mp3"
-      },
-      {
-        "t": 27.88,
-        "end": 33.486,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "Good.",
-        "de": "Gut.",
-        "orig": "scenes/familyguy/lines/12.mp3"
-      },
-      {
-        "t": 33.486,
-        "end": 36.289,
-        "chars": [
-          1
-        ],
-        "who": "Brian",
-        "text": "Hey, Peter, just thought I'd check on y— Oh, my God!",
-        "de": "Hey Peter, ich wollte nur mal nach dir seh— Oh mein Gott!",
-        "orig": "scenes/familyguy/lines/13.mp3"
-      },
-      {
-        "t": 36.289,
-        "end": 39.35,
-        "chars": [
-          2
-        ],
-        "who": "Peter",
-        "text": "Gov'ment came and took my baby!",
-        "de": "Die Regierung kam und hat mein Baby geholt!",
-        "orig": "scenes/familyguy/lines/14.mp3"
-      }
-    ]
-  },
-  {
-    "id": "oppenheimer_final",
-    "title": "Oppenheimer — Final Conversation (Oppenheimer & Einstein)",
-    "videoUrl": "scenes/oppenheimer.mp4",
-    "avatars": {
-      "1": "scenes/oppenheimer/oppenheimer.png",
-      "2": "scenes/oppenheimer/einstein.png"
-    },
-    "roles": [
-      {
-        "id": 1,
-        "name": "Oppenheimer",
-        "pan": -0.5,
-        "effect": "none",
-        "gain": 1.0
-      },
-      {
-        "id": 2,
-        "name": "Einstein",
-        "pan": 0.5,
-        "effect": "none",
-        "gain": 1.0
-      }
-    ],
-    "lines": [
-      {
-        "t": 0.7,
-        "end": 3.966,
-        "chars": [
-          1
-        ],
-        "who": "Oppenheimer",
-        "text": "Albert...",
-        "de": "Albert...",
-        "orig": "scenes/oppenheimer/lines/01.mp3"
-      },
-      {
-        "t": 3.966,
-        "end": 6.933,
-        "chars": [
-          1
-        ],
-        "who": "Oppenheimer",
-        "text": "When I came to you with those calculations-",
-        "de": "Als ich mit diesen Berechnungen zu dir kam-",
-        "orig": "scenes/oppenheimer/lines/02.mp3"
-      },
-      {
-        "t": 6.933,
-        "end": 12.9,
-        "chars": [
-          1
-        ],
-        "who": "Oppenheimer",
-        "text": "We thought we might start a chain reaction that would... destroy the entire world?",
-        "de": "Wir dachten, wir könnten eine Kettenreaktion auslösen, die... die ganze Welt zerstört?",
-        "orig": "scenes/oppenheimer/lines/03.mp3"
-      },
-      {
-        "t": 12.9,
-        "end": 20.833,
-        "chars": [
-          2
-        ],
-        "who": "Einstein",
-        "text": "Hm, I remember it well. What of it?",
-        "de": "Hm, ich erinnere mich gut daran. Was ist damit?",
-        "orig": "scenes/oppenheimer/lines/04.mp3"
-      },
-      {
-        "t": 20.833,
-        "end": 22.82,
-        "chars": [
-          1
-        ],
-        "who": "Oppenheimer",
-        "text": "I believe we did.",
-        "de": "Ich glaube, das haben wir.",
-        "orig": "scenes/oppenheimer/lines/05.mp3"
       }
     ]
   }
