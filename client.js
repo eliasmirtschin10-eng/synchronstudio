@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.2";
+const APP_VERSION = "5.3";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -179,6 +179,15 @@ const AVATAR_CHARS = [
   { img: "scenes/chickenjockey/jockey.png", label: "Chicken Jockey" },
   { img: "scenes/godfather/peter.png", label: "Peter" },
   { img: "scenes/godfather/familie.png", label: "Lois" },
+  { img: "scenes/tojigojo/toji.png", label: "Toji" },
+  { img: "scenes/tojigojo/gojo.png", label: "Gojo (Toji-Kampf)" },
+  { img: "scenes/whodecided/escanor.png", label: "Escanor" },
+  { img: "scenes/whodecided/estarossa.png", label: "Estarossa" },
+  { img: "scenes/whodecided/zeldris.png", label: "Zeldris" },
+  { img: "scenes/marriedcouple/shiori.png", label: "Shiori" },
+  { img: "scenes/marriedcouple/jiro.png", label: "Jiro" },
+  { img: "scenes/potatochip/light.png", label: "Light" },
+  { img: "scenes/potatochip/ryuk.png", label: "Ryuk" },
 ];
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
@@ -821,7 +830,7 @@ function setupHostConn(conn) {
   conn.on("close", () => { conns.delete(conn.peer); players = players.filter(p => p.id !== conn.peer); broadcastState(); });
 }
 function broadcast(msg) { conns.forEach(c => { if (c.open) c.send(msg); }); }
-function broadcastState() { renderPlayers(); renderBoothPlayers(); broadcast({ t: "state", players }); checkStartable(); checkAllDone(); }
+function broadcastState() { renderPlayers(); renderBoothPlayers(); broadcast({ t: "state", players }); checkStartable(); checkAllDone(); if (isHost) renderPremState(); }
 
 function handleMsg(msg, conn) {
   switch (msg.t) {
