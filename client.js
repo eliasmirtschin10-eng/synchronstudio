@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.0";
+const APP_VERSION = "5.2";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -307,13 +307,14 @@ async function getRefPeaks(l, cols) {
   } catch { return null; }
 }
 
-let liveVoicePeaks = null, liveVoiceIdx = 0, currentRefPeaks = null, recording = false;
+let liveVoicePeaks = null, liveVoiceIdx = 0, currentRefPeaks = null, recording = false, livePeakHold = null;
 function startDualViz(canvasId, l, recMaxSec) {
   const canvas = $(canvasId), g = canvas.getContext("2d");
   const dpr = window.devicePixelRatio || 1;
   const data = new Uint8Array(vizAn.frequencyBinCount);
-  const COLS = 90;
+  const COLS = 176;   // feinere Aufloesung fuer mehr Detail in der Wellenform
   liveVoicePeaks = new Float32Array(COLS);
+  livePeakHold = new Float32Array(COLS);
   liveVoiceIdx = 0;
   currentRefPeaks = null;
   getRefPeaks(l, COLS).then(r => { currentRefPeaks = r; });
@@ -326,14 +327,20 @@ function startDualViz(canvasId, l, recMaxSec) {
     g.clearRect(0, 0, W, H);
     const mid = H / 2, colW = W / COLS;
 
+    // Feine Mittellinie als Referenz
+    g.fillStyle = "rgba(255,255,255,.08)";
+    g.fillRect(0, mid - dpr * 0.4, W, dpr * 0.8);
+
     // Lila Hintergrund: Original-Referenz, gestaucht auf ihre eigene Dauer relativ zu recMaxSec
     if (currentRefPeaks) {
+      const refGrad = g.createLinearGradient(0, mid - H * 0.42, 0, mid + H * 0.42);
+      refGrad.addColorStop(0, "rgba(232,150,255,.65)"); refGrad.addColorStop(1, "rgba(160,50,220,.5)");
       const refCols = Math.max(1, Math.round(COLS * Math.min(1, currentRefPeaks.duration / recMaxSec)));
       for (let i = 0; i < refCols; i++) {
         const srcI = Math.floor(i * currentRefPeaks.peaks.length / refCols);
         const h = Math.max(1 * dpr, currentRefPeaks.peaks[srcI] * H * 0.85);
-        g.fillStyle = "rgba(200,75,255,.55)";
-        g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.5), h);
+        g.fillStyle = refGrad;
+        g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.3), h);
       }
     }
 
@@ -347,10 +354,22 @@ function startDualViz(canvasId, l, recMaxSec) {
       liveVoicePeaks[col] = Math.max(liveVoicePeaks[col], level);
       liveVoiceIdx = col;
     }
+    const liveGrad = g.createLinearGradient(0, mid - H * 0.42, 0, mid + H * 0.42);
+    liveGrad.addColorStop(0, "rgba(140,200,255,.95)"); liveGrad.addColorStop(1, "rgba(60,130,240,.85)");
     for (let i = 0; i <= liveVoiceIdx; i++) {
       const h = Math.max(1 * dpr, liveVoicePeaks[i] * H * 0.85);
-      g.fillStyle = "rgba(90,170,255,.9)";
-      g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.5), h);
+      g.fillStyle = liveGrad;
+      g.shadowColor = "rgba(90,170,255,.5)"; g.shadowBlur = 3 * dpr;
+      g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.3), h);
+      g.shadowBlur = 0;
+      // Peak-Hold: langsam abklingender heller Strich am bisher lautesten Punkt dieser Spalte
+      livePeakHold[i] = Math.max(liveVoicePeaks[i] * 0.999, (livePeakHold[i] || 0) * 0.985);
+      const ph = livePeakHold[i] * H * 0.85;
+      if (ph > h) {
+        g.fillStyle = "rgba(220,240,255,.9)";
+        g.fillRect(i * colW, mid - ph / 2, Math.max(1, colW - dpr * 0.3), Math.max(1, dpr * 0.8));
+        g.fillRect(i * colW, mid + ph / 2 - dpr * 0.8, Math.max(1, colW - dpr * 0.3), Math.max(1, dpr * 0.8));
+      }
     }
     // Fortschritts-Linie
     if (recording) {
@@ -372,12 +391,17 @@ function drawStaticRefViz() {
   const W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
   if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
   g.clearRect(0, 0, W, H);
+  const mid = H / 2;
+  g.fillStyle = "rgba(255,255,255,.08)";
+  g.fillRect(0, mid - dpr * 0.4, W, dpr * 0.8);
   if (!currentRefPeaks) return;
-  const mid = H / 2, COLS = currentRefPeaks.peaks.length, colW = W / COLS;
+  const COLS = currentRefPeaks.peaks.length, colW = W / COLS;
+  const grad = g.createLinearGradient(0, mid - H * 0.42, 0, mid + H * 0.42);
+  grad.addColorStop(0, "rgba(232,150,255,.65)"); grad.addColorStop(1, "rgba(160,50,220,.5)");
   for (let i = 0; i < COLS; i++) {
     const h = Math.max(1 * dpr, currentRefPeaks.peaks[i] * H * 0.85);
-    g.fillStyle = "rgba(200,75,255,.55)";
-    g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.5), h);
+    g.fillStyle = grad;
+    g.fillRect(i * colW, mid - h / 2, Math.max(1, colW - dpr * 0.3), h);
   }
 }
 function previewRefViz(l) {
@@ -385,7 +409,7 @@ function previewRefViz(l) {
   currentRefPeaks = null; recording = false;
   const canvas = $("viz");
   if (canvas) { const g = canvas.getContext("2d"); g.clearRect(0, 0, canvas.width, canvas.height); }
-  getRefPeaks(l, 90).then(r => { currentRefPeaks = r; drawStaticRefViz(); });
+  getRefPeaks(l, 176).then(r => { currentRefPeaks = r; drawStaticRefViz(); });
 }
 
 function startVizOn(canvasId) {
@@ -729,6 +753,15 @@ let redoMode = null, redoReturnScreen = null;
 let finalTracksData = null;   // Host: letzter kompletter Mix-Datensatz, für Nach-Korrekturen
 let premiereLocked = false;   // true sobald die Premiere offiziell abgespielt wurde
 
+
+// ═════════════════════════════════════════════════════════════
+// 🥊 DUELL-MODUS: 2 Spieler, 1 Rolle, unabhängige Aufnahmen, Kopf-an-Kopf-Abstimmung
+// ═════════════════════════════════════════════════════════════
+let duelInfo = null;          // { roleId, aId, bId }
+let duelStagedScene = null;   // vom Host im Setup gewählte Szene, bevor das Duell startet
+const duelSubs = {};          // Host: playerId -> items[]
+const duelVotes = {};         // Host: voterId -> "a" | "b"
+
 // ═════════════════════════════════════════════════════════════
 // RAUM VERLASSEN — sauberer Reset ohne Seiten-Reload
 // ═════════════════════════════════════════════════════════════
@@ -808,7 +841,7 @@ function handleMsg(msg, conn) {
     case "ready": { const p = players.find(p => p.id === conn.peer); if (p && p.role != null) p.ready = true; broadcastState(); break; }
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
-    case "trackUpdate": applyTrackUpdate(msg.role, msg.lineIdx, msg.startAt, msg.buf); break;
+    case "trackUpdate": applyTrackUpdate(msg.role, msg.lineIdx, msg.startAt, msg.buf, msg.effect); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
     case "rate": collectRating(conn.peer, msg.scores); break;
     case "mg":
@@ -836,6 +869,12 @@ function handleMsg(msg, conn) {
       $("scene-card").style.display = "none";
       renderPlayers();
       break;
+    case "duelSetupInfo": duelInfo = msg.duelInfo; break;
+    case "duelSubmit": collectDuelSubmit(msg.playerId, msg.items); break;
+    case "duelReady": loadDuelSequence(msg.dataA, msg.dataB, msg.duelInfo); break;
+    case "duelVote": collectDuelVote(conn.peer, msg.choice); break;
+    case "duelVoteBroadcast": showDuelVoteLive(msg.tally); break;
+    case "duelResult": showDuelResult(msg.result); break;
     case "wins": Object.assign(mgWins, msg.wins); renderWins(); break;
     case "nextRound":
       match.round = msg.round; players = msg.players;
@@ -917,7 +956,20 @@ $("btn-load-scene").onclick = () => {
   broadcastState();
 };
 
-const EFFECTS = { none: "Normal", vintage_1990: "Vintage / 90er Tape", radio: "Funkgerät", telefon: "Telefon", hall: "Halliger Raum" };
+const EFFECTS = {
+  none: "Normal", vintage_1990: "Vintage / 90er Tape", radio: "Funkgerät", telefon: "Telefon", hall: "Halliger Raum",
+  megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter"
+};
+
+// ── Spieler kann pro Line seinen eigenen Effekt waehlen — ueberschreibt Rollen-/Szenen-Standard NUR fuer diese Line ──
+let myEffectOverrides = {};   // lineIdx -> Effekt-Key (nur gesetzt, wenn vom Standard abweichend)
+function myEffectiveRole(l) {
+  // Reihenfolge: Spieler-Wahl > Szenen-Autor-Override (l.effect) > Rollen-Standard
+  const base = roleOf(myRole()) || { pan: 0, effect: "none", gain: 1 };
+  const chosen = myEffectOverrides[l.idx];
+  if (chosen) return { ...base, effect: chosen };
+  return effectiveRole(base, l);
+}
 
 $("file-video").onchange = async (e) => {
   const f = e.target.files[0];
@@ -1086,16 +1138,19 @@ function hostSettingsChanged() {
   match.autoRoulette = $("set-roulette").checked;
   // Im Runden- UND Battle-Royale-Modus ist alles Zufall: Rollenwahl & Szenenwahl werden ausgeblendet
   const rnd = match.mode === "rounds" || match.mode === "elimination";
+  const duell = match.mode === "duell";
   $("rounds-opts").style.display = (match.mode === "rounds") ? "" : "none";
-  $("host-scene").style.display = rnd ? "none" : "";
+  $("host-scene").style.display = (rnd || duell) ? "none" : "";
+  $("duel-setup").style.display = duell ? "" : "none";
+  if (duell) populateDuelSceneSelect();
   // WICHTIG: Szenenliste immer (neu) laden, damit das Dropdown im Freien Modus gefüllt ist
-  if (!rnd) loadSceneList();
+  if (!rnd && !duell) loadSceneList();
 
   // FIX: Beim Moduswechsel eine evtl. schon geladene Szene/Rollen zurücksetzen —
   // sonst bleiben z.B. manuell gewählte Free-Modus-Rollen im Runden-Modus aktiv nutzbar.
   if (match.mode !== prevMode) {
     scene = null; localVideoBuf = null; videoBlobUrl = null;
-    scenePool = [];
+    scenePool = []; duelInfo = null; duelStagedScene = null;
     players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
     $("scene-card").style.display = "none";
     $("btn-go-round").style.display = "none";
@@ -1122,6 +1177,8 @@ function renderSettingsView(s) {
     el.innerHTML = `🔪 <b>Battle Royale · Runde ${round}</b> · ${activeLeft} noch im Rennen · 🎲 Zufalls-Szenen &amp; -Rollen · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
   } else if (mode === "rounds") {
     el.innerHTML = `🏆 <b>Match · Runde ${round}/${rounds}</b> · 🎲 Zufalls-Szenen &amp; -Rollen · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
+  } else if (mode === "duell") {
+    el.innerHTML = `🥊 <b>Duell-Modus</b> · Host wählt Szene, Rolle &amp; die zwei Duellanten · Rest schaut zu &amp; stimmt danach ab` + (isHost ? "" : ' <span class="tag">(Host)</span>');
   } else {
     el.innerHTML = `🎮 <b>Freies Spiel</b> · Szene &amp; Rollen frei wählbar · 🕶 Blind: ${bl ? "an" : "aus"}` + (isHost ? "" : ' <span class="tag">(Host)</span>');
   }
@@ -1156,6 +1213,11 @@ $("btn-ready").onclick = async () => {
 
 function checkStartable() {
   if (!isHost) return;
+  if (match.mode === "duell") {
+    // Duell hat seinen eigenen Start-Button (🥊 Duell starten) — der normale Button bleibt aussen vor
+    $("btn-start").style.display = "none";
+    return;
+  }
   if ((match.mode === "rounds" || match.mode === "elimination") && !scene) {
     // Match noch nicht gestartet → Button startet das Match
     $("btn-start").style.display = "";
@@ -1305,18 +1367,59 @@ function nextSameRoleStart(lineIdx) {
   return best;
 }
 
+
+// ── Duell-Setup: Szene wählen, dann Rolle + beide Duellanten festlegen ──
+function populateDuelSceneSelect() {
+  const sel = $("duel-scene-select");
+  sel.innerHTML = sceneList.length
+    ? sceneList.map((s, i) => `<option value="${i}">${esc(s.title)}</option>`).join("")
+    : "<option>— Szenen laden… —</option>";
+}
+$("btn-duel-load-scene").onclick = () => {
+  const s = sceneList[$("duel-scene-select").value];
+  if (!s) return;
+  duelStagedScene = JSON.parse(JSON.stringify(s));
+  $("duel-role-select").innerHTML = duelStagedScene.roles.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join("");
+  const playerOpts = players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  $("duel-player-a").innerHTML = playerOpts;
+  $("duel-player-b").innerHTML = playerOpts;
+  if (players[1]) $("duel-player-b").value = players[1].id;
+  $("duel-pickers").style.display = "flex";
+  status("duel-setup-status", "Szene geladen — jetzt Rolle & beide Duellanten wählen.");
+};
+$("btn-duel-start").onclick = () => {
+  const roleId = parseInt($("duel-role-select").value);
+  const aId = $("duel-player-a").value, bId = $("duel-player-b").value;
+  if (aId === bId) return status("duel-setup-status", "Duellant A und B müssen unterschiedlich sein!", true), SFX.err();
+  duelInfo = { roleId, aId, bId };
+  scene = JSON.parse(JSON.stringify(duelStagedScene));
+  localVideoBuf = null; videoBlobUrl = null;
+  players.forEach(p => { p.role = (p.id === aId || p.id === bId) ? roleId : null; p.ready = true; });
+  Object.keys(duelSubs).forEach(k => delete duelSubs[k]);
+  Object.keys(duelVotes).forEach(k => delete duelVotes[k]);
+  broadcast({ t: "scene", scene });
+  broadcast({ t: "duelSetupInfo", duelInfo });
+  broadcastState();
+  status("duel-setup-status", "🥊 Duell steht: " + nameOf(aId) + " vs " + nameOf(bId) + " als " + duelStagedScene.roles.find(r => r.id === roleId).name);
+  broadcast({ t: "goLines" });
+  startBooth();
+};
+
 function startBooth() {
   const rid = myRole();
   if (rid == null) {                      // Zuschauer
     show("scr-wait");
     renderBoothPlayers();
+    $("duel-waiting-note").style.display = match.mode === "duell" ? "" : "none";
     const me0 = players.find(p => p.id === myId);
     const bench = me0 ? (me0.timesSpectated || 0) : 0;
-    status("wait-status", "🍿 Du bist Zuschauer — die Premiere startet automatisch, wenn alle fertig sind." + (match.mode === "rounds" ? " (Nächste Runde bist du garantiert bevorzugt dran, " + bench + "x gebankt bisher.)" : ""));
+    status("wait-status", match.mode === "duell"
+      ? "🥊 Duell läuft — " + nameOf(duelInfo?.aId) + " vs " + nameOf(duelInfo?.bId) + " nehmen unabhängig voneinander auf. Danach hört ihr beide Versionen und stimmt ab!"
+      : "🍿 Du bist Zuschauer — die Premiere startet automatisch, wenn alle fertig sind." + (match.mode === "rounds" ? " (Nächste Runde bist du garantiert bevorzugt dran, " + bench + "x gebankt bisher.)" : ""));
     return;
   }
   myLines = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.includes(rid));
-  curLine = 0; takes = {};
+  curLine = 0; takes = {}; myEffectOverrides = {};
   const r = roleOf(rid);
   $("booth-rolename").textContent = r.name;
   const av = scene.avatars?.[String(rid)];
@@ -1357,6 +1460,14 @@ function renderLine() {
   $("btn-line-next").textContent = redoMode !== null ? "✅ Aktualisieren & zurück" : "✅ Passt, weiter";
   const sk = $("btn-line-skip"); if (sk) sk.style.display = lineHasOrig(l) ? "" : "none";
   const og = $("btn-line-orig"); if (og) og.style.display = (lineHasOrig(l) && !scene.blind) ? "" : "none";
+  const efSel = $("my-effect-select");
+  if (efSel) {
+    const baseRole = roleOf(myRole()) || { effect: "none" };
+    const sceneDefault = effectiveRole(baseRole, l).effect;
+    efSel.innerHTML = `<option value="">🎭 Standard (${esc(EFFECTS[sceneDefault] || sceneDefault)})</option>` +
+      Object.entries(EFFECTS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("");
+    efSel.value = myEffectOverrides[l.idx] || "";
+  }
   $("rectime-fill").style.width = "0";
   if (lineHasOrig(l)) previewRefViz(l); else { cancelAnimationFrame(vizRAF); const c = $("viz"); if (c) { const g = c.getContext("2d"); g.clearRect(0,0,c.width,c.height); } }
   status("booth-status", takes[l.idx] ? "Take gespeichert — anhören, neu aufnehmen oder weiter." : "Unendlich Versuche — nimm auf, bis es sitzt.");
@@ -1586,7 +1697,7 @@ $("btn-line-play").onclick = async () => {
   const v = $("booth-video");
   v.pause(); v.currentTime = l.t; v.volume = boothVol * 0.6; v.playbackRate = 1;
   await v.play();
-  const effRole = effectiveRole(roleOf(myRole()), myLines[curLine]);
+  const effRole = myEffectiveRole(myLines[curLine]);
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.playbackRate.value = effectPitch(effRole.effect);
@@ -1596,6 +1707,13 @@ $("btn-line-play").onclick = async () => {
   src.onended = () => { if (previewSrc === src) previewSrc = null; v.pause(); };
 };
 
+$("my-effect-select").onchange = () => {
+  const l = myLines[curLine];
+  if (!l) return;
+  const v = $("my-effect-select").value;
+  if (v) myEffectOverrides[l.idx] = v; else delete myEffectOverrides[l.idx];
+  SFX.click();
+};
 $("btn-line-prev").onclick = () => {
   if (redoMode !== null || curLine <= 0) return;
   curLine--; renderLine(); SFX.click();
@@ -1632,7 +1750,13 @@ function finishBooth() {
   show("scr-wait");
   renderBoothPlayers();
   const items = myLines.filter(l => takes[l.idx] && takes[l.idx] !== "SKIP")
-    .map(l => ({ startAt: l.t, idx: l.idx, buf: takes[l.idx] }));
+    .map(l => ({ startAt: l.t, idx: l.idx, buf: takes[l.idx], effect: myEffectOverrides[l.idx] || undefined }));
+  if (match.mode === "duell" && duelInfo) {
+    if (isHost) collectDuelSubmit(myId, items);
+    else hostConn.send({ t: "duelSubmit", playerId: myId, items });
+    status("wait-status", "🥊 Dein Take ist im Kasten! Warte auf den anderen Duellanten …");
+    return;
+  }
   if (isHost) collectTracks(myRole(), items);
   else hostConn.send({ t: "tracks", role: myRole(), items });
 }
@@ -2152,14 +2276,15 @@ function finishRedo() {
   const buf = takes[l.idx];
   const startAt = l.t;
   const lineIdx = l.idx;
+  const effect = myEffectOverrides[l.idx] || undefined;
   redoMode = null;
   cancelAnimationFrame(vizRAF);
   $("onair").classList.remove("live");
   const back = redoReturnScreen || "scr-wait";
   show(back);
   if (buf && buf !== "SKIP") {
-    if (isHost) applyTrackUpdate(myRole(), lineIdx, startAt, buf);
-    else hostConn.send({ t: "trackUpdate", role: myRole(), lineIdx, startAt, buf });
+    if (isHost) applyTrackUpdate(myRole(), lineIdx, startAt, buf, effect);
+    else hostConn.send({ t: "trackUpdate", role: myRole(), lineIdx, startAt, buf, effect });
   }
   status(back === "scr-playback" ? "play-status" : "wait-status", "✅ Line aktualisiert! Wird im Endergebnis berücksichtigt.");
   renderRedoPanel("redo-panel-wait");
@@ -2186,7 +2311,7 @@ function renderRedoPanel(containerId) {
 }
 
 // ── Host: patcht einen einzelnen Take in den bestehenden Mix und verteilt neu ──
-async function applyTrackUpdate(role, lineIdx, startAt, rawBuf) {
+async function applyTrackUpdate(role, lineIdx, startAt, rawBuf, effect) {
   if (!finalTracksData) return;
   try {
     const ctx = getCtx();
@@ -2194,14 +2319,147 @@ async function applyTrackUpdate(role, lineIdx, startAt, rawBuf) {
     finalTracksData = finalTracksData.map(track => {
       if (track.role !== role) return track;
       const items = track.items.filter(it => it.idx !== lineIdx);
-      items.push({ startAt, idx: lineIdx, buf: ab });
+      items.push({ startAt, idx: lineIdx, buf: ab, effect });
       return { role, items };
     });
-    if (!finalTracksData.some(t => t.role === role)) finalTracksData.push({ role, items: [{ startAt, idx: lineIdx, buf: ab }] });
+    if (!finalTracksData.some(t => t.role === role)) finalTracksData.push({ role, items: [{ startAt, idx: lineIdx, buf: ab, effect }] });
     broadcast({ t: "mix", data: finalTracksData });
     loadMix(finalTracksData);
   } catch (e) { console.error("Track-Update fehlgeschlagen:", e); }
 }
+
+
+// ── Duell: beide Einreichungen sammeln, dann zwei komplette Mixe bauen ──
+function collectDuelSubmit(playerId, items) {
+  duelSubs[playerId] = items;
+  if (duelSubs[duelInfo.aId] && duelSubs[duelInfo.bId]) assembleDuelMixes();
+}
+function assembleDuelMixes() {
+  if (!isHost) return;
+  const dataA = [{ role: duelInfo.roleId, items: duelSubs[duelInfo.aId] }];
+  const dataB = [{ role: duelInfo.roleId, items: duelSubs[duelInfo.bId] }];
+  broadcast({ t: "duelReady", dataA, dataB, duelInfo });
+  loadDuelSequence(dataA, dataB, duelInfo);
+}
+
+// ── Beide Versionen nacheinander abspielen, dann Abstimm-Screen zeigen ──
+async function decodeDuelData(data) {
+  const ctx = getCtx();
+  const items = [];
+  for (const track of data) {
+    for (const item of track.items) {
+      try {
+        const ab = await toArrayBuffer(item.buf);
+        items.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: await ctx.decodeAudioData(ab), effect: item.effect });
+      } catch (e) { console.warn("Duell-Spur kaputt:", e); }
+    }
+  }
+  // Alle anderen Rollen (nicht die Duell-Rolle) sprechen original, falls vorhanden
+  if (scene.lines) {
+    const coveredIdx = new Set(items.map(i => i.lineIdx));
+    for (let i = 0; i < scene.lines.length; i++) {
+      const l = scene.lines[i];
+      if (!lineHasOrig(l) || coveredIdx.has(i)) continue;
+      try {
+        const buffer = await getLineOrigBuffer(l);
+        if (buffer) items.push({ role: null, startAt: l.t, lineIdx: i, buffer });
+      } catch {}
+    }
+  }
+  return items;
+}
+
+async function loadDuelSequence(dataA, dataB, info) {
+  duelInfo = info;
+  show("scr-playback");
+  $("btn-replay").style.display = "none"; $("btn-download-audio").style.display = "none";
+  $("btn-download").style.display = "none"; $("btn-again").style.display = "none"; $("btn-back").style.display = "none";
+  status("play-status", "🥊 Bereite beide Versionen vor …");
+
+  const itemsA = await decodeDuelData(dataA);
+  const itemsB = await decodeDuelData(dataB);
+
+  const pv = $("play-video");
+  pv.src = videoBlobUrl || scene.videoUrl;
+  attachPrompter(pv, $("play-prompter"), null);
+  await waitCanPlay(pv, 25000);
+
+  const playOnce = (items, label) => new Promise(resolve => {
+    status("play-status", "🥊 " + label);
+    mixItems = items;
+    pv.addEventListener("ended", resolve, { once: true });
+    playMix(false);
+  });
+
+  await playOnce(itemsA, "Take 1: " + nameOf(duelInfo.aId));
+  await new Promise(r => setTimeout(r, 500));
+  await playOnce(itemsB, "Take 2: " + nameOf(duelInfo.bId));
+
+  showDuelVote();
+}
+
+// ── Abstimm-Screen: alle außer den beiden Duellanten stimmen ab ──
+function showDuelVote() {
+  show("scr-duel-vote");
+  $("leave-btn").style.display = "";
+  const pA = players.find(p => p.id === duelInfo.aId), pB = players.find(p => p.id === duelInfo.bId);
+  $("btn-vote-a").innerHTML = (pA ? avatarHTML(pA) : "") + `<b>${esc(nameOf(duelInfo.aId))}</b><span class="tag">Take 1</span>`;
+  $("btn-vote-b").innerHTML = (pB ? avatarHTML(pB) : "") + `<b>${esc(nameOf(duelInfo.bId))}</b><span class="tag">Take 2</span>`;
+  $("duel-result").innerHTML = "";
+  $("btn-duel-back").style.display = "none";
+  const amDuelist = myId === duelInfo.aId || myId === duelInfo.bId;
+  $("btn-vote-a").disabled = amDuelist;
+  $("btn-vote-b").disabled = amDuelist;
+  status("duel-vote-status", amDuelist ? "Als Duellant darfst du nicht über dich selbst abstimmen 😄" : "Klick auf die Version, die dir besser gefallen hat!");
+}
+$("btn-vote-a").onclick = () => castDuelVote("a");
+$("btn-vote-b").onclick = () => castDuelVote("b");
+function castDuelVote(choice) {
+  if (myId === duelInfo.aId || myId === duelInfo.bId) return;
+  $("btn-vote-a").disabled = true; $("btn-vote-b").disabled = true;
+  status("duel-vote-status", "✅ Stimme abgegeben — warte auf die anderen …");
+  SFX.click();
+  if (isHost) collectDuelVote(myId, choice);
+  else hostConn.send({ t: "duelVote", choice });
+}
+function collectDuelVote(voterId, choice) {
+  duelVotes[voterId] = choice;
+  const eligible = players.filter(p => p.id !== duelInfo.aId && p.id !== duelInfo.bId);
+  const tally = { a: Object.values(duelVotes).filter(v => v === "a").length, b: Object.values(duelVotes).filter(v => v === "b").length };
+  broadcast({ t: "duelVoteBroadcast", tally });
+  showDuelVoteLive(tally);
+  if (Object.keys(duelVotes).length >= eligible.length && eligible.length > 0) finishDuelVote(tally);
+}
+function showDuelVoteLive(tally) {
+  $("duel-vote-sub").textContent = "Stimmen bisher: " + nameOf(duelInfo.aId) + " " + tally.a + " : " + tally.b + " " + nameOf(duelInfo.bId);
+}
+function finishDuelVote(tally) {
+  if (!isHost) return;
+  let winner = tally.a > tally.b ? "a" : tally.b > tally.a ? "b" : "tie";
+  const result = { tally, winner, aName: nameOf(duelInfo.aId), bName: nameOf(duelInfo.bId) };
+  broadcast({ t: "duelResult", result });
+  showDuelResult(result);
+  addWin(winner === "a" ? duelInfo.aId : winner === "b" ? duelInfo.bId : null);
+}
+function showDuelResult(result) {
+  $("btn-vote-a").disabled = true; $("btn-vote-b").disabled = true;
+  const { tally, winner, aName, bName } = result;
+  $("duel-result").innerHTML = winner === "tie"
+    ? `<div class="raterow">🤝 Unentschieden! ${tally.a} : ${tally.b}</div>`
+    : `<div class="raterow winner" style="border-color:var(--amber);box-shadow:0 0 16px rgba(255,201,92,.3)">🏆 <b>${esc(winner === "a" ? aName : bName)}</b> gewinnt das Duell! (${tally.a} : ${tally.b})</div>`;
+  status("duel-vote-status", "");
+  if (isHost) $("btn-duel-back").style.display = "";
+  SFX.done();
+  if (winner !== "tie") burstConfetti();
+}
+$("btn-duel-back").onclick = () => {
+  if (!isHost) return;
+  duelInfo = null; duelStagedScene = null;
+  Object.keys(duelSubs).forEach(k => delete duelSubs[k]);
+  Object.keys(duelVotes).forEach(k => delete duelVotes[k]);
+  broadcast({ t: "again" });
+  backToLobby();
+};
 
 function collectTracks(role, items) {
   collected.set(role, items);
@@ -2239,7 +2497,7 @@ async function loadMix(data) {
     for (const item of track.items) {
       try {
         const ab = await toArrayBuffer(item.buf);
-        mixItems.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: await ctx.decodeAudioData(ab) });
+        mixItems.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: await ctx.decodeAudioData(ab), effect: item.effect });
         okCount++;
       } catch (e) { failCount++; console.warn("Spur kaputt:", track.role, e); }
     }
@@ -2406,6 +2664,7 @@ async function exportAudioFast() {
     for (const item of mixItems) {
       let role = item.role != null ? (roleOf(item.role) || { pan: 0, effect: "none", gain: 1 }) : { pan: 0, effect: "none", gain: 1 };
       if (scene.lines && item.lineIdx != null) role = effectiveRole(role, scene.lines[item.lineIdx]);
+      if (item.effect) role = { ...role, effect: item.effect };
       const src = offlineCtx.createBufferSource();
       src.buffer = item.buffer;
       src.playbackRate.value = effectPitch(role.effect);
@@ -2485,6 +2744,7 @@ async function playMix(saveFile) {
   for (const item of mixItems) {
     let role = item.role != null ? (roleOf(item.role) || { pan: 0, effect: "none", gain: 1 }) : { pan: 0, effect: "none", gain: 1 };
     if (scene.lines && item.lineIdx != null) role = effectiveRole(role, scene.lines[item.lineIdx]);
+    if (item.effect) role = { ...role, effect: item.effect };   // Spieler-eigene Wahl übersticht alles andere
     const src = ctx.createBufferSource();
     src.buffer = item.buffer;
     src.playbackRate.value = effectPitch(role.effect);
