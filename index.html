@@ -425,6 +425,7 @@
             <option value="free">🎮 Freies Spiel (Szene &amp; Rollen selbst wählen)</option>
             <option value="rounds">🏆 Match mit Runden (alles Zufall)</option>
             <option value="elimination">🔪 Battle Royale (schlechtester fliegt jede Runde raus)</option>
+            <option value="duell">🥊 Duell (2 Spieler, 1 Rolle, direkter Vergleich)</option>
           </select>
         </label>
       </div>
@@ -435,6 +436,27 @@
         </label>
         <span class="tag">Im Match sind Szenen &amp; Rollen jede Runde zufällig 🎲</span>
       </div>
+    </div>
+    <div class="card" id="duel-setup" style="display:none">
+      <h2>🥊 Duell einrichten</h2>
+      <p class="sub">Zwei Spieler sprechen dieselbe Rolle unabhängig voneinander ein — danach hört die Gruppe beide Versionen und stimmt ab, wer's besser gemacht hat.</p>
+      <div class="row" style="gap:14px">
+        <select id="duel-scene-select" style="flex:1"></select>
+        <button id="btn-duel-load-scene">Laden</button>
+      </div>
+      <div class="row" id="duel-pickers" style="gap:14px;margin-top:12px;display:none">
+        <label class="small" style="margin:0">Duell-Rolle
+          <select id="duel-role-select"></select>
+        </label>
+        <label class="small" style="margin:0">Duellant A
+          <select id="duel-player-a"></select>
+        </label>
+        <label class="small" style="margin:0">Duellant B
+          <select id="duel-player-b"></select>
+        </label>
+        <button class="primary" id="btn-duel-start">🥊 Duell starten</button>
+      </div>
+      <p class="status" id="duel-setup-status"></p>
     </div>
     <div class="card" id="host-scene" style="display:none">
       <h2>Szene wählen</h2>
@@ -517,6 +539,10 @@
         <input type="checkbox" id="rec-timer" checked style="accent-color:var(--amber);width:17px;height:17px">
         ⏱ 3-Sek.-Countdown vor der Aufnahme (kein Maus-Klick im Take)
       </label>
+      <label class="tag" style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        🎚 Dein Effekt für diese Line:
+        <select id="my-effect-select" style="flex:1;max-width:260px"></select>
+      </label>
       <div class="boothbtns">
         <button class="big ghost" id="btn-line-prev">⬅ Vorherige</button>
         <button class="big" id="btn-line-scene">🎬 Szene ansehen</button>
@@ -534,10 +560,26 @@
     </div>
   </section>
 
+  <!-- DUELL-ABSTIMMUNG -->
+  <section class="screen" id="scr-duel-vote">
+    <div class="card">
+      <h2>🥊 Wer hat's besser gemacht?</h2>
+      <p class="sub" id="duel-vote-sub">Beide Versionen sind gelaufen — jetzt abstimmen!</p>
+      <div class="row" style="gap:16px;justify-content:center;margin:20px 0">
+        <button class="big" id="btn-vote-a" style="flex:1;max-width:220px;padding:24px 12px;display:flex;flex-direction:column;align-items:center;gap:10px"></button>
+        <button class="big" id="btn-vote-b" style="flex:1;max-width:220px;padding:24px 12px;display:flex;flex-direction:column;align-items:center;gap:10px"></button>
+      </div>
+      <p class="status" id="duel-vote-status"></p>
+      <div id="duel-result" style="display:grid;gap:10px;margin-top:10px"></div>
+      <button class="primary big" id="btn-duel-back" style="display:none;margin-top:12px">🏠 Zurück zur Lobby</button>
+    </div>
+  </section>
+
   <!-- WARTEN -->
   <section class="screen" id="scr-wait">
     <div class="card">
       <h2>🎙 Warten auf die Premiere</h2>
+      <div id="duel-waiting-note" style="display:none" class="sub">🥊 Duell läuft — die beiden Duellanten nehmen gerade unabhängig voneinander auf.</div>
       <p class="sub" id="wait-status">Warte, bis alle fertig eingesprochen haben — dann startet die Premiere automatisch.</p>
       <div class="players" id="wait-players"></div>
       <div id="redo-panel-wait" style="margin-top:12px"></div>
