@@ -1807,6 +1807,138 @@
     "difficultyOverride": "medium"
   },
   {
+  "id": "superbadmclovin",
+  "title": "Superbad - McLovin, Evan Und Seth",
+  "videoUrl": "scenes/superbadmclovin.mp4",
+  "roles": [
+    {
+      "id": 1,
+      "name": "Mc Lovin",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "Evan",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 3,
+      "name": "Seth",
+      "pan": 0,
+      "effect": "none",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 0,
+      "end": 1.99,
+      "chars": [
+        2
+      ],
+      "who": "Evan",
+      "text": "Fogel bist du schonmal jemanden Begegnet der Mohammed Heißt?",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 2,
+      "end": 4.2,
+      "chars": [
+        1
+      ],
+      "who": "Mc Lovin",
+      "text": "Du vielleicht schonmal jemanden der Mc Lovin Heißt? (Stolz Nerdy)",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 4.22,
+      "end": 6.53,
+      "chars": [
+        3
+      ],
+      "who": "Seth",
+      "text": "Nein!, Deswegen ist es ja auch so ein beschissener Name!",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 6.62,
+      "end": 7.48,
+      "chars": [
+        1
+      ],
+      "who": "Mc Lovin",
+      "text": "Leck Mich Doch?",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 7.5,
+      "end": 8.1,
+      "chars": [
+        3
+      ],
+      "who": "Seth",
+      "text": "Gib Mal her",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 8.12,
+      "end": 13.22,
+      "chars": [
+        3
+      ],
+      "who": "Seth",
+      "text": "Okay... Also erstens du siehst da aus wie ein zukünftiger Kinder Schänder, und zweitens wo istn dein vorname?",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 13.31,
+      "end": 14.9,
+      "chars": [
+        3
+      ],
+      "who": "Seth",
+      "text": "Da Steht Nur McLovin!!!???",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 15.15,
+      "end": 19.09,
+      "chars": [
+        2
+      ],
+      "who": "Evan",
+      "text": "Was... Ein Name?... Nur Ein Name? für wen hälst du dich (seil? sag einfach jesus oder so ein scheiß)",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 19.35,
+      "end": 23.54,
+      "chars": [
+        3
+      ],
+      "who": "Seth",
+      "text": "Fogel, hier steht drauf das du 25 bist, um alk zu kaufen muss man nur 21 sein!",
+      "de": "Original Ist Deutsch!"
+    },
+    {
+      "t": 23.74,
+      "end": 34.71,
+      "chars": [
+        1
+      ],
+      "who": "Mc Lovin",
+      "text": "Jajaja pass mal auf scharmhaar perücke, jeden tag gehen hier hunderte kids mit ihren gefaketen ausweisen in die getränkte märkte und auf jeden steht das sie 21 sind... wie viel 21 jährige soll es denn geben, das nennt man strategie alter",
+      "de": "Original Ist Deutsch!"
+    }
+  ],
+  "voiceTrack": "scenes/superbadmclovin_voices.mp3",
+  "difficultyOverride": "easy"
+  },
+  {
     "id": "backroomsdinner",
     "title": "Backrooms — Dinner Scene: Clark & Mary (2 Rollen)",
     "videoUrl": "scenes/backroomsdinner.mp4",
