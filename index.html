@@ -524,6 +524,11 @@
       <div class="bar" id="booth-bar" style="display:none"><i></i></div>
       <canvas class="viz" id="viz"></canvas>
       <p class="tag" style="margin:2px 0 0"><span style="color:#c84bff">■ Original</span> &nbsp; <span style="color:#5aaaff">■ Deine Stimme</span></p>
+      <label class="tag" style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        🎚 Noise Gate live nachjustieren: <span id="booth-gate-val">50%</span>
+        <input type="range" id="booth-gate" min="0" max="1" step="0.05" value="0.5" style="flex:1;max-width:220px;accent-color:var(--amber)">
+        <span id="booth-gate-lamp" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#3a3a46" title="grün = Gate offen (du bist hörbar)"></span>
+      </label>
       <div class="rectime"><i id="rectime-fill"></i></div>
 
       <div class="row" style="margin-bottom:10px;gap:16px">
