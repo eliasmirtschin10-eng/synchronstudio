@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.4";
+const APP_VERSION = "5.5";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -280,8 +280,9 @@ function startGateLoop() {
     if (rms > thr) lastLoudT = now;
     if (rms > thr && !gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.004); gateOpen = true; }
     else if (gateOpen && now - lastLoudT > 200) { micGateNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05); gateOpen = false; }
-    const lamp = $("gate-lamp");
+    const lamp = $("gate-lamp"), lamp2 = $("booth-gate-lamp");
     if (lamp) lamp.style.background = gateOpen ? "var(--ok)" : "#3a3a46";
+    if (lamp2) lamp2.style.background = gateOpen ? "var(--ok)" : "#3a3a46";
   })();
 }
 
@@ -503,7 +504,24 @@ $("btn-mic-raw").onclick = () => {
   status("mic-status", "🎙 Roh-Modus: Alle Filter aus — pur wie dein Mikro klingt. (Kopfhörer Pflicht, sonst Echo!)");
 };
 $("mic-gain").oninput = e => { micSettings.gain = parseFloat(e.target.value); $("mic-gain-val").textContent = Math.round(micSettings.gain * 100) + "%"; applyMicTuning(); };
-$("mic-gate").oninput = e => { micSettings.gate = parseFloat(e.target.value); $("mic-gate-val").textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%"; };
+$("mic-gate").oninput = e => {
+  micSettings.gate = parseFloat(e.target.value);
+  $("mic-gate-val").textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%";
+  syncBoothGateUI();
+};
+function syncBoothGateUI() {
+  const bg = $("booth-gate"), bv = $("booth-gate-val");
+  if (!bg) return;
+  bg.value = micSettings.gate;
+  bv.textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%";
+}
+$("booth-gate").oninput = e => {
+  micSettings.gate = parseFloat(e.target.value);
+  saveMic();
+  syncBoothGateUI();
+  $("mic-gate").value = micSettings.gate;
+  $("mic-gate-val").textContent = micSettings.gate <= 0 ? "Aus" : Math.round(micSettings.gate * 100) + "%";
+};
 // Beim ersten Klick irgendwo den Setup starten (AudioContext braucht eine Geste)
 document.addEventListener("click", function once() { if (document.querySelector("#scr-mic.active") && !micStream) initMicScreen(); }, { once: true });
 
@@ -1459,6 +1477,7 @@ function startBooth() {
 function renderLine() {
   const l = myLines[curLine];
   if (!l) return finishBooth();
+  syncBoothGateUI();
   $("booth-count").innerHTML = `${curLine + 1}/${myLines.length}<small>Voiceline</small>`;
   $("line-who").textContent = l.who + (l.chars.length > 1 ? " (zusammen!)" : "");
   $("line-text").textContent = l.text;
