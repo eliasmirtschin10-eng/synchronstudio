@@ -4912,6 +4912,635 @@
     ]
   },
   {
+    "id": "brresearch",
+    "title": "Backrooms — Research Part 1 (Bobby, Clark & Kat, 3 Rollen)",
+    "videoUrl": "scenes/brresearch.mp4",
+    "avatars": {
+      "1": "scenes/brresearch/bobby.png",
+      "2": "scenes/brresearch/clark.png",
+      "3": "scenes/brresearch/kat.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Bobby",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Clark",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Kat",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 5.0,
+        "end": 17.8,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Okay, we are rolling. We got um, some shit over here. We got some stop signs and, uh.. a rope. Whats the rope for?",
+        "de": "Okay, wir zeichnen auf. Wir haben hier so'n paar Sachen. Wir haben Stoppschilder und, äh... ein Seil. Wofür ist das Seil?",
+        "orig": "scenes/brresearch/lines/01.mp3"
+      },
+      {
+        "t": 17.8,
+        "end": 19.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "Supplies.",
+        "de": "Zubehör.",
+        "orig": "scenes/brresearch/lines/02.mp3"
+      },
+      {
+        "t": 19.0,
+        "end": 21.0,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Oh, great, he's gonna tie us up.",
+        "de": "Oh, super, er wird uns fesseln.",
+        "orig": "scenes/brresearch/lines/03.mp3"
+      },
+      {
+        "t": 21.0,
+        "end": 23.7,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "No, we're gonna tie ourselves up.",
+        "de": "Nein, wir fesseln uns selbst.",
+        "orig": "scenes/brresearch/lines/04.mp3"
+      },
+      {
+        "t": 23.7,
+        "end": 25.0,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Hmm, Kinky",
+        "de": "Hmm, kinky",
+        "orig": "scenes/brresearch/lines/05.mp3"
+      },
+      {
+        "t": 25.0,
+        "end": 25.8,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "What the fuck?",
+        "de": "Was zum Fick?",
+        "orig": "scenes/brresearch/lines/06.mp3"
+      },
+      {
+        "t": 25.8,
+        "end": 28.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Uh, you still haven't told us what we're doing here, man?",
+        "de": "Äh, du hast uns immer noch nicht gesagt, was wir hier machen, Mann?",
+        "orig": "scenes/brresearch/lines/07.mp3"
+      },
+      {
+        "t": 28.5,
+        "end": 35.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "I did tell you. Research. These are supplies, and we're using them for research. It's not that hard to understand.",
+        "de": "Hab ich dir doch gesagt. Forschung. Das ist Zubehör, und wir benutzen es für Forschung. Ist doch nicht so schwer zu verstehen.",
+        "orig": "scenes/brresearch/lines/08.mp3"
+      },
+      {
+        "t": 35.0,
+        "end": 41.0,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Okay, research for what? Y-you gotta be more specific dude.",
+        "de": "Okay, Forschung wofür? Du musst schon spezifischer werden, Alter.",
+        "orig": "scenes/brresearch/lines/09.mp3"
+      },
+      {
+        "t": 41.0,
+        "end": 43.2,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "I'm gonna go through the door.",
+        "de": "Ich geh jetzt durch die Tür.",
+        "orig": "scenes/brresearch/lines/10.mp3"
+      },
+      {
+        "t": 43.2,
+        "end": 47.0,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "What door?",
+        "de": "Welche Tür?",
+        "orig": "scenes/brresearch/lines/11.mp3"
+      },
+      {
+        "t": 47.0,
+        "end": 48.3,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "That's the door.",
+        "de": "Das ist die Tür.",
+        "orig": "scenes/brresearch/lines/12.mp3"
+      },
+      {
+        "t": 48.3,
+        "end": 49.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "(Chuckle)",
+        "de": "(Kichert)",
+        "orig": "scenes/brresearch/lines/13.mp3"
+      },
+      {
+        "t": 49.5,
+        "end": 53.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "I taped the outline on the other side, too, just to help us find our way back.",
+        "de": "Ich hab die Umrisse auch auf der anderen Seite markiert, nur damit wir den Weg zurückfinden.",
+        "orig": "scenes/brresearch/lines/14.mp3"
+      },
+      {
+        "t": 53.0,
+        "end": 54.5,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Bobby?",
+        "de": "Bobby?",
+        "orig": "scenes/brresearch/lines/15.mp3"
+      },
+      {
+        "t": 54.5,
+        "end": 55.9,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "(Chuckles) What?",
+        "de": "(Kichert) Was?",
+        "orig": "scenes/brresearch/lines/16.mp3"
+      },
+      {
+        "t": 55.9,
+        "end": 63.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "Look, I know it sounds crazy, but follow my lead. Okay. I want to be back before sunup.",
+        "de": "Hör zu, ich weiß, es klingt verrückt, aber folg einfach meinem Beispiel. Okay. Ich will vor Sonnenaufgang zurück sein.",
+        "orig": "scenes/brresearch/lines/17.mp3"
+      },
+      {
+        "t": 63.0,
+        "end": 65.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Dude I'ts like 9PM, what the fuck are you-- Woah!",
+        "de": "Alter, es ist wie 21 Uhr, was zum Fick redest du da-- Woah!",
+        "orig": "scenes/brresearch/lines/18.mp3"
+      },
+      {
+        "t": 65.5,
+        "end": 66.5,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "What the fuck?",
+        "de": "Was zum Fick?",
+        "orig": "scenes/brresearch/lines/19.mp3"
+      },
+      {
+        "t": 66.5,
+        "end": 67.0,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Clark?!",
+        "de": "Clark?!",
+        "orig": "scenes/brresearch/lines/20.mp3"
+      },
+      {
+        "t": 67.0,
+        "end": 67.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "What the fuck?",
+        "de": "Was zum Fick?",
+        "orig": "scenes/brresearch/lines/21.mp3"
+      },
+      {
+        "t": 67.5,
+        "end": 67.9,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "How did--",
+        "de": "Wie hast du--",
+        "orig": "scenes/brresearch/lines/22.mp3"
+      },
+      {
+        "t": 67.9,
+        "end": 70.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Dude, did you... Did you just fucking see that? How-- How did he--",
+        "de": "Alter, hast du das gerade wirklich gesehen? Wie-- wie hat er--",
+        "orig": "scenes/brresearch/lines/23.mp3"
+      },
+      {
+        "t": 70.5,
+        "end": 73.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "I'm right here! Come see It for yourself!",
+        "de": "Ich bin genau hier! Komm und sieh's dir selbst an!",
+        "orig": "scenes/brresearch/lines/24.mp3"
+      },
+      {
+        "t": 73.0,
+        "end": 76.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "D... Dude did you just fucking... What? How the-",
+        "de": "D... Alter, hast du das gerade echt... Was? Wie zum--",
+        "orig": "scenes/brresearch/lines/25.mp3"
+      },
+      {
+        "t": 76.5,
+        "end": 77.5,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Bobby, stop!",
+        "de": "Bobby, hör auf!",
+        "orig": "scenes/brresearch/lines/26.mp3"
+      },
+      {
+        "t": 77.5,
+        "end": 79.0,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "WHAT THE FUCK?!",
+        "de": "WAS ZUM FICK?!",
+        "orig": "scenes/brresearch/lines/27.mp3"
+      },
+      {
+        "t": 79.0,
+        "end": 80.5,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Clark where are you?",
+        "de": "Clark, wo bist du?",
+        "orig": "scenes/brresearch/lines/28.mp3"
+      },
+      {
+        "t": 80.5,
+        "end": 83.7,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Babe did you... Did you see that? Where the fuck did he go!?",
+        "de": "Schatz, hast du... hast du das gesehen? Wo zum Fick ist er hin?!",
+        "orig": "scenes/brresearch/lines/29.mp3"
+      },
+      {
+        "t": 83.7,
+        "end": 85.4,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "YES BOBBY I SAW IT!",
+        "de": "JA BOBBY, ICH HAB'S GESEHEN!",
+        "orig": "scenes/brresearch/lines/30.mp3"
+      },
+      {
+        "t": 85.4,
+        "end": 86.0,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Oh! Where--",
+        "de": "Oh! Wo--",
+        "orig": "scenes/brresearch/lines/31.mp3"
+      },
+      {
+        "t": 86.0,
+        "end": 88.5,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "Just step through the door. You'll be fine.",
+        "de": "Geh einfach durch die Tür. Dir wird nichts passieren.",
+        "orig": "scenes/brresearch/lines/32.mp3"
+      },
+      {
+        "t": 88.5,
+        "end": 91.3,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "What?! No! Tell us what is going on!",
+        "de": "Was?! Nein! Sag uns, was hier los ist!",
+        "orig": "scenes/brresearch/lines/33.mp3"
+      },
+      {
+        "t": 91.3,
+        "end": 92.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "You know what, just...",
+        "de": "Weißt du was, einfach...",
+        "orig": "scenes/brresearch/lines/34.mp3"
+      },
+      {
+        "t": 92.5,
+        "end": 97.0,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "No! Bobby wait.",
+        "de": "Nein! Bobby, warte.",
+        "orig": "scenes/brresearch/lines/35.mp3"
+      },
+      {
+        "t": 97.0,
+        "end": 103.0,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "WHAT THE FUCK?! DUDE! DUDE, HOW IS THIS POSSIBLE?",
+        "de": "WAS ZUM FICK?! ALTER! ALTER, WIE IST DAS MÖGLICH?",
+        "orig": "scenes/brresearch/lines/36.mp3"
+      },
+      {
+        "t": 103.0,
+        "end": 107.4,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Bobby! Clark! Where are you? What the fuck is back there?",
+        "de": "Bobby! Clark! Wo seid ihr? Was zum Fick ist da hinten?",
+        "orig": "scenes/brresearch/lines/37.mp3"
+      },
+      {
+        "t": 107.4,
+        "end": 114.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "No, no Kat, it's good, i'ts good. J-just you gotta come see this.",
+        "de": "Nein, nein, Kat, es ist gut, es ist gut. D-du musst dir das einfach ansehen.",
+        "orig": "scenes/brresearch/lines/38.mp3"
+      },
+      {
+        "t": 114.5,
+        "end": 118.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "I mean... Right, you see... You see, it's um... I'ts fine",
+        "de": "Ich meine... genau, du siehst... du siehst, es ist, ähm... es ist okay",
+        "orig": "scenes/brresearch/lines/39.mp3"
+      },
+      {
+        "t": 118.5,
+        "end": 120.5,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "Clark, what is this? Where are we?",
+        "de": "Clark, was ist das? Wo sind wir?",
+        "orig": "scenes/brresearch/lines/40.mp3"
+      },
+      {
+        "t": 120.5,
+        "end": 123.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "It's what i'm trying to figure out.",
+        "de": "Genau das versuch ich rauszufinden.",
+        "orig": "scenes/brresearch/lines/41.mp3"
+      },
+      {
+        "t": 123.0,
+        "end": 127.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Whose um.. Whose shit is this? Is it-is it... is it part of your store?",
+        "de": "Wessen, ähm... wessen Zeug ist das? Ist das-ist das... gehört das zu deinem Laden?",
+        "orig": "scenes/brresearch/lines/42.mp3"
+      },
+      {
+        "t": 127.5,
+        "end": 129.9,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "If it belongs to someone, I haven't meet them yet.",
+        "de": "Wenn's jemandem gehört, hab ich die Person noch nicht getroffen.",
+        "orig": "scenes/brresearch/lines/43.mp3"
+      },
+      {
+        "t": 129.9,
+        "end": 130.5,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Okay...",
+        "de": "Okay...",
+        "orig": "scenes/brresearch/lines/44.mp3"
+      },
+      {
+        "t": 130.5,
+        "end": 138.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "-been here every night since I found the place, and I still barely scratched the surface. Come on, I'll show you. It only gets better.",
+        "de": "-bin hier jede Nacht, seit ich den Ort gefunden hab, und ich hab immer noch kaum an der Oberfläche gekratzt. Komm, ich zeig's dir. Es wird nur noch besser.",
+        "orig": "scenes/brresearch/lines/45.mp3"
+      },
+      {
+        "t": 138.0,
+        "end": 139.8,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "What the fuck?",
+        "de": "Was zum Fick?",
+        "orig": "scenes/brresearch/lines/46.mp3"
+      },
+      {
+        "t": 139.8,
+        "end": 143.0,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "You don't think he, like dosed us or something do you?",
+        "de": "Du glaubst doch nicht, dass er uns, so wie, was reingemischt hat, oder?",
+        "orig": "scenes/brresearch/lines/47.mp3"
+      },
+      {
+        "t": 143.0,
+        "end": 148.0,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "No, no ,no. We're not on drugs. I think I'd be able to tell if I was high.",
+        "de": "Nein, nein, nein. Wir sind nicht auf Drogen. Ich glaub, ich würd's merken, wenn ich high wäre.",
+        "orig": "scenes/brresearch/lines/48.mp3"
+      },
+      {
+        "t": 148.0,
+        "end": 150.0,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "You are high!",
+        "de": "Du bist high!",
+        "orig": "scenes/brresearch/lines/49.mp3"
+      },
+      {
+        "t": 150.0,
+        "end": 157.8,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "Pot doesn't count. So um.. it's like.. what, like an empty office building?",
+        "de": "Gras zählt nicht. Also, ähm... ist das wie... ein leeres Bürogebäude oder so?",
+        "orig": "scenes/brresearch/lines/50.mp3"
+      },
+      {
+        "t": 157.8,
+        "end": 164.0,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "In here? Sure. But it's like it was made by a bunch of construction workers on acid. There's even a pool!",
+        "de": "Hier drin? Klar. Aber es ist so, als hätten's Bauarbeiter auf Acid gebaut. Es gibt sogar einen Pool!",
+        "orig": "scenes/brresearch/lines/51.mp3"
+      },
+      {
+        "t": 164.0,
+        "end": 165.4,
+        "chars": [
+          3
+        ],
+        "who": "Kat",
+        "text": "There's a pool?",
+        "de": "Es gibt einen Pool?",
+        "orig": "scenes/brresearch/lines/52.mp3"
+      },
+      {
+        "t": 165.4,
+        "end": 168.5,
+        "chars": [
+          2
+        ],
+        "who": "Clark",
+        "text": "Yeah. I mean, kind of. Keep up!",
+        "de": "Ja. Ich mein, sowas in der Art. Beeil dich!",
+        "orig": "scenes/brresearch/lines/53.mp3"
+      },
+      {
+        "t": 168.5,
+        "end": 173.4,
+        "chars": [
+          1
+        ],
+        "who": "Bobby",
+        "text": "\\\"Pots.\\\" What the fuck?",
+        "de": "\"Pools.\" Was zum Fick?",
+        "orig": "scenes/brresearch/lines/54.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
