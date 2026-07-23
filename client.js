@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.3";
+const APP_VERSION = "5.4";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -188,6 +188,9 @@ const AVATAR_CHARS = [
   { img: "scenes/marriedcouple/jiro.png", label: "Jiro" },
   { img: "scenes/potatochip/light.png", label: "Light" },
   { img: "scenes/potatochip/ryuk.png", label: "Ryuk" },
+  { img: "scenes/brresearch/bobby.png", label: "Bobby" },
+  { img: "scenes/brresearch/clark.png", label: "Clark (Research)" },
+  { img: "scenes/brresearch/kat.png", label: "Kat" },
 ];
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
