@@ -263,7 +263,27 @@
   .resultscore{font-family:'Archivo Black';color:var(--amber);font-size:1.1rem;white-space:nowrap}
 
   /* 🏆 Podium (Kahoot-artig, im Synchronstudio-Look) */
-  .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin:26px 0 14px;flex-wrap:wrap}
+  /* 🔦 Schwingender Scheinwerfer bei der Podium-Enthüllung */
+  .spotlight{
+    position:absolute; top:-60px; left:50%; width:260px; height:calc(100% + 60px);
+    margin-left:-130px; pointer-events:none; z-index:1; opacity:0;
+    background:radial-gradient(ellipse at top, rgba(255,225,160,.4), rgba(255,225,160,.08) 55%, transparent 75%);
+    filter:blur(1px);
+    transform-origin:top center;
+  }
+  .spotlight.sweeping{ opacity:1; animation:spotlightSweep 1.15s cubic-bezier(.45,.05,.55,.95) infinite; }
+  .spotlight.settle-3{ opacity:1; transform:translateX(120px) rotate(5deg); transition:transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s; }
+  .spotlight.settle-2{ opacity:1; transform:translateX(-120px) rotate(-5deg); transition:transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s; }
+  .spotlight.settle-1{ opacity:1; transform:translateX(0) rotate(0deg) scale(1.35); transition:transform .5s cubic-bezier(.34,1.56,.64,1), opacity .3s; filter:blur(0px) brightness(1.3); }
+  .spotlight.hide{ opacity:0; transition:opacity .5s; }
+  @keyframes spotlightSweep{
+    0%{ transform:translateX(-135px) rotate(-9deg); }
+    50%{ transform:translateX(135px) rotate(9deg); }
+    100%{ transform:translateX(-135px) rotate(-9deg); }
+  }
+  @media (prefers-reduced-motion:reduce){ .spotlight{ animation:none!important; transition:none!important; } }
+
+  .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin:26px 0 14px;flex-wrap:wrap;position:relative}
   .podium-slot{
     display:flex;flex-direction:column;align-items:center;gap:8px;width:120px;
     opacity:0;transform:translateY(36px) scale(.9);
@@ -623,6 +643,25 @@
       </div>
       <div id="tp-result" style="margin-top:12px;display:grid;gap:4px"></div>
     </div>
+    <div class="card">
+      <h2>✊ Warte-Arena: Schnick-Schnack-Schnuck</h2>
+      <p class="sub" id="rps-info">Zwei Wartende können zocken — wer traut sich?</p>
+      <div id="rps-area" style="margin-bottom:12px"></div>
+      <div class="row">
+        <button id="btn-rps-join">🕹 Mitspielen</button>
+        <button class="ghost" id="btn-rps-reset">Neustart</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎲 Warte-Arena: Würfel-Duell</h2>
+      <p class="sub" id="dice-info">Zwei Wartende können zocken — wer traut sich?</p>
+      <div id="dice-area" style="margin-bottom:12px"></div>
+      <div class="row">
+        <button id="btn-dice-join">🕹 Mitspielen</button>
+        <button class="primary" id="btn-dice-roll">🎲 Würfeln</button>
+        <button class="ghost" id="btn-dice-reset">Neustart</button>
+      </div>
+    </div>
   </section>
 
   <!-- REALTIME (für Szenen ohne Line-Timings) -->
@@ -641,6 +680,7 @@
       <h2>🏁 Finale — Wer synchronisiert am besten?</h2>
       <p class="sub" id="final-sub"></p>
       <div class="podium-wrap" id="podium-wrap">
+        <div class="spotlight" id="podium-spotlight"></div>
         <div class="podium-slot" id="podium-2" style="display:none">
           <div class="p-avatar-wrap"></div>
           <span class="p-name"></span>

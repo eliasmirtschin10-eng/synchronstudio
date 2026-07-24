@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.7";
+const APP_VERSION = "5.8";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -905,6 +905,8 @@ function handleMsg(msg, conn) {
     case "tracks": collectTracks(msg.role, msg.items); break;
     case "trackUpdate": applyTrackUpdate(msg.role, msg.lineIdx, msg.startAt, msg.buf, msg.effect, msg.gate); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
+    case "rps": rpsHandle(msg.a, conn.peer); break;
+    case "dice": diceHandle(msg.a, conn.peer); break;
     case "rate": collectRating(conn.peer, msg.scores); break;
     case "mg":
       if (msg.k === "rxStart") { const d = 1500 + Math.random() * 3500; broadcast({ t: "rxGo", delay: d }); rxRun(d); }
@@ -951,6 +953,8 @@ function handleMsg(msg, conn) {
     case "go": startRealtime(); break;
     case "mix": loadMix(msg.data); break;
     case "tttState": ttt = msg.ttt; renderTTT(); break;
+    case "rpsState": rps = msg.rps; renderRPS(); break;
+    case "diceState": dice = msg.dice; renderDice(); break;
     case "premGo": premStart(); break;
     case "emojiShow": showEmoji(msg.pid, msg.char); break;
     case "rateResult": showRateResult(msg.results, msg.eliminatedName); break;
@@ -1937,6 +1941,7 @@ function tttHandle(a, pid) {
   renderTTT();
 }
 function nameOf(pid) { return players.find(p => p.id === pid)?.name || "?"; }
+function onWaitScreen() { return !!document.querySelector("#scr-wait.active"); }   // nur Sound spielen, wenn man die Warte-Arena wirklich SIEHT
 
 function renderTTT() {
   const board = $("ttt-board");
@@ -1959,6 +1964,12 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btn-ttt-join").onclick = () => tttAction({ k: "join" });
   $("btn-ttt-reset").onclick = () => tttAction({ k: "reset" });
   renderTTT();
+  $("btn-rps-join") && ($("btn-rps-join").onclick = () => rpsAction({ k: "join" }));
+  $("btn-rps-reset") && ($("btn-rps-reset").onclick = () => rpsAction({ k: "reset" }));
+  renderRPS();
+  $("btn-dice-join") && ($("btn-dice-join").onclick = () => diceAction({ k: "join" }));
+  $("btn-dice-reset") && ($("btn-dice-reset").onclick = () => diceAction({ k: "reset" }));
+  renderDice();
 });
 
 
@@ -1976,7 +1987,7 @@ function cbRun() {
   $("cb-result").innerHTML = "";
   let left = 10;
   $("cb-info").textContent = "⚡ LOS! Klick was das Zeug hält — " + left + "s";
-  SFX.go();
+  if (onWaitScreen()) SFX.go();
   clearInterval(cbTimer);
   cbTimer = setInterval(() => {
     left--;
@@ -2005,13 +2016,106 @@ function cbShowResult(list) {
   $("cb-result").innerHTML = list.map(([pid, n], i) =>
     `<div>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(nameOf(pid))}</b> — ${n} Klicks</div>`).join("");
   $("cb-info").textContent = list.length ? "Ergebnis! Revanche?" : "Zwei Wartende, ein Button — wer klickt schneller?";
-  SFX.done();
+  if (onWaitScreen()) SFX.done();
 }
 document.addEventListener("DOMContentLoaded", () => {
   $("btn-cb-start").onclick = cbStart;
   $("cb-btn").onclick = () => { if (cbActive) { cbClicks++; $("cb-btn").textContent = "🔥 " + cbClicks; } };
 });
 
+
+// ═════════════════════════════════════════════════════════════
+// WARTE-ARENA 5: Schnick-Schnack-Schnuck (2 Wartende)
+// ═════════════════════════════════════════════════════════════
+let rps = { p: [], picks: {}, wins: {}, lastResult: null };
+const RPS_ICON = { rock: "✊", paper: "✋", scissors: "✌️" };
+const RPS_BEATS = { rock: "scissors", paper: "rock", scissors: "paper" };
+function rpsAction(a) { if (isHost) rpsHandle(a, myId); else hostConn.send({ t: "rps", a }); }
+function rpsHandle(a, pid) {
+  if (a.k === "join" && rps.p.length < 2 && !rps.p.includes(pid)) { rps.p.push(pid); rps.wins[pid] = 0; }
+  if (a.k === "pick" && rps.p.includes(pid) && rps.p.length === 2 && !rps.lastResult) {
+    rps.picks[pid] = a.choice;
+    if (Object.keys(rps.picks).length === 2) {
+      const [a1, a2] = rps.p, c1 = rps.picks[a1], c2 = rps.picks[a2];
+      let winner = null;
+      if (c1 !== c2) winner = RPS_BEATS[c1] === c2 ? a1 : a2;
+      if (winner) { rps.wins[winner]++; addWin(winner); }
+      rps.lastResult = { c1, c2, winner };
+      broadcast({ t: "rpsState", rps }); renderRPS();
+      setTimeout(() => { rps.picks = {}; rps.lastResult = null; broadcast({ t: "rpsState", rps }); renderRPS(); }, 2200);
+      return;
+    }
+  }
+  if (a.k === "reset") rps = { p: Object.keys(rps.wins).length ? [...rps.p].reverse() : [], picks: {}, wins: {}, lastResult: null };
+  broadcast({ t: "rpsState", rps });
+  renderRPS();
+}
+function renderRPS() {
+  const el = $("rps-area"); if (!el) return;
+  const iAmIn = rps.p.includes(myId);
+  const bothIn = rps.p.length === 2;
+  $("btn-rps-join").style.display = (!iAmIn && rps.p.length < 2) ? "" : "none";
+  if (!bothIn) { el.innerHTML = ""; $("rps-info").textContent = rps.p.length === 0 ? "Zwei Wartende können zocken — wer traut sich?" : nameOf(rps.p[0]) + " wartet auf einen Gegner …"; return; }
+  const [a1, a2] = rps.p;
+  if (rps.lastResult) {
+    const { c1, c2, winner } = rps.lastResult;
+    $("rps-info").textContent = winner ? "🏆 " + nameOf(winner) + " gewinnt die Runde!" : "🤝 Unentschieden!";
+    el.innerHTML = `<div style="display:flex;gap:24px;justify-content:center;font-size:3rem">
+      <div style="text-align:center"><div>${RPS_ICON[c1]}</div><div class="tag">${esc(nameOf(a1))}</div></div>
+      <div style="align-self:center;font-size:1.4rem">⚔️</div>
+      <div style="text-align:center"><div>${RPS_ICON[c2]}</div><div class="tag">${esc(nameOf(a2))}</div></div>
+    </div>`;
+    if (onWaitScreen()) winner ? SFX.done() : SFX.beep();
+  } else {
+    const myTurn = iAmIn && !rps.picks[myId];
+    $("rps-info").textContent = nameOf(a1) + " (" + (rps.wins[a1]||0) + ") vs " + nameOf(a2) + " (" + (rps.wins[a2]||0) + ")" + (iAmIn ? (rps.picks[myId] ? " — warte auf Gegner …" : " — wähl deinen Zug!") : " — beide wählen gerade …");
+    el.innerHTML = !myTurn ? "" : `<div style="display:flex;gap:10px;justify-content:center">${Object.entries(RPS_ICON).map(([k,ic]) => `<button class="big" data-k="${k}" style="font-size:1.8rem;padding:14px 20px">${ic}</button>`).join("")}</div>`;
+    el.querySelectorAll("button").forEach(b => b.onclick = () => rpsAction({ k: "pick", choice: b.dataset.k }));
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// WARTE-ARENA 6: Würfel-Duell (2 Wartende)
+// ═════════════════════════════════════════════════════════════
+let dice = { p: [], rolls: {}, winner: null };
+function diceAction(a) { if (isHost) diceHandle(a, myId); else hostConn.send({ t: "dice", a }); }
+function diceHandle(a, pid) {
+  if (a.k === "join" && dice.p.length < 2 && !dice.p.includes(pid)) dice.p.push(pid);
+  if (a.k === "roll" && dice.p.includes(pid) && dice.rolls[pid] == null && !dice.winner) {
+    dice.rolls[pid] = 1 + Math.floor(Math.random() * 6);
+    if (Object.keys(dice.rolls).length === 2) {
+      const [a1, a2] = dice.p;
+      if (dice.rolls[a1] !== dice.rolls[a2]) { dice.winner = dice.rolls[a1] > dice.rolls[a2] ? a1 : a2; addWin(dice.winner); }
+      else dice.winner = "tie";
+    }
+  }
+  if (a.k === "reset") dice = { p: dice.winner && dice.winner !== "tie" ? [...dice.p].reverse() : dice.p, rolls: {}, winner: null };
+  broadcast({ t: "diceState", dice });
+  renderDice();
+}
+const DICE_FACE = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+function renderDice() {
+  const el = $("dice-area"); if (!el) return;
+  const iAmIn = dice.p.includes(myId);
+  $("btn-dice-join").style.display = (!iAmIn && dice.p.length < 2) ? "" : "none";
+  if (dice.p.length < 2) { el.innerHTML = ""; $("dice-info").textContent = dice.p.length === 0 ? "Zwei Wartende können zocken — wer traut sich?" : nameOf(dice.p[0]) + " wartet auf einen Gegner …"; return; }
+  const [a1, a2] = dice.p;
+  const r1 = dice.rolls[a1], r2 = dice.rolls[a2];
+  el.innerHTML = `<div style="display:flex;gap:24px;justify-content:center;font-size:3.2rem">
+    <div style="text-align:center"><div>${r1 ? DICE_FACE[r1-1] : "🎲"}</div><div class="tag">${esc(nameOf(a1))}</div></div>
+    <div style="align-self:center;font-size:1.2rem">vs</div>
+    <div style="text-align:center"><div>${r2 ? DICE_FACE[r2-1] : "🎲"}</div><div class="tag">${esc(nameOf(a2))}</div></div>
+  </div>`;
+  if (dice.winner) {
+    $("dice-info").textContent = dice.winner === "tie" ? "🤝 Unentschieden! Nochmal?" : "🏆 " + nameOf(dice.winner) + " gewinnt (" + Math.max(r1,r2) + " vs " + Math.min(r1,r2) + ")!";
+    if (onWaitScreen()) dice.winner === "tie" ? SFX.beep() : SFX.done();
+  } else if (iAmIn && dice.rolls[myId] == null) {
+    $("dice-info").textContent = "🎲 Du bist dran — würfeln!";
+  } else {
+    $("dice-info").textContent = nameOf(a1) + " vs " + nameOf(a2) + " — warte auf beide Würfe …";
+  }
+}
+$("btn-dice-roll") && ($("btn-dice-roll").onclick = () => diceAction({ k: "roll" }));
 
 // ═════════════════════════════════════════════════════════════
 // BEWERTUNGS-SHOW: Nach der Premiere Sterne verteilen
@@ -2210,18 +2314,27 @@ function showFinal(list, rounds, championName) {
 
   if (isHost) $("btn-back-lobby").style.display = "";
 
-  // Gestaffelte Enthüllung: 3. Platz -> 2. Platz -> 1. Platz (mit Konfetti), wie bei einer echten Prämierung
-  const reveal = [];
-  if (top3[2]) reveal.push({ id: "podium-3", delay: 300 });
-  if (top3[1]) reveal.push({ id: "podium-2", delay: 900 });
-  if (top3[0]) reveal.push({ id: "podium-1", delay: 1600 });
-  reveal.forEach(({ id, delay }) => {
+  // 🔦 Scheinwerfer-Enthüllung: schwingt hin und her, hält kurz je Platz, ~7 Sekunden episch bis zum 1. Platz
+  const spot = $("podium-spotlight");
+  spot.className = "spotlight";
+  const steps = [];
+  if (top3[2]) steps.push({ id: "podium-3", settle: "settle-3", sweepMs: 1600 });
+  if (top3[1]) steps.push({ id: "podium-2", settle: "settle-2", sweepMs: top3[2] ? 1100 : 1600 });
+  if (top3[0]) steps.push({ id: "podium-1", settle: "settle-1", sweepMs: (top3[2] || top3[1]) ? 1400 : 1600 });
+
+  let t = 0;
+  steps.forEach((step, i) => {
+    setTimeout(() => { spot.className = "spotlight sweeping"; }, t);
+    t += step.sweepMs;
+    setTimeout(() => { spot.className = "spotlight " + step.settle; }, t);
     setTimeout(() => {
-      $(id).classList.add("show");
-      SFX.beep();
-      if (id === "podium-1") { SFX.done(); burstConfetti(); }
-    }, delay);
+      $(step.id).classList.add("show");
+      if (i === steps.length - 1) { SFX.done(); burstConfetti(); }
+      else SFX.beep();
+    }, t + 160);
+    t += 700;   // kurz auf dem enthüllten Platz verweilen, bevor's weiterschwingt
   });
+  setTimeout(() => { spot.className = "spotlight hide"; }, t + 500);
 }
 
 $("btn-back-lobby").onclick = () => {
@@ -2291,7 +2404,7 @@ function rxRun(delay) {
     if (!rxWaiting) return;
     rxGreenAt = performance.now();
     pad.style.background = "#1a5c34"; pad.textContent = "JETZT! KLICK!";
-    SFX.go();
+    if (onWaitScreen()) SFX.go();
   }, delay);
 }
 $("rx-pad") && ($("rx-pad").onclick = () => {
@@ -2349,7 +2462,7 @@ function mgShowResult(game, list) {
   const el = $(game === "rx" ? "rx-result" : "tp-result");
   el.innerHTML = list.map(([pid, ms], i) =>
     `<div>${i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "•"} <b>${esc(nameOf(pid))}</b> — ${ms >= 9999 ? "zu früh 😅" : game === "rx" ? ms + " ms" : (ms / 1000).toFixed(2) + "s"}</div>`).join("");
-  SFX.done();
+  if (onWaitScreen()) SFX.done();
 }
 
 // ═════════════════════════════════════════════════════════════
