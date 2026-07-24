@@ -50,6 +50,7 @@
   /* Schwebende Halftone-Punkte im Hintergrund */
   .floaties{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
   .floaties span{position:absolute;border-radius:50%;background:var(--grad);opacity:.10;filter:blur(1px);animation:float linear infinite}
+  .floaties span.img-orb{background-size:cover;background-position:center;filter:blur(1.5px) grayscale(.45) brightness(1.15);opacity:.16}
   @keyframes float{from{transform:translateY(110vh) scale(.6)}to{transform:translateY(-15vh) scale(1.1)}}
   @media (prefers-reduced-motion:reduce){.floaties{display:none}}
   .wrap{max-width:980px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
@@ -772,21 +773,6 @@
 <div class="floaties" id="floaties"></div>
 <div id="emoji-layer" style="position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden"></div>
 <div class="countdown" id="countdown"><div>3</div></div>
-<script>
-  // Schwebende Punkte generieren
-  (function(){
-    const f = document.getElementById("floaties");
-    for (let i=0;i<14;i++){
-      const s = document.createElement("span");
-      const sz = 6 + Math.random()*26;
-      s.style.width = s.style.height = sz+"px";
-      s.style.left = Math.random()*100+"%";
-      s.style.animationDuration = (12+Math.random()*16)+"s";
-      s.style.animationDelay = (-Math.random()*20)+"s";
-      f.appendChild(s);
-    }
-  })();
-</script>
 <script src="client.js"></script>
 </body>
 </html>

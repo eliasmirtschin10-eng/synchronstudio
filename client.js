@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.9";
+const APP_VERSION = "6.0";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -132,6 +132,15 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "6.0", items: [
+    "🖼️ Hintergrund aufgewertet: dezente, unscharfe Charakterbilder aus unseren Szenen schweben jetzt mit den Farbpunkten"
+  ]},
+  { v: "5.9", items: ["✨ Profil-Accessoires: Katzenohren, Bärenohren, Kopfhörer, Krone, Heiligenschein & Teufelshörner — überlagern jedes Profilbild"] },
+  { v: "5.8", items: [
+    "🔇 Fix: Minigame-Sounds aus der Warte-Arena waren auch während der Booth-Aufnahme hörbar",
+    "🎮 Zwei neue Warte-Arena-Spiele: Schnick-Schnack-Schnuck & Würfel-Duell",
+    "🔦 Podium-Finale mit schwingendem Scheinwerfer über ~7 Sekunden bis zur Sieger-Enthüllung"
+  ]},
   { v: "5.6", items: [
     "🐛 Fix: Duell-Modus zeigte nur das Ergebnis von wer zuerst fertig war, statt auf beide zu warten (match.mode wurde bei Mitspielern nie richtig übernommen)",
     "🎬 Cross-Origin-Fix fürs Video-Speichern ergänzt"
@@ -224,6 +233,31 @@ const AVATAR_CHARS = [
   { img: "scenes/brresearch/kat.png", label: "Kat" },
   { img: "scenes/notmywallet/manray.png", label: "Man Ray" },
 ];
+// ── Schwebende Hintergrund-Punkte: Mix aus Farbverlauf-Kreisen und ganz dezenten Charakterbildern aus unseren Szenen ──
+(function buildFloaties() {
+  const f = document.getElementById("floaties");
+  if (!f) return;
+  const pool = [...AVATAR_CHARS].sort(() => Math.random() - 0.5).slice(0, 8);
+  const TOTAL = 15;
+  for (let i = 0; i < TOTAL; i++) {
+    const s = document.createElement("span");
+    const useImg = i % 2 === 0 && pool.length;   // jede zweite ein Bild, Rest bleibt schlichter Farbpunkt
+    if (useImg) {
+      const c = pool[(i / 2) % pool.length | 0];
+      s.className = "img-orb";
+      s.style.backgroundImage = `url('${c.img}')`;
+      const sz = 26 + Math.random() * 24;
+      s.style.width = s.style.height = sz + "px";
+    } else {
+      const sz = 6 + Math.random() * 26;
+      s.style.width = s.style.height = sz + "px";
+    }
+    s.style.left = Math.random() * 100 + "%";
+    s.style.animationDuration = (14 + Math.random() * 18) + "s";
+    s.style.animationDelay = (-Math.random() * 24) + "s";
+    f.appendChild(s);
+  }
+})();
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
 
