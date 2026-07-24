@@ -428,7 +428,10 @@
   <section class="screen" id="scr-lobby">
     <div class="card">
       <span class="tag">Raumcode</span>
-      <div class="roomcode-big" id="lobby-code">0000</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="roomcode-big" id="lobby-code">0000</div>
+        <button class="ghost" id="btn-copy-code" title="Raumcode kopieren" style="font-size:1.1rem;padding:6px 10px">📋</button>
+      </div>
       <p class="sub">Schick den Code deinen Leuten. Alle öffnen denselben Link und treten bei.</p>
       <div class="players" id="player-list"></div>
       <div class="row" style="margin-top:14px;gap:6px" id="emoji-bar">

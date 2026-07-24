@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "6.0";
+const APP_VERSION = "6.1";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -132,6 +132,13 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "6.1", items: [
+    "📋 Raumcode-Kopieren-Button in der Lobby",
+    "🚪 Verlassen-Bestätigung als richtiges Modal statt Browser-Popup",
+    "🎙 Mikro-Live-Anzeige neben deinem Namen in der Lobby (leuchtet, wenn Ton ankommt)",
+    "🔊 Mehrere Effekte kräftiger gemacht (Telefon, Unter Wasser, Monster, Roboter u.a. — die waren zu schwach)",
+    "🎭 Drei neue Effekte: Doppelgänger (Chorus), Nachschlag-Echo, Titan (sehr tiefe Stimme)"
+  ]},
   { v: "6.0", items: [
     "🖼️ Hintergrund aufgewertet: dezente, unscharfe Charakterbilder aus unseren Szenen schweben jetzt mit den Farbpunkten"
   ]},
@@ -398,13 +405,24 @@ function startGateLoop() {
   (function loop() {
     requestAnimationFrame(loop);
     if (!micStream) return;
-    const thr = micSettings.gate * 0.16;            // Slider 0..1 → Schwelle 0..0.16 RMS (deutlich stärker)
-    if (thr <= 0) { if (!gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.01); gateOpen = true; } return; }
     gateAn.getFloatTimeDomainData(buf);
     let sum = 0;
     for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
     const rms = Math.sqrt(sum / buf.length);
     const now = performance.now();
+
+    // Lobby-Mikro-Live-Anzeige: unabhängig vom Gate, zeigt einfach "kommt gerade Ton an"
+    const liveDot = $("mic-live-dot");
+    if (liveDot) liveDot.style.background = rms > 0.02 ? "var(--ok)" : "#3a3a46";
+
+    const thr = micSettings.gate * 0.16;            // Slider 0..1 → Schwelle 0..0.16 RMS (deutlich stärker)
+    if (thr <= 0) {
+      if (!gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.01); gateOpen = true; }
+      const lamp0 = $("gate-lamp"), lamp02 = $("booth-gate-lamp");
+      if (lamp0) lamp0.style.background = "var(--ok)";
+      if (lamp02) lamp02.style.background = "var(--ok)";
+      return;
+    }
     if (rms > thr) lastLoudT = now;
     if (rms > thr && !gateOpen) { micGateNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.004); gateOpen = true; }
     else if (gateOpen && now - lastLoudT > 200) { micGateNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05); gateOpen = false; }
@@ -948,10 +966,33 @@ function leaveRoom() {
   SFX.stop();
 }
 document.body.insertAdjacentHTML("beforeend",
-  `<button id="leave-btn" style="position:fixed;right:12px;bottom:10px;z-index:98;display:none;padding:8px 14px;font-size:.82rem;background:#1f1f28;border:1px solid var(--line);border-radius:8px;color:var(--muted)">🚪 Raum verlassen</button>`);
+  `<button id="leave-btn" style="position:fixed;right:12px;bottom:10px;z-index:98;display:none;padding:8px 14px;font-size:.82rem;background:#1f1f28;border:1px solid var(--line);border-radius:8px;color:var(--muted)">🚪 Raum verlassen</button>
+   <div id="leave-confirm-overlay" style="display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
+     <div style="max-width:340px;width:100%;background:#14141b;border:1px solid var(--line);border-radius:16px;padding:22px;text-align:center">
+       <p style="margin:0 0 18px;font-size:1rem" id="leave-confirm-text">Raum wirklich verlassen?</p>
+       <div class="row" style="justify-content:center;gap:10px">
+         <button class="ghost" id="btn-leave-cancel">Abbrechen</button>
+         <button class="primary" id="btn-leave-confirm" style="background:var(--hot)">🚪 Ja, verlassen</button>
+       </div>
+     </div>
+   </div>`);
 $("leave-btn").onclick = () => {
-  if (confirm("Raum wirklich verlassen?" + (isHost ? " Du bist Host — der Raum wird für alle geschlossen!" : ""))) leaveRoom();
+  $("leave-confirm-text").textContent = "Raum wirklich verlassen?" + (isHost ? " Du bist Host — der Raum wird für alle geschlossen!" : "");
+  $("leave-confirm-overlay").style.display = "flex";
 };
+$("btn-leave-cancel").onclick = () => $("leave-confirm-overlay").style.display = "none";
+$("leave-confirm-overlay").onclick = e => { if (e.target.id === "leave-confirm-overlay") $("leave-confirm-overlay").style.display = "none"; };
+$("btn-leave-confirm").onclick = () => { $("leave-confirm-overlay").style.display = "none"; leaveRoom(); };
+
+$("btn-copy-code") && ($("btn-copy-code").onclick = async () => {
+  const code = $("lobby-code").textContent;
+  try {
+    await navigator.clipboard.writeText(code);
+    $("btn-copy-code").textContent = "✅";
+    setTimeout(() => { $("btn-copy-code").textContent = "📋"; }, 1500);
+    SFX.click();
+  } catch { status("lobby-status", "Kopieren nicht möglich — Code von Hand markieren: " + code, true); }
+});
 
 function enterLobby(code) {
   $("lobby-code").textContent = code;
@@ -1120,7 +1161,8 @@ $("btn-load-scene").onclick = () => {
 
 const EFFECTS = {
   none: "Normal", vintage_1990: "Vintage / 90er Tape", radio: "Funkgerät", telefon: "Telefon", hall: "Halliger Raum",
-  megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter"
+  megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter",
+  chorus: "Doppelgänger", echo: "Nachschlag-Echo", titan: "Titan (sehr tief)"
 };
 
 // ── Spieler kann pro Line seinen eigenen Effekt waehlen — ueberschreibt Rollen-/Szenen-Standard NUR fuer diese Line ──
@@ -1277,10 +1319,11 @@ function avatarColor(name) {
 function playerCard(p) {
   const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
   const prog = p.total > 0 ? `<div class="pbar"><i style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span class="tag">${p.done}/${p.total} Lines</span>` : "";
+  const micDot = p.id === myId ? `<span id="mic-live-dot" title="Dein Mikro — leuchtet, wenn gerade Ton ankommt" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3a3a46;margin-left:6px"></span>` : "";
   return `<div class="player ${p.ready ? "ready" : ""}" data-pid="${p.id}" style="${p.eliminated ? "opacity:.5" : ""}">
     ${avatarHTML(p)}
     <div class="pinfo">
-      <span class="pname">${esc(p.name)}</span>
+      <span class="pname">${esc(p.name)}${micDot}</span>
       ${p.eliminated ? '<span class="prole" style="color:var(--hot)">🔪 eliminiert</span>' : `<span class="prole ${role ? "" : "empty"}">${role ? "🎭 " + esc(role) : "noch keine Rolle"}</span>`}
       ${p.ready && !p.total ? '<span class="tag" style="color:var(--ok)">bereit</span>' : ""}${prog}
     </div>
@@ -3116,34 +3159,44 @@ function buildChain(ctx, role, dest) {
 
   switch (role.effect) {
     case "vintage_1990":
-      filt("highpass", 120); filt("lowpass", 6200);
-      filt("peaking", 2800, 1, 3);
-      node = chainShaper(ctx, node, 6);
+      filt("highpass", 140); filt("lowpass", 5600);
+      filt("peaking", 2600, 1, 4.5);
+      node = chainShaper(ctx, node, 10);
       break;
     case "radio":
       filt("highpass", 380); filt("lowpass", 3000);
       node = chainShaper(ctx, node, 25);
       break;
     case "telefon":
-      filt("highpass", 300); filt("lowpass", 3400);
+      filt("highpass", 350); filt("lowpass", 2900); filt("peaking", 1700, 1.3, 5);
+      node = chainShaper(ctx, node, 15);
       break;
     case "megaphone":
-      filt("highpass", 500); filt("lowpass", 2600); filt("peaking", 1500, 2, 8);
-      node = chainShaper(ctx, node, 45);
+      filt("highpass", 550); filt("lowpass", 2500); filt("peaking", 1500, 2, 9);
+      node = chainShaper(ctx, node, 55);
       break;
-    case "underwater":
-      filt("lowpass", 700); filt("peaking", 300, 1.5, 4);
+    case "underwater": {
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 550;
+      node.connect(lp); node = lp;
+      filt("peaking", 260, 1.5, 5);
+      // Wabbel-Effekt: LFO schiebt die Lowpass-Frequenz langsam auf und ab, wie Schallwellen unter Wasser
+      const uwLfo = ctx.createOscillator(); uwLfo.type = "sine"; uwLfo.frequency.value = 3.1;
+      const uwDepth = ctx.createGain(); uwDepth.gain.value = 230;
+      uwLfo.connect(uwDepth); uwDepth.connect(lp.frequency);
+      try { uwLfo.start(); } catch {}
       break;
+    }
     case "helium":
       filt("highpass", 200); filt("peaking", 3500, 1, 6);
       break;
     case "monster":
-      filt("lowpass", 2200); filt("peaking", 150, 1.2, 5);
+      filt("lowpass", 1900); filt("peaking", 130, 1.4, 7);
+      node = chainShaper(ctx, node, 20);
       break;
     case "robot": {
-      const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = 32;
-      const ringGain = ctx.createGain(); ringGain.gain.value = 0.5;
-      const dcOffset = ctx.createGain(); dcOffset.gain.value = 0.5;
+      const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = 38;
+      const ringGain = ctx.createGain(); ringGain.gain.value = 0.72;
+      const dcOffset = ctx.createGain(); dcOffset.gain.value = 0.28;
       lfo.connect(ringGain.gain);
       node.connect(ringGain); node.connect(dcOffset);
       const merge = ctx.createGain();
@@ -3153,6 +3206,38 @@ function buildChain(ctx, role, dest) {
       filt("bandpass", 1800, 0.7);
       break;
     }
+    case "chorus": {
+      // Doppelgänger-Effekt: leicht verstimmte, verzögerte Kopie wird dazugemischt -> schwebender Doppel-Klang
+      const dry = ctx.createGain(); dry.gain.value = 0.75;
+      const wet = ctx.createGain(); wet.gain.value = 0.55;
+      const delay = ctx.createDelay(); delay.delayTime.value = 0.022;
+      const chLfo = ctx.createOscillator(); chLfo.type = "sine"; chLfo.frequency.value = 0.9;
+      const chDepth = ctx.createGain(); chDepth.gain.value = 0.006;
+      chLfo.connect(chDepth); chDepth.connect(delay.delayTime);
+      try { chLfo.start(); } catch {}
+      node.connect(dry); node.connect(delay); delay.connect(wet);
+      const merge2 = ctx.createGain();
+      dry.connect(merge2); wet.connect(merge2);
+      node = merge2;
+      break;
+    }
+    case "echo": {
+      // Deutlicher Einzel-Nachschlag (Slap-Echo), anders als der weiche "halliger Raum"
+      const dry = ctx.createGain(); dry.gain.value = 0.9;
+      const wet = ctx.createGain(); wet.gain.value = 0.55;
+      const delay = ctx.createDelay(); delay.delayTime.value = 0.22;
+      const fb = ctx.createGain(); fb.gain.value = 0.22;
+      node.connect(dry); node.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(wet);
+      const merge3 = ctx.createGain();
+      dry.connect(merge3); wet.connect(merge3);
+      node = merge3;
+      break;
+    }
+    case "titan":
+      // Sehr tiefe, bedrohliche Stimme -- staerkerer Bruder von "monster", mit mehr Growl
+      filt("lowpass", 1300); filt("peaking", 90, 1.6, 9);
+      node = chainShaper(ctx, node, 30);
+      break;
     case "hall": {
       const dry = ctx.createGain(); dry.gain.value = 0.85;
       const wet = ctx.createGain(); wet.gain.value = 0.4;
@@ -3181,6 +3266,7 @@ function effectiveRole(role, line) {
 function effectPitch(effect) {
   if (effect === "helium") return 1.35;
   if (effect === "monster") return 0.72;
+  if (effect === "titan") return 0.6;
   return 1;
 }
 function chainShaper(ctx, node, amount) { const s = shaper(ctx, amount); node.connect(s); return s; }

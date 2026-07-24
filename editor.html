@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Synchronstudio — Szenen-Editor</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{--bg:#0c0c10;--panel:#17171f;--line:#2b2b36;--text:#f0f0f5;--muted:#8d8da0;--amber:#ffc95c;--hot:#ff4d55;--violet:#c84bff;--grad:linear-gradient(120deg,var(--amber),var(--hot) 55%,var(--violet))}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -35,6 +36,25 @@
 <div class="wrap">
   <h1><em>Szenen</em>-Editor</h1>
   <p class="sub">Baue eigene Szenen fürs Synchronstudio — komplett ohne Choicer-Voicer-Mods. Video laden, Lines timen, JSON exportieren, fertig.</p>
+
+  <div class="card">
+    <h2>🧩 Mod-Pack automatisch importieren (ZIP)</h2>
+    <p class="sub">Lädt eine Choicer-Voicer-artige ZIP (Video + nummerierte Voicelines + Timestamps + Avatare) und zieht automatisch Rollen, Lines, Zeiten, Original-Audio und Charakterbilder raus. Nur .zip — bei .rar bitte vorher lokal entpacken &amp; neu als .zip packen.</p>
+    <input type="file" id="modzip" accept=".zip">
+    <div class="row" style="margin-top:10px">
+      <button class="primary" id="b-modimport" disabled>📦 Pack importieren</button>
+      <span class="tag" id="modimport-status"></span>
+    </div>
+    <div id="modimport-progress-wrap" style="display:none;margin-top:10px">
+      <div style="height:10px;background:#0e0e13;border-radius:99px;overflow:hidden">
+        <div id="modimport-progress" style="height:100%;width:0%;background:var(--grad);transition:width .3s"></div>
+      </div>
+    </div>
+    <div id="modimport-downloads" style="margin-top:12px;display:none">
+      <p class="tag" style="margin-bottom:8px">📥 Erzeugte Dateien — in deinen <span class="key">scenes/</span>-Ordner hochladen:</p>
+      <div id="modimport-download-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
 
   <div class="card">
     <h2>0 · Alte Szene importieren (optional)</h2>
@@ -119,7 +139,8 @@
 const $ = id => document.getElementById(id);
 const v = $("v");
 const EFFECTS = { none: "Normal", vintage_1990: "Vintage/90er", radio: "Funkgerät", telefon: "Telefon", hall: "Hall",
-  megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter" };
+  megaphone: "Megafon", underwater: "Unter Wasser", helium: "Helium", monster: "Monster", robot: "Roboter",
+  chorus: "Doppelgänger", echo: "Nachschlag-Echo", titan: "Titan (sehr tief)" };
 let lines = [];
 
 let waveformPeaks = null, waveformDuration = 0;
@@ -235,6 +256,246 @@ function addRole(name = "") {
 addRole(); addRole();
 $("b-addrole").onclick = () => addRole();
 const roleNames = () => [...$("roles").children].map(r => r.querySelector("input").value || "?");
+
+// ═════════════════════════════════════════════════════════════
+// 🧩 MOD-PACK-IMPORT: ZIP mit Video + Voicelines + Zeiten + Avataren automatisch auslesen
+// ═════════════════════════════════════════════════════════════
+let modZipFile = null, modImportResult = null;
+
+$("modzip").onchange = e => {
+  modZipFile = e.target.files[0];
+  $("b-modimport").disabled = !modZipFile;
+  $("modimport-status").textContent = modZipFile ? "Bereit: " + modZipFile.name : "";
+};
+
+function setModProgress(pct, label) {
+  $("modimport-progress").style.width = pct + "%";
+  if (label) $("modimport-status").textContent = label;
+}
+
+function addDownloadRow(container, blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const row = document.createElement("div");
+  row.className = "row";
+  row.style.margin = "0";
+  row.innerHTML = `<a href="${url}" download="${filename}" style="color:var(--amber);text-decoration:underline">⬇ ${filename}</a> <span class="tag">(${Math.round(blob.size/1024)} KB)</span>`;
+  container.appendChild(row);
+}
+
+// ── Parst die ZIP-Struktur: Video, Backing-Track, Untertitel+Zeiten, Original-Audio pro Line ──
+async function parseModPack(zip) {
+  const entries = Object.values(zip.files).filter(f => !f.dir);
+  const videoEntry = entries.find(f => /dub_video\.(ogv|mp4|webm)$/i.test(f.name))
+    || entries.find(f => /\.(ogv|mp4|webm)$/i.test(f.name) && !/backing/i.test(f.name));
+  const backingEntry = entries.find(f => /_backing_track/i.test(f.name));
+  const captionEntries = entries.filter(f => /\.(ini|txt)$/i.test(f.name) && !/_pack_info/i.test(f.name.split("/").pop()));
+
+  if (!videoEntry) throw new Error("Kein Video (dub_video.ogv/.mp4) in der ZIP gefunden.");
+
+  const parsedLines = [];
+  for (const capEntry of captionEntries) {
+    const txt = await capEntry.async("string");
+    const tsMatch = txt.match(/dub_timestamps=\[([\d.]+)\]/);
+    const charsMatch = txt.match(/dub_characters=\[([\s\S]*?)\]/);
+    const imageMatch = txt.match(/image="(.*?)"/);
+    const capMatch = txt.match(/caption="([\s\S]*?)"\s*(?:\r?\n|$)/) || txt.match(/caption="([\s\S]*?)"/);
+    if (!capMatch) continue;   // z.B. _pack_info.ini ohne caption-Feld
+    let text = capMatch[1].replace(/\\"/g, "").replace(/[""]/g, "").trim();
+    let t = tsMatch ? parseFloat(tsMatch[1]) : null;
+    if (t == null) {
+      const fnMatch = capEntry.name.match(/_(\d+)-(\d+)\.(ini|txt)$/i);   // Fallback: Zeit im Dateinamen
+      if (fnMatch) t = parseFloat(fnMatch[1] + "." + fnMatch[2]);
+    }
+    if (t == null) continue;   // keine Zeit ermittelbar
+    let chars = charsMatch ? [...charsMatch[1].matchAll(/"(.*?)"/g)].map(m => m[1]) : ["?"];
+    if (!chars.length) chars = ["?"];
+    const baseName = capEntry.name.replace(/\.(ini|txt)$/i, "");
+    const audioEntry = entries.find(f => f.name.replace(/\.(mp3|ogg|wav)$/i, "") === baseName && /\.(mp3|ogg|wav)$/i.test(f.name));
+    parsedLines.push({ t, chars, text, audioEntry, image: imageMatch ? imageMatch[1] : null });
+  }
+  parsedLines.sort((a, b) => a.t - b.t);
+
+  return { videoEntry, backingEntry, parsedLines, totalCaptionFiles: captionEntries.length };
+}
+
+// ── Baut aus vielen einzelnen Original-Voicelines EINE lange, zeitlich passende Stimmen-Spur ──
+async function buildCombinedVoiceTrack(parsedLines, totalDuration) {
+  const ActxCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const sr = 44100;
+  const offlineCtx = new ActxCtor(1, Math.ceil(Math.max(1, totalDuration) * sr), sr);
+  for (const l of parsedLines) {
+    if (!l.audioEntry) continue;
+    try {
+      const buf = await l.audioEntry.async("arraybuffer");
+      const audio = await offlineCtx.decodeAudioData(buf.slice(0));
+      const src = offlineCtx.createBufferSource();
+      src.buffer = audio;
+      src.connect(offlineCtx.destination);
+      src.start(Math.max(0, l.t));
+    } catch (e) { console.warn("Konnte Line-Audio nicht einbauen:", e); }
+  }
+  const rendered = await offlineCtx.startRendering();
+  return audioBufferToWav(rendered);
+}
+
+// ── WAV-Encoder (reines JS) ──
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels, sampleRate = buffer.sampleRate, numFrames = buffer.length;
+  const blockAlign = numChannels * 2, dataSize = numFrames * blockAlign;
+  const buf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buf);
+  const writeStr = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeStr(0, "RIFF"); view.setUint32(4, 36 + dataSize, true); writeStr(8, "WAVE");
+  writeStr(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true); view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true);
+  writeStr(36, "data"); view.setUint32(40, dataSize, true);
+  const channels = []; for (let c = 0; c < numChannels; c++) channels.push(buffer.getChannelData(c));
+  let offset = 44;
+  for (let i = 0; i < numFrames; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      const s = Math.max(-1, Math.min(1, channels[c][i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+// ── Muxt Video-Bild mit dem Backing-Track als Ton zu einer neuen Datei (läuft in Echtzeit = Videolänge) ──
+async function muxVideoWithBacking(videoBlob, backingBlob, onProgress) {
+  return new Promise(async (resolve, reject) => {
+    const vid = document.createElement("video");
+    try {
+      // WICHTIG: Das Video muss wirklich im DOM haengen (nur unsichtbar positioniert),
+      // sonst liefert captureStream() in manchen Browsern nur Ton, aber keine Bildframes.
+      vid.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:2px;height:2px";
+      vid.muted = true; vid.playsInline = true;
+      document.body.appendChild(vid);
+      vid.src = URL.createObjectURL(videoBlob);
+      await new Promise(res => { vid.onloadedmetadata = res; });
+
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const backingBuf = await ctx.decodeAudioData(await backingBlob.arrayBuffer());
+      const dest = ctx.createMediaStreamDestination();
+      const src = ctx.createBufferSource();
+      src.buffer = backingBuf;
+      src.connect(dest);
+
+      vid.currentTime = 0;
+      await vid.play();   // Erst abspielen lassen, DANACH capturen — liefert zuverlässiger echte Bildframes
+
+      const videoStream = vid.captureStream ? vid.captureStream() : vid.mozCaptureStream();
+      const combined = new MediaStream([...videoStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+      const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm";
+      const rec = new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
+      const chunks = [];
+      rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        vid.remove();   // Aufräumen — Video-Element wieder aus dem DOM entfernen
+        resolve(new Blob(chunks, { type: "video/webm" }));
+      };
+
+      rec.start();
+      src.start();
+      const t0 = performance.now();
+      const dur = vid.duration || 1;
+      const poll = setInterval(() => {
+        const pct = Math.min(100, ((performance.now() - t0) / 1000 / dur) * 100);
+        onProgress(pct);
+        if (vid.ended || vid.currentTime >= dur - 0.05) { clearInterval(poll); rec.stop(); vid.pause(); }
+      }, 150);
+    } catch (e) { vid.remove(); reject(e); }
+  });
+}
+
+$("b-modimport").onclick = async () => {
+  if (!modZipFile) return;
+  $("b-modimport").disabled = true;
+  $("modimport-progress-wrap").style.display = "";
+  $("modimport-downloads").style.display = "none";
+  try {
+    setModProgress(2, "📦 ZIP wird entpackt …");
+    const zip = await JSZip.loadAsync(modZipFile);
+    const { videoEntry, backingEntry, parsedLines, totalCaptionFiles } = await parseModPack(zip);
+
+    setModProgress(15, "🎭 Baue Rollen & Lines …");
+    const charOrder = [];
+    parsedLines.forEach(l => l.chars.forEach(c => { if (!charOrder.includes(c)) charOrder.push(c); }));
+    $("roles").innerHTML = "";
+    if (charOrder.length) charOrder.forEach(name => addRole(name)); else { addRole(); addRole(); }
+    const charToRoleId = {}; charOrder.forEach((name, i) => charToRoleId[name] = i + 1);
+
+    lines = parsedLines.map((l, i) => ({
+      t: l.t,
+      end: parsedLines[i + 1] ? Math.max(l.t + 0.3, parsedLines[i + 1].t) : l.t + 3,
+      role: charToRoleId[l.chars[0]] || 1, text: l.text, de: ""
+    }));
+    renderLines();
+
+    setModProgress(30, "🎬 Video wird geladen …");
+    const videoBlobRaw = await videoEntry.async("blob");
+    let finalVideoBlob = videoBlobRaw;
+    if (backingEntry) {
+      setModProgress(40, "🎞️ Video + Musik werden gemuxt — läuft einmal in Videolänge durch …");
+      const backingBlob = await backingEntry.async("blob");
+      finalVideoBlob = await muxVideoWithBacking(videoBlobRaw, backingBlob, pct => setModProgress(40 + pct * 0.4, null));
+    }
+    v.src = URL.createObjectURL(finalVideoBlob);
+    v.style.display = ""; $("vctrl").style.display = "flex";
+    await new Promise(res => { v.onloadedmetadata = res; });
+    $("vdur").textContent = "Länge: " + v.duration.toFixed(2) + "s";
+    decodeWaveform(new File([finalVideoBlob], "video.webm"));
+
+    setModProgress(85, "🗣️ Original-Stimmen werden zu einer Spur zusammengefasst …");
+    const voiceTrackBlob = await buildCombinedVoiceTrack(parsedLines, v.duration || 60);
+
+    setModProgress(93, "🖼️ Charakterbilder werden vorbereitet …");
+    const entries = Object.values(zip.files).filter(f => !f.dir);
+    const avatarEntries = {};
+    for (const name of charOrder) {
+      // 1. Bevorzugt: das "image="-Feld der ersten Line dieses Charakters (funktioniert auch bei
+      //    Packs, wo die Bilddatei NICHT nach dem Charakter benannt ist, z.B. "IMG_1234.jpg")
+      const firstLine = parsedLines.find(l => l.chars.includes(name) && l.image);
+      let imgEntry = firstLine ? entries.find(f => f.name.split("/").pop() === firstLine.image) : null;
+      // 2. Fallback: Dateiname wie der Charaktername (z.B. "Bobby.png")
+      if (!imgEntry) {
+        const safe = name.replace(/[^a-z0-9]/gi, "").toLowerCase();
+        imgEntry = entries.find(f => f.name.split("/").pop().replace(/[^a-z0-9.]/gi, "").toLowerCase().replace(/\.(jpg|jpeg)$/, ".png") === safe + ".png"
+          || f.name.split("/").pop().replace(/[^a-z0-9.]/gi, "").toLowerCase() === safe + ".png");
+      }
+      if (imgEntry) avatarEntries[name] = imgEntry;
+    }
+
+    const sid = ($("sid").value || "meinpack").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    const dlList = $("modimport-download-list");
+    dlList.innerHTML = "";
+    addDownloadRow(dlList, finalVideoBlob, sid + ".webm");
+    addDownloadRow(dlList, voiceTrackBlob, sid + "_voices.wav");
+    const avatarFileNames = {};
+    for (const [name, entry] of Object.entries(avatarEntries)) {
+      const blob = await entry.async("blob");
+      const srcExt = (entry.name.match(/\.(png|jpe?g|webp)$/i) || [".png"])[0].toLowerCase().replace("jpeg", "jpg");
+      const fname = sid + "_" + name.toLowerCase().replace(/[^a-z0-9]/g, "") + srcExt;
+      avatarFileNames[charToRoleId[name]] = "scenes/" + sid + "/" + fname;
+      addDownloadRow(dlList, blob, fname);
+    }
+    $("modimport-downloads").style.display = "";
+
+    modImportResult = { voiceTrackFile: sid + "_voices.wav", avatarFileNames, videoFile: sid + ".webm" };
+
+    const skipped = totalCaptionFiles - parsedLines.length;
+    setModProgress(100, `✅ Fertig! ${parsedLines.length} Lines, ${charOrder.length} Rollen erkannt` +
+      (skipped ? `, ${skipped} Datei(en) ohne erkennbare Zeit übersprungen` : "") +
+      (parsedLines.length === 0 ? " — dieser Pack hat kein bekanntes Zeit-Format, bitte Lines von Hand timen." : ". Titel/ID unten pruefen, dann exportieren.")
+    );
+  } catch (e) {
+    $("modimport-status").textContent = "❌ Fehler: " + e.message;
+    console.error(e);
+  }
+  $("b-modimport").disabled = false;
+};
+
 
 
 function mark(type) {
@@ -380,8 +641,16 @@ $("b-export").onclick = () => {
     if (l.effect) line.effect = l.effect;   // Line-eigener Effekt überschreibt nur diese eine Zeile
     return line;
   });
-  const scene = { id, title: $("stitle").value || id, videoUrl: "scenes/" + id + ".mp4", roles, lines: ls };
-  if ($("usevoice").checked) scene.voiceTrack = "scenes/" + id + "_voices.mp3";
+  const videoExt = modImportResult ? "webm" : "mp4";
+  const scene = { id, title: $("stitle").value || id, videoUrl: "scenes/" + id + "." + videoExt, roles, lines: ls };
+  if (modImportResult) {
+    scene.voiceTrack = "scenes/" + id + "_voices.wav";
+    if (Object.keys(modImportResult.avatarFileNames).length) {
+      scene.avatars = { ...modImportResult.avatarFileNames };
+    }
+  } else if ($("usevoice").checked) {
+    scene.voiceTrack = "scenes/" + id + "_voices.mp3";
+  }
   if ($("difficulty").value !== "auto") scene.difficultyOverride = $("difficulty").value;
   $("out").value = JSON.stringify(scene, null, 2);
 };
