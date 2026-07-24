@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "6.1";
+const APP_VERSION = "6.2";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -132,6 +132,10 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "6.2", items: [
+    "🎨 Neues Kritzel-Board in der Warte-Arena — alle malen live zusammen auf derselben Leinwand",
+    "🐛 Fix: „Original anhören“ konnte bei langsamem Netzwerk verspätet die Stimme der VORHERIGEN Line abspielen, wenn man währenddessen zur nächsten weitergeklickt hat"
+  ]},
   { v: "6.1", items: [
     "📋 Raumcode-Kopieren-Button in der Lobby",
     "🚪 Verlassen-Bestätigung als richtiges Modal statt Browser-Popup",
@@ -817,6 +821,7 @@ show = function(id) {
   _origShow(id);
   updateLobbyMusic();
   if (id === "scr-lobby" || id === "scr-wait") startTipRotation(); else clearInterval(tipTimer);
+  if (id === "scr-wait") setTimeout(renderDrawBoard, 30);   // Canvas hat gerade erst eine echte Größe bekommen -> neu zeichnen
   // Ingame (Booth/Aufnahme) ruhig halten: keine Ablenkung
   const calm = id === "scr-booth" || id === "scr-record";
   const f = document.getElementById("floaties");
@@ -1092,6 +1097,8 @@ function handleMsg(msg, conn) {
     case "tttState": ttt = msg.ttt; renderTTT(); break;
     case "rpsState": rps = msg.rps; renderRPS(); break;
     case "diceState": dice = msg.dice; renderDice(); break;
+    case "draw": drawHandle(msg.a, conn.peer); break;
+    case "drawState": drawBoard = msg.drawBoard; renderDrawBoard(); break;
     case "premGo": premStart(); break;
     case "emojiShow": showEmoji(msg.pid, msg.char); break;
     case "rateResult": showRateResult(msg.results, msg.eliminatedName); break;
@@ -1698,6 +1705,9 @@ function startBooth() {
 function renderLine() {
   const l = myLines[curLine];
   if (!l) return finishBooth();
+  origReqId++;   // Line gewechselt -> jede noch wartende "Original anhören"-Anfrage von vorher wird ungültig
+  if (origSrc) { try { origSrc.stop(); } catch {} origSrc = null; }
+  const ob = $("btn-line-orig"); if (ob) ob.textContent = "🗣 Original anhören";
   syncBoothGateUI();
   $("booth-count").innerHTML = `${curLine + 1}/${myLines.length}<small>Voiceline</small>`;
   $("line-who").textContent = l.who + (l.chars.length > 1 ? " (zusammen!)" : "");
@@ -1771,20 +1781,23 @@ async function getLineOrigBuffer(l) {
 function lineHasOrig(l) { return !!(l.orig || scene.voiceTrack); }
 
 const origCache = new Map();
-let origSrc = null;
+let origSrc = null, origReqId = 0;
 $("btn-line-orig").onclick = async () => {
   const l = myLines[curLine];
   if (!lineHasOrig(l)) return;
   if (origSrc) { try { origSrc.stop(); } catch {} origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; $("booth-video").pause(); return; }
   const ctx = getCtx();
+  const myReqId = ++origReqId;   // eigener Zähler-Wert -- wenn sich die Line inzwischen geändert hat, brechen wir unten ab
   try {
     $("btn-line-orig").textContent = "⏳ …";
     const buffer = await getLineOrigBuffer(l);
+    if (myReqId !== origReqId) return;   // zwischenzeitlich wurde die Line gewechselt oder neu geklickt -> diese veraltete Anfrage verwerfen, NICHT mehr abspielen
     if (!buffer) throw new Error("kein Original");
     // Video läuft synchron mit, Original-Stimme liegt drüber (Video leise)
     const v = $("booth-video");
     v.pause(); v.currentTime = l.t; v.volume = boothVol * 0.45; v.playbackRate = practiceSpeed;
     await v.play().catch(() => {});
+    if (myReqId !== origReqId) return;   // sicherheitshalber nach dem await auf v.play() nochmal prüfen
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.playbackRate.value = practiceSpeed;
@@ -1794,6 +1807,7 @@ $("btn-line-orig").onclick = async () => {
     $("btn-line-orig").textContent = "⏹ Stopp";
     src.onended = () => { if (origSrc === src) { origSrc = null; $("btn-line-orig").textContent = "🗣 Original anhören"; v.pause(); } };
   } catch (e) {
+    if (myReqId !== origReqId) return;
     $("btn-line-orig").textContent = "🗣 Original anhören";
     status("booth-status", "Original-Audio nicht ladbar — GitHub Pages noch am Deployen?", true);
   }
@@ -2109,6 +2123,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btn-dice-join") && ($("btn-dice-join").onclick = () => diceAction({ k: "join" }));
   $("btn-dice-reset") && ($("btn-dice-reset").onclick = () => diceAction({ k: "reset" }));
   renderDice();
+  initDrawCanvas();
 });
 
 
@@ -2255,6 +2270,110 @@ function renderDice() {
   }
 }
 $("btn-dice-roll") && ($("btn-dice-roll").onclick = () => diceAction({ k: "roll" }));
+
+// ═════════════════════════════════════════════════════════════
+// 🎨 Kritzel-Board: alle warten zusammen malen auf derselben Leinwand
+// ═════════════════════════════════════════════════════════════
+let drawBoard = { strokes: [] };
+let drawColor = "#ffc95c", drawSize = 4;
+let drawing = false, curStroke = null, lastSentLen = 0, drawThrottle = null;
+const DRAW_COLORS = ["#ffc95c", "#ff5470", "#7c5cff", "#4ade80", "#4ac9e8", "#f5f5f5", "#1a1a22"];
+
+function drawAction(a) { if (isHost) drawHandle(a, myId); else hostConn.send({ t: "draw", a }); }
+function drawHandle(a, pid) {
+  if (a.k === "stroke") {
+    const idx = drawBoard.strokes.findIndex(s => s.id === a.stroke.id);
+    if (idx >= 0) drawBoard.strokes[idx] = a.stroke; else drawBoard.strokes.push(a.stroke);
+  } else if (a.k === "clear") {
+    drawBoard = { strokes: [] };
+  }
+  broadcast({ t: "drawState", drawBoard });
+  renderDrawBoard();
+}
+function drawCanvasCtx() {
+  const c = $("draw-canvas");
+  if (!c) return null;
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.clientWidth * dpr, h = c.clientHeight * dpr;
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  return c.getContext("2d");
+}
+function renderDrawBoard() {
+  const g = drawCanvasCtx();
+  if (!g) return;
+  const c = $("draw-canvas");
+  g.clearRect(0, 0, c.width, c.height);
+  for (const s of drawBoard.strokes) {
+    if (!s.points.length) continue;
+    g.strokeStyle = s.color; g.lineWidth = (s.size || 4) * (window.devicePixelRatio || 1);
+    g.lineCap = "round"; g.lineJoin = "round";
+    g.beginPath();
+    s.points.forEach((p, i) => {
+      const x = p[0] * c.width, y = p[1] * c.height;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    });
+    g.stroke();
+  }
+}
+function drawColorPicker() {
+  const wrap = $("draw-colors");
+  if (!wrap) return;
+  wrap.innerHTML = DRAW_COLORS.map(c => `<button class="colorbtn" data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};border:2px solid ${c === drawColor ? "var(--amber)" : "transparent"};padding:0"></button>`).join("");
+  wrap.querySelectorAll(".colorbtn").forEach(b => b.onclick = () => { drawColor = b.dataset.c; drawColorPicker(); });
+}
+function initDrawCanvas() {
+  const c = $("draw-canvas");
+  if (!c || c.__wired) return;
+  c.__wired = true;
+  drawColorPicker();
+  renderDrawBoard();
+  const posOf = (e) => {
+    const r = c.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    return [Math.min(1, Math.max(0, cx / r.width)), Math.min(1, Math.max(0, cy / r.height))];
+  };
+  const start = (e) => {
+    e.preventDefault();
+    drawing = true;
+    curStroke = { id: myId + "_" + Date.now(), color: drawColor, size: drawSize, points: [posOf(e)] };
+    lastSentLen = 0;
+    renderDrawBoard(); drawLiveSegment();
+  };
+  const move = (e) => {
+    if (!drawing) return;
+    e.preventDefault();
+    curStroke.points.push(posOf(e));
+    drawLiveSegment();
+    if (!drawThrottle) drawThrottle = setTimeout(() => { drawThrottle = null; flushStroke(); }, 90);
+  };
+  const end = () => {
+    if (!drawing) return;
+    drawing = false;
+    flushStroke();
+    curStroke = null;
+  };
+  function drawLiveSegment() {
+    const g = drawCanvasCtx();
+    const pts = curStroke.points;
+    if (pts.length < 2) return;
+    g.strokeStyle = curStroke.color; g.lineWidth = curStroke.size * (window.devicePixelRatio || 1);
+    g.lineCap = "round"; g.lineJoin = "round";
+    const a = pts[pts.length - 2], b = pts[pts.length - 1];
+    g.beginPath(); g.moveTo(a[0] * c.width, a[1] * c.height); g.lineTo(b[0] * c.width, b[1] * c.height); g.stroke();
+  }
+  function flushStroke() {
+    if (!curStroke || curStroke.points.length === lastSentLen) return;
+    lastSentLen = curStroke.points.length;
+    drawAction({ k: "stroke", stroke: { ...curStroke, points: [...curStroke.points] } });
+  }
+  c.addEventListener("mousedown", start); c.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  c.addEventListener("touchstart", start, { passive: false }); c.addEventListener("touchmove", move, { passive: false });
+  c.addEventListener("touchend", end);
+}
+$("draw-size") && ($("draw-size").oninput = e => drawSize = parseInt(e.target.value));
+$("btn-draw-clear") && ($("btn-draw-clear").onclick = () => drawAction({ k: "clear" }));
 
 // ═════════════════════════════════════════════════════════════
 // BEWERTUNGS-SHOW: Nach der Premiere Sterne verteilen

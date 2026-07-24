@@ -671,6 +671,16 @@
         <button class="ghost" id="btn-dice-reset">Neustart</button>
       </div>
     </div>
+    <div class="card">
+      <h2>🎨 Kritzel-Board</h2>
+      <p class="sub">Alle warten zusammen — malt gemeinsam auf derselben Leinwand!</p>
+      <canvas id="draw-canvas" style="width:100%;height:220px;display:block;background:#0e0e13;border:1px solid var(--line);border-radius:12px;cursor:crosshair;touch-action:none"></canvas>
+      <div class="row" style="margin-top:10px;align-items:center">
+        <div id="draw-colors" style="display:flex;gap:6px"></div>
+        <input type="range" id="draw-size" min="2" max="16" value="4" style="width:80px" title="Stiftgröße">
+        <button class="ghost" id="btn-draw-clear">🧹 Board leeren</button>
+      </div>
+    </div>
   </section>
 
   <!-- REALTIME (für Szenen ohne Line-Timings) -->
