@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "6.4";
+const APP_VERSION = "6.5";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -132,6 +132,11 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "6.5", items: [
+    "🖼️ Kritzel-Board zieht auf breiten Bildschirmen als festes Panel an den rechten Rand um (statt in der Karten-Spalte)",
+    "💡 Neues linkes Seitenpanel mit rotierendem Fun-Fact-Ticker zum Ausgleich",
+    "🎨 Nur noch ein gemeinsames Board statt zwei getrennter Kopien (Lobby + Warte-Screen)"
+  ]},
   { v: "6.4", items: [
     "🎨 Kritzel-Board neu aufgeteilt: Werkzeugleiste links, größere Leinwand rechts",
     "🧽 Radiergummi ergänzt",
@@ -832,11 +837,13 @@ show = function(id) {
   _origShow(id);
   updateLobbyMusic();
   if (id === "scr-lobby" || id === "scr-wait") startTipRotation(); else clearInterval(tipTimer);
-  if (id === "scr-wait" || id === "scr-lobby") setTimeout(renderDrawBoard, 30);   // Canvas hat gerade erst eine echte Größe bekommen -> neu zeichnen
   // Ingame (Booth/Aufnahme) ruhig halten: keine Ablenkung
   const calm = id === "scr-booth" || id === "scr-record";
   const f = document.getElementById("floaties");
   if (f) f.style.display = calm ? "none" : "";
+  const spL = document.getElementById("side-panel-left"), spR = document.getElementById("side-panel-right");
+  [spL, spR].forEach(sp => { if (sp) sp.style.visibility = calm ? "hidden" : "visible"; });
+  if (!calm) setTimeout(renderDrawBoard, 30);   // Canvas war ggf. gerade erst sichtbar -> Größe neu berechnen & zeichnen
   document.body.classList.toggle("ingame", calm);
 };
 
@@ -914,6 +921,35 @@ function startTipRotation() {
   clearInterval(tipTimer);
   rotateTip();
   tipTimer = setInterval(rotateTip, 7000);
+}
+
+// 💡 Fun-Fact-Ticker fürs linke Seitenpanel — läuft unabhängig durchgehend, rein zur Unterhaltung
+const FUN_FACTS = [
+  "🐙 Oktopusse haben drei Herzen und blaues Blut.",
+  "🍯 Honig verdirbt praktisch nie — man hat noch essbaren Honig in 3000 Jahre alten Gräbern gefunden.",
+  "🌕 Der Mond entfernt sich jedes Jahr etwa 3,8 cm von der Erde.",
+  "🦒 Giraffen und Menschen haben gleich viele Halswirbel: sieben.",
+  "🍌 Bananen sind aus botanischer Sicht Beeren — Erdbeeren dagegen nicht.",
+  "⚡ Ein Blitz ist etwa fünfmal heißer als die Sonnenoberfläche.",
+  "🐌 Manche Schnecken können bis zu drei Jahre am Stück schlafen.",
+  "🎮 Das erste Videospiel-Easter-Egg wurde 1979 in „Adventure” für die Atari 2600 versteckt.",
+  "🧠 Dein Gehirn verbraucht etwa 20% deiner täglichen Energie — obwohl es nur ~2% deines Körpergewichts ausmacht.",
+  "🦈 Haie gibt es schon länger als Bäume — seit etwa 400 Millionen Jahren.",
+  "🥶 Wasser kann bei Zimmertemperatur sieden — wenn der Luftdruck niedrig genug ist.",
+  "🐝 Bienen können einfache Mathe-Aufgaben lösen und Muster erkennen.",
+];
+let funFactIdx = 0, funFactTimer = null;
+function rotateFunFact() {
+  const el = document.getElementById("funfact-text");
+  if (!el) return;
+  el.style.transition = "opacity .3s";
+  el.style.opacity = "0";
+  setTimeout(() => { el.textContent = FUN_FACTS[funFactIdx % FUN_FACTS.length]; funFactIdx++; el.style.opacity = "1"; }, 300);
+}
+function startFunFactRotation() {
+  clearInterval(funFactTimer);
+  rotateFunFact();
+  funFactTimer = setInterval(rotateFunFact, 8000);
 }
 
 
@@ -2135,7 +2171,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btn-dice-reset") && ($("btn-dice-reset").onclick = () => diceAction({ k: "reset" }));
   renderDice();
   initDrawCanvas("draw-canvas", "draw-colors", "draw-size", "btn-draw-clear", "btn-draw-eraser");
-  initDrawCanvas("draw-canvas-lobby", "draw-colors-lobby", "draw-size-lobby", "btn-draw-clear-lobby", "btn-draw-eraser-lobby");
+  startFunFactRotation();
 });
 
 
@@ -2291,7 +2327,7 @@ let drawColor = "#ffc95c", drawSize = 4;
 let drawing = false, curStroke = null, lastSentLen = 0, drawThrottle = null;
 const DRAW_COLORS = ["#ffc95c", "#ff5470", "#7c5cff", "#4ade80", "#4ac9e8", "#f5f5f5", "#3a3a46",
   "#ff8a3d", "#ff4dd8", "#4d7bff", "#2fbf71", "#e8e037", "#8a4b2f", "#000000"];
-const DRAW_CANVAS_IDS = ["draw-canvas", "draw-canvas-lobby"];   // beide zeigen dieselbe geteilte Zeichnung
+const DRAW_CANVAS_IDS = ["draw-canvas"];   // nur noch EIN Canvas -- festes Seitenpanel statt Duplikat pro Screen
 
 function drawAction(a) { if (isHost) drawHandle(a, myId); else hostConn.send({ t: "draw", a }); }
 function drawHandle(a, pid) {
@@ -2336,8 +2372,8 @@ function renderDrawBoardOn(canvasId) {
   }
 }
 function renderDrawBoard() { DRAW_CANVAS_IDS.forEach(renderDrawBoardOn); }
-const DRAW_CANVAS_COLOR_IDS = ["draw-colors", "draw-colors-lobby"];
-const DRAW_ERASER_IDS = ["btn-draw-eraser", "btn-draw-eraser-lobby"];
+const DRAW_CANVAS_COLOR_IDS = ["draw-colors"];
+const DRAW_ERASER_IDS = ["btn-draw-eraser"];
 function drawColorPicker(colorsId) {
   const wrap = $(colorsId);
   if (!wrap) return;
