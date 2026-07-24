@@ -449,11 +449,14 @@
     <div class="card">
       <h2>🎨 Kritzel-Board</h2>
       <p class="sub">Malt schon mal zusammen, während ihr auf den Start wartet!</p>
-      <canvas id="draw-canvas-lobby" class="draw-canvas" style="width:100%;height:220px;display:block;background:#0e0e13;border:1px solid var(--line);border-radius:12px;cursor:crosshair;touch-action:none"></canvas>
-      <div class="row" style="margin-top:10px;align-items:center">
-        <div id="draw-colors-lobby" style="display:flex;gap:6px"></div>
-        <input type="range" id="draw-size-lobby" min="2" max="16" value="4" style="width:80px" title="Stiftgröße">
-        <button class="ghost" id="btn-draw-clear-lobby">🧹 Board leeren</button>
+      <div style="display:flex;gap:12px;align-items:stretch">
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;width:76px">
+          <div id="draw-colors-lobby" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px"></div>
+          <button class="ghost" id="btn-draw-eraser-lobby" title="Radiergummi" style="padding:6px;font-size:1.1rem">🧽</button>
+          <input type="range" id="draw-size-lobby" min="2" max="24" value="4" style="width:100%" title="Stiftgröße">
+          <button class="ghost" id="btn-draw-clear-lobby" style="padding:6px;font-size:.78rem">🧹 Leeren</button>
+        </div>
+        <canvas id="draw-canvas-lobby" class="draw-canvas" style="flex:1;min-width:0;height:280px;display:block;background:#0e0e13;border:1px solid var(--line);border-radius:12px;cursor:crosshair;touch-action:none"></canvas>
       </div>
     </div>
 
@@ -685,11 +688,14 @@
     <div class="card">
       <h2>🎨 Kritzel-Board</h2>
       <p class="sub">Alle warten zusammen — malt gemeinsam auf derselben Leinwand!</p>
-      <canvas id="draw-canvas" style="width:100%;height:220px;display:block;background:#0e0e13;border:1px solid var(--line);border-radius:12px;cursor:crosshair;touch-action:none"></canvas>
-      <div class="row" style="margin-top:10px;align-items:center">
-        <div id="draw-colors" style="display:flex;gap:6px"></div>
-        <input type="range" id="draw-size" min="2" max="16" value="4" style="width:80px" title="Stiftgröße">
-        <button class="ghost" id="btn-draw-clear">🧹 Board leeren</button>
+      <div style="display:flex;gap:12px;align-items:stretch">
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;width:76px">
+          <div id="draw-colors" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px"></div>
+          <button class="ghost" id="btn-draw-eraser" title="Radiergummi" style="padding:6px;font-size:1.1rem">🧽</button>
+          <input type="range" id="draw-size" min="2" max="24" value="4" style="width:100%" title="Stiftgröße">
+          <button class="ghost" id="btn-draw-clear" style="padding:6px;font-size:.78rem">🧹 Leeren</button>
+        </div>
+        <canvas id="draw-canvas" class="draw-canvas" style="flex:1;min-width:0;height:280px;display:block;background:#0e0e13;border:1px solid var(--line);border-radius:12px;cursor:crosshair;touch-action:none"></canvas>
       </div>
     </div>
   </section>

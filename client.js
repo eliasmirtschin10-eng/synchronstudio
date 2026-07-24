@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "6.3";
+const APP_VERSION = "6.4";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -132,6 +132,11 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "6.4", items: [
+    "🎨 Kritzel-Board neu aufgeteilt: Werkzeugleiste links, größere Leinwand rechts",
+    "🧽 Radiergummi ergänzt",
+    "🌈 Doppelt so viele Farben (7 → 14)"
+  ]},
   { v: "6.3", items: [
     "🎨 Kritzel-Board jetzt auch in der Lobby (vorher nur beim Warten nach der Aufnahme)",
     "🎬 Neue Szene: Star Wars — You Turned Her Against Me (Anakin & Obi-Wan)"
@@ -2129,8 +2134,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btn-dice-join") && ($("btn-dice-join").onclick = () => diceAction({ k: "join" }));
   $("btn-dice-reset") && ($("btn-dice-reset").onclick = () => diceAction({ k: "reset" }));
   renderDice();
-  initDrawCanvas("draw-canvas", "draw-colors", "draw-size", "btn-draw-clear");
-  initDrawCanvas("draw-canvas-lobby", "draw-colors-lobby", "draw-size-lobby", "btn-draw-clear-lobby");
+  initDrawCanvas("draw-canvas", "draw-colors", "draw-size", "btn-draw-clear", "btn-draw-eraser");
+  initDrawCanvas("draw-canvas-lobby", "draw-colors-lobby", "draw-size-lobby", "btn-draw-clear-lobby", "btn-draw-eraser-lobby");
 });
 
 
@@ -2284,7 +2289,8 @@ $("btn-dice-roll") && ($("btn-dice-roll").onclick = () => diceAction({ k: "roll"
 let drawBoard = { strokes: [] };
 let drawColor = "#ffc95c", drawSize = 4;
 let drawing = false, curStroke = null, lastSentLen = 0, drawThrottle = null;
-const DRAW_COLORS = ["#ffc95c", "#ff5470", "#7c5cff", "#4ade80", "#4ac9e8", "#f5f5f5", "#1a1a22"];
+const DRAW_COLORS = ["#ffc95c", "#ff5470", "#7c5cff", "#4ade80", "#4ac9e8", "#f5f5f5", "#3a3a46",
+  "#ff8a3d", "#ff4dd8", "#4d7bff", "#2fbf71", "#e8e037", "#8a4b2f", "#000000"];
 const DRAW_CANVAS_IDS = ["draw-canvas", "draw-canvas-lobby"];   // beide zeigen dieselbe geteilte Zeichnung
 
 function drawAction(a) { if (isHost) drawHandle(a, myId); else hostConn.send({ t: "draw", a }); }
@@ -2306,6 +2312,11 @@ function drawCanvasCtx(canvasId) {
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
   return c.getContext("2d");
 }
+const DRAW_BG = "#0e0e13";
+function strokeVisual(color, size) {
+  // "eraser" ist keine echte Farbe -- male stattdessen mit der Canvas-Hintergrundfarbe und etwas dicker
+  return color === "eraser" ? { color: DRAW_BG, width: size * 2.2 } : { color, width: size };
+}
 function renderDrawBoardOn(canvasId) {
   const g = drawCanvasCtx(canvasId);
   if (!g) return;
@@ -2313,7 +2324,8 @@ function renderDrawBoardOn(canvasId) {
   g.clearRect(0, 0, c.width, c.height);
   for (const s of drawBoard.strokes) {
     if (!s.points.length) continue;
-    g.strokeStyle = s.color; g.lineWidth = (s.size || 4) * (window.devicePixelRatio || 1);
+    const v = strokeVisual(s.color, s.size || 4);
+    g.strokeStyle = v.color; g.lineWidth = v.width * (window.devicePixelRatio || 1);
     g.lineCap = "round"; g.lineJoin = "round";
     g.beginPath();
     s.points.forEach((p, i) => {
@@ -2324,17 +2336,22 @@ function renderDrawBoardOn(canvasId) {
   }
 }
 function renderDrawBoard() { DRAW_CANVAS_IDS.forEach(renderDrawBoardOn); }
+const DRAW_CANVAS_COLOR_IDS = ["draw-colors", "draw-colors-lobby"];
+const DRAW_ERASER_IDS = ["btn-draw-eraser", "btn-draw-eraser-lobby"];
 function drawColorPicker(colorsId) {
   const wrap = $(colorsId);
   if (!wrap) return;
   wrap.innerHTML = DRAW_COLORS.map(c => `<button class="colorbtn" data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};border:2px solid ${c === drawColor ? "var(--amber)" : "transparent"};padding:0"></button>`).join("");
   wrap.querySelectorAll(".colorbtn").forEach(b => b.onclick = () => {
     drawColor = b.dataset.c;
-    DRAW_CANVAS_COLOR_IDS.forEach(drawColorPicker);   // beide Farbwähler synchron halten
+    syncDrawToolUI();
   });
 }
-const DRAW_CANVAS_COLOR_IDS = ["draw-colors", "draw-colors-lobby"];
-function initDrawCanvas(canvasId, colorsId, sizeId, clearId) {
+function syncDrawToolUI() {
+  DRAW_CANVAS_COLOR_IDS.forEach(drawColorPicker);
+  DRAW_ERASER_IDS.forEach(id => { const b = $(id); if (b) b.style.borderColor = drawColor === "eraser" ? "var(--amber)" : "var(--line)"; });
+}
+function initDrawCanvas(canvasId, colorsId, sizeId, clearId, eraserId) {
   const c = $(canvasId);
   if (!c || c.__wired) return;
   c.__wired = true;
@@ -2370,7 +2387,8 @@ function initDrawCanvas(canvasId, colorsId, sizeId, clearId) {
     const g = drawCanvasCtx(canvasId);
     const pts = curStroke.points;
     if (pts.length < 2) return;
-    g.strokeStyle = curStroke.color; g.lineWidth = curStroke.size * (window.devicePixelRatio || 1);
+    const v = strokeVisual(curStroke.color, curStroke.size);
+    g.strokeStyle = v.color; g.lineWidth = v.width * (window.devicePixelRatio || 1);
     g.lineCap = "round"; g.lineJoin = "round";
     const a = pts[pts.length - 2], b = pts[pts.length - 1];
     g.beginPath(); g.moveTo(a[0] * c.width, a[1] * c.height); g.lineTo(b[0] * c.width, b[1] * c.height); g.stroke();
@@ -2386,6 +2404,7 @@ function initDrawCanvas(canvasId, colorsId, sizeId, clearId) {
   c.addEventListener("touchend", end);
   $(sizeId) && ($(sizeId).oninput = e => drawSize = parseInt(e.target.value));
   $(clearId) && ($(clearId).onclick = () => drawAction({ k: "clear" }));
+  $(eraserId) && ($(eraserId).onclick = () => { drawColor = "eraser"; syncDrawToolUI(); });
 }
 
 // ═════════════════════════════════════════════════════════════
