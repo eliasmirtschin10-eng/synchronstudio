@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.8";
+const APP_VERSION = "5.9";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -227,12 +227,48 @@ const AVATAR_CHARS = [
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}
 
+// ── Profil-Accessoires: selbst gezeichnete SVGs, überlagern den Avatar (kein externes Bildmaterial nötig) ──
+const ACCESSORIES = {
+  catears: { label: "🐱 Katzenohren", svg: `<svg viewBox="0 0 100 60" style="position:absolute;top:-28%;left:0;width:100%;height:70%;overflow:visible">
+    <path d="M8,42 L20,4 L34,34 Z" fill="#3a3a46" stroke="#1a1a22" stroke-width="2"/>
+    <path d="M66,34 L80,4 L92,42 Z" fill="#3a3a46" stroke="#1a1a22" stroke-width="2"/>
+    <path d="M13,36 L21,14 L29,30 Z" fill="#f691b3"/>
+    <path d="M71,30 L79,14 L87,36 Z" fill="#f691b3"/>
+  </svg>` },
+  bearears: { label: "🐻 Bärenohren", svg: `<svg viewBox="0 0 100 60" style="position:absolute;top:-26%;left:0;width:100%;height:65%;overflow:visible">
+    <circle cx="20" cy="20" r="16" fill="#8a5a3c" stroke="#5c3a24" stroke-width="2"/>
+    <circle cx="80" cy="20" r="16" fill="#8a5a3c" stroke="#5c3a24" stroke-width="2"/>
+    <circle cx="20" cy="20" r="8" fill="#e8c9a8"/>
+    <circle cx="80" cy="20" r="8" fill="#e8c9a8"/>
+  </svg>` },
+  headphones: { label: "🎧 Kopfhörer", svg: `<svg viewBox="0 0 100 100" style="position:absolute;top:-14%;left:0;width:100%;height:100%;overflow:visible">
+    <path d="M14,52 A36,36 0 0 1 86,52" fill="none" stroke="#e0e0e8" stroke-width="7" stroke-linecap="round"/>
+    <rect x="6" y="46" width="16" height="26" rx="7" fill="#c9483a" stroke="#7a1f16" stroke-width="2"/>
+    <rect x="78" y="46" width="16" height="26" rx="7" fill="#c9483a" stroke="#7a1f16" stroke-width="2"/>
+  </svg>` },
+  crown: { label: "👑 Krone", svg: `<svg viewBox="0 0 100 60" style="position:absolute;top:-34%;left:0;width:100%;height:55%;overflow:visible">
+    <path d="M10,50 L10,26 L30,40 L50,14 L70,40 L90,26 L90,50 Z" fill="#ffc95c" stroke="#a87a1a" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="50" cy="12" r="5" fill="#ff6b6b"/>
+  </svg>` },
+  halo: { label: "😇 Heiligenschein", svg: `<svg viewBox="0 0 100 40" style="position:absolute;top:-38%;left:0;width:100%;height:40%;overflow:visible">
+    <ellipse cx="50" cy="20" rx="26" ry="9" fill="none" stroke="#ffe38a" stroke-width="6"/>
+  </svg>` },
+  horns: { label: "😈 Teufelshörner", svg: `<svg viewBox="0 0 100 60" style="position:absolute;top:-24%;left:0;width:100%;height:55%;overflow:visible">
+    <path d="M22,44 Q10,20 26,6 Q22,26 34,38 Z" fill="#c9312b" stroke="#6e130f" stroke-width="2"/>
+    <path d="M78,44 Q90,20 74,6 Q78,26 66,38 Z" fill="#c9312b" stroke="#6e130f" stroke-width="2"/>
+  </svg>` }
+};
+let myAccessory = null;
+try { const a2 = localStorage.getItem("ss_accessory"); if (a2) myAccessory = JSON.parse(a2); } catch {}
+
 function avatarHTML(p) {
   const av = p.avatar;
-  if (av && av.type === "char") return `<div class="pavatar pavatar-img" style="background-image:url('${av.value}')"></div>`;
-  if (av && av.type === "emoji") return `<div class="pavatar" style="background:${avatarColor(p.name)}">${av.value}</div>`;
+  const acc = p.accessory && ACCESSORIES[p.accessory] ? ACCESSORIES[p.accessory].svg : "";
+  const wrap = (inner) => acc ? `<div style="position:relative;display:inline-block">${inner}${acc}</div>` : inner;
+  if (av && av.type === "char") return wrap(`<div class="pavatar pavatar-img" style="background-image:url('${av.value}')"></div>`);
+  if (av && av.type === "emoji") return wrap(`<div class="pavatar" style="background:${avatarColor(p.name)}">${av.value}</div>`);
   const initial = (p.name || "?").trim().charAt(0).toUpperCase() || "?";
-  return `<div class="pavatar" style="background:${avatarColor(p.name)}">${esc(initial)}</div>`;
+  return wrap(`<div class="pavatar" style="background:${avatarColor(p.name)}">${esc(initial)}</div>`);
 }
 
 function renderAvatarPicker() {
@@ -247,12 +283,38 @@ function renderAvatarPicker() {
     try { localStorage.setItem("ss_avatar", JSON.stringify(myAvatar)); } catch {}
     grid.querySelectorAll(".avatarbtn").forEach(x => x.classList.remove("chosen"));
     b.classList.add("chosen");
+    renderAccessoryPreview();
     SFX.click();
   });
   if (myAvatar) {
     const sel = grid.querySelector(`.avatarbtn[data-type="${myAvatar.type}"][data-value="${CSS.escape ? CSS.escape(myAvatar.value) : myAvatar.value}"]`);
     if (sel) sel.classList.add("chosen");
   }
+  renderAccessoryPicker();
+}
+
+// ── Accessoire-Auswahl: Katzenohren, Kopfhörer & Co. — überlagern das gewählte Profilbild ──
+function renderAccessoryPicker() {
+  const wrap = $("accessory-grid");
+  if (!wrap) return;
+  wrap.innerHTML = `<button class="avatarbtn accbtn" data-acc="" title="Kein Accessoire">🚫</button>` +
+    Object.entries(ACCESSORIES).map(([k, a]) => `<button class="avatarbtn accbtn" data-acc="${k}" title="${esc(a.label)}">${a.label.split(" ")[0]}</button>`).join("");
+  wrap.querySelectorAll(".accbtn").forEach(b => b.onclick = () => {
+    myAccessory = b.dataset.acc || null;
+    try { localStorage.setItem("ss_accessory", JSON.stringify(myAccessory)); } catch {}
+    wrap.querySelectorAll(".accbtn").forEach(x => x.classList.remove("chosen"));
+    b.classList.add("chosen");
+    renderAccessoryPreview();
+    SFX.click();
+  });
+  const sel = wrap.querySelector(`.accbtn[data-acc="${myAccessory || ""}"]`);
+  if (sel) sel.classList.add("chosen");
+  renderAccessoryPreview();
+}
+function renderAccessoryPreview() {
+  const el = $("accessory-preview");
+  if (!el) return;
+  el.innerHTML = avatarHTML({ name: myName || "Du", avatar: myAvatar, accessory: myAccessory });
 }
 
 async function buildMic() {
@@ -576,7 +638,7 @@ $("btn-create").onclick = () => {
   peer.on("open", () => {
     opened = true;
     myId = peer.id;
-    players = [{ id: myId, name: myName + " (Host)", avatar: myAvatar, role: null, ready: false, done: 0, total: 0 }];
+    players = [{ id: myId, name: myName + " (Host)", avatar: myAvatar, accessory: myAccessory, role: null, ready: false, done: 0, total: 0 }];
     enterLobby(code);
     loadSceneList();
   });
@@ -614,7 +676,7 @@ $("btn-join").onclick = () => {
       if (!joined) status("start-status", "❌ Raum gefunden, aber die Verbindung zum Host kommt nicht durch. Beide mal: anderes Netz testen (z. B. Handy-Hotspot), VPN aus, Brave-Shields aus.", true);
     }, 15000);
 
-    hostConn.on("open", () => { joined = true; hostConn.send({ t: "hello", name: myName, avatar: myAvatar }); enterLobby(code); });
+    hostConn.on("open", () => { joined = true; hostConn.send({ t: "hello", name: myName, avatar: myAvatar, accessory: myAccessory }); enterLobby(code); });
     // Debug: ICE-Status in der Console (F12) verfolgen
     const watchIce = setInterval(() => {
       const pc = hostConn.peerConnection;
@@ -890,7 +952,7 @@ function handleMsg(msg, conn) {
     // — beim Host —
     case "hello": {
       if (players.length >= 8) { conn.send({ t: "full", cap: 8 }); setTimeout(() => conn.close(), 500); break; }
-      players.push({ id: conn.peer, name: msg.name, avatar: msg.avatar || null, role: null, ready: false, done: 0, total: 0 });
+      players.push({ id: conn.peer, name: msg.name, avatar: msg.avatar || null, accessory: msg.accessory || null, role: null, ready: false, done: 0, total: 0 });
       if (scene) { if (localVideoBuf) sendLocalVideo(conn); else conn.send({ t: "scene", scene }); }
       broadcastState();
       break;
