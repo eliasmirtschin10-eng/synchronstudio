@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.6";
+const APP_VERSION = "5.7";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -120,7 +120,38 @@ window.addEventListener("DOMContentLoaded", () => {
   watchVideoErrors($("play-video"), "play-status");
 });
 document.body.insertAdjacentHTML("beforeend",
-  `<div style="position:fixed;left:10px;bottom:8px;z-index:99;font-size:.68rem;color:#55556a;letter-spacing:.08em;pointer-events:none">v${APP_VERSION}</div>`);
+  `<button id="patchnotes-btn" style="position:fixed;left:10px;bottom:8px;z-index:99;font-size:.68rem;color:#8a8aa0;letter-spacing:.08em;background:#14141b;border:1px solid var(--line);border-radius:99px;padding:3px 10px;cursor:pointer">v${APP_VERSION} · 📋 Patch Notes</button>
+   <div id="patchnotes-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
+     <div style="max-width:520px;width:100%;max-height:80vh;overflow-y:auto;background:#14141b;border:1px solid var(--line);border-radius:16px;padding:22px">
+       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+         <h2 style="margin:0">📋 Patch Notes</h2>
+         <button id="patchnotes-close" class="ghost" style="padding:4px 12px">✕</button>
+       </div>
+       <div id="patchnotes-body" style="display:flex;flex-direction:column;gap:16px;font-size:.9rem;line-height:1.5"></div>
+     </div>
+   </div>`);
+
+const PATCH_NOTES = [
+  { v: "5.6", items: [
+    "🐛 Fix: Duell-Modus zeigte nur das Ergebnis von wer zuerst fertig war, statt auf beide zu warten (match.mode wurde bei Mitspielern nie richtig übernommen)",
+    "🎬 Cross-Origin-Fix fürs Video-Speichern ergänzt"
+  ]},
+  { v: "5.5", items: ["🎚 Noise Gate live nachjustierbar direkt in der Booth, wirkt sofort auch während laufender Aufnahme"] },
+  { v: "5.3–5.4", items: ["🎬 Mehrere neue Szenen (Toji vs Gojo, Who Decided That, Backrooms Research, Death Note Potato Chip u.a.)", "🐛 Fix: „X/Y geladen“-Anzeige blieb hängen, wenn wer während des Ladens die Verbindung trennte"] },
+  { v: "5.0–5.2", items: ["🥊 Neuer Duell-Modus: zwei Spieler sprechen dieselbe Rolle unabhängig ein, danach stimmt die Gruppe ab", "🎚 Eigene Effekt-Wahl pro Line beim Aufnehmen (überschreibt Szenen-Standard)", "🌊 Wellenform detaillierter (mehr Auflösung, Verlauf, Peak-Hold)"] },
+  { v: "4.8–4.9", items: ["🌊 Dual-Waveform in der Booth: Original (lila) + eigene Stimme (blau) live überlagert", "🏆 Finale als echtes Podium (1./2./3. Platz) statt einfacher Liste", "⭐ Bewertungs-Screen optisch aufgewertet"] },
+  { v: "4.7", items: ["✂️ Frame-genaues Timing im Editor, Wellenform-Vorschau beim Line-Setzen", "🔁 Einzelne Lines nachträglich neu einsprechen (Redo), ohne die ganze Szene zu wiederholen"] }
+];
+$("patchnotes-btn").onclick = () => {
+  $("patchnotes-body").innerHTML = PATCH_NOTES.map(g => `
+    <div>
+      <div style="font-family:'Archivo Black';color:var(--amber);margin-bottom:6px">v${g.v}</div>
+      <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">${g.items.map(i => `<li>${i}</li>`).join("")}</ul>
+    </div>`).join("");
+  $("patchnotes-overlay").style.display = "flex";
+};
+$("patchnotes-close").onclick = () => $("patchnotes-overlay").style.display = "none";
+$("patchnotes-overlay").onclick = e => { if (e.target.id === "patchnotes-overlay") $("patchnotes-overlay").style.display = "none"; };
 
 // ═════════════════════════════════════════════════════════════
 // MIKROFON — Einstellungen + Processing-Graph
@@ -191,6 +222,7 @@ const AVATAR_CHARS = [
   { img: "scenes/brresearch/bobby.png", label: "Bobby" },
   { img: "scenes/brresearch/clark.png", label: "Clark (Research)" },
   { img: "scenes/brresearch/kat.png", label: "Kat" },
+  { img: "scenes/notmywallet/manray.png", label: "Man Ray" },
 ];
 let myAvatar = null;
 try { const a = localStorage.getItem("ss_avatar"); if (a) myAvatar = JSON.parse(a); } catch {}

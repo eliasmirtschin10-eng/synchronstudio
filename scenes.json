@@ -5541,6 +5541,283 @@
     ]
   },
   {
+    "id": "notmywallet",
+    "title": "Spongebob — It's Not My Wallet (3 Rollen)",
+    "videoUrl": "scenes/notmywallet.mp4",
+    "avatars": {
+      "1": "scenes/notmywallet/bob.png",
+      "2": "scenes/notmywallet/manray.png",
+      "3": "scenes/notmywallet/pat.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Spongebob",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Man Ray",
+        "pan": 0.0,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 3,
+        "name": "Patrick",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 0.49,
+        "end": 6.19,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "Okay, Man Ray. Are you ready for your first day at goodness school?",
+        "de": "Okay, Man Ray. Bist du bereit für deinen ersten Tag in der Gutmenschen-Schule?",
+        "orig": "scenes/notmywallet/lines/01.mp3"
+      },
+      {
+        "t": 6.19,
+        "end": 11.63,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "Pat, get your wallet out. Okay, goodness lesson number one. You see someone drop their wallet...",
+        "de": "Pat, hol deine Brieftasche raus. Okay, Güte-Lektion Nummer eins. Du siehst, wie jemand seine Brieftasche fallen lässt...",
+        "orig": "scenes/notmywallet/lines/02.mp3"
+      },
+      {
+        "t": 11.63,
+        "end": 15.22,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "Patrick, drop the wallet. Now, what do you do?",
+        "de": "Patrick, lass die Brieftasche fallen. Also, was machst du?",
+        "orig": "scenes/notmywallet/lines/03.mp3"
+      },
+      {
+        "t": 15.22,
+        "end": 19.27,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "Excuse me, sir! But I do believe you've dropped your wallet.",
+        "de": "Entschuldigung, mein Herr! Aber ich glaube, Sie haben Ihre Brieftasche fallen lassen.",
+        "orig": "scenes/notmywallet/lines/04.mp3"
+      },
+      {
+        "t": 19.27,
+        "end": 21.33,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "Doesn't look familiar to me.",
+        "de": "Kommt mir nicht bekannt vor.",
+        "orig": "scenes/notmywallet/lines/05.mp3"
+      },
+      {
+        "t": 21.33,
+        "end": 24.45,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "What? I just saw you drop it. Here.",
+        "de": "Was? Ich hab grad gesehen, wie du sie fallen gelassen hast. Hier.",
+        "orig": "scenes/notmywallet/lines/06.mp3"
+      },
+      {
+        "t": 24.45,
+        "end": 25.83,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "Nope, it's not mine.",
+        "de": "Nö, die ist nicht meine.",
+        "orig": "scenes/notmywallet/lines/07.mp3"
+      },
+      {
+        "t": 25.83,
+        "end": 30.55,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "It is yours. I... am trying to be a good person and return it to you.",
+        "de": "Die ist deine. Ich... versuch ein guter Mensch zu sein und sie dir zurückzugeben.",
+        "orig": "scenes/notmywallet/lines/08.mp3"
+      },
+      {
+        "t": 30.55,
+        "end": 34.65,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "Return what to who?",
+        "de": "Was zurückgeben an wen?",
+        "orig": "scenes/notmywallet/lines/09.mp3"
+      },
+      {
+        "t": 34.65,
+        "end": 37.67,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "Aren't you Patrick Star?",
+        "de": "Bist du nicht Patrick Star?",
+        "orig": "scenes/notmywallet/lines/10.mp3"
+      },
+      {
+        "t": 37.67,
+        "end": 38.42,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "Yup.",
+        "de": "Jup.",
+        "orig": "scenes/notmywallet/lines/11.mp3"
+      },
+      {
+        "t": 38.42,
+        "end": 40.69,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "And this is your ID.",
+        "de": "Und das hier ist dein Ausweis.",
+        "orig": "scenes/notmywallet/lines/12.mp3"
+      },
+      {
+        "t": 40.69,
+        "end": 41.3,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "Yup.",
+        "de": "Jup.",
+        "orig": "scenes/notmywallet/lines/13.mp3"
+      },
+      {
+        "t": 41.3,
+        "end": 48.74,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "I found this ID in this wallet. And if that's the case, this must be your wallet.",
+        "de": "Ich hab diesen Ausweis in dieser Brieftasche gefunden. Und wenn das so ist, muss das deine Brieftasche sein.",
+        "orig": "scenes/notmywallet/lines/14.mp3"
+      },
+      {
+        "t": 48.74,
+        "end": 50.68,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "That makes sense to me.",
+        "de": "Ergibt für mich Sinn.",
+        "orig": "scenes/notmywallet/lines/15.mp3"
+      },
+      {
+        "t": 50.68,
+        "end": 51.88,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "Then take it.",
+        "de": "Dann nimm sie.",
+        "orig": "scenes/notmywallet/lines/16.mp3"
+      },
+      {
+        "t": 51.88,
+        "end": 53.06,
+        "chars": [
+          3
+        ],
+        "who": "Patrick",
+        "text": "It's not my wallet.",
+        "de": "Ist nicht meine Brieftasche.",
+        "orig": "scenes/notmywallet/lines/17.mp3"
+      },
+      {
+        "t": 53.06,
+        "end": 56.44,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "You dim bulb! Take back your wallet or I'll rip your arms off!",
+        "de": "Du Dummkopf! Nimm deine Brieftasche zurück, oder ich reiß dir die Arme aus!",
+        "orig": "scenes/notmywallet/lines/18.mp3"
+      },
+      {
+        "t": 56.44,
+        "end": 58.25,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "Ah-ah! Wrong.",
+        "de": "Ah-ah! Falsch.",
+        "orig": "scenes/notmywallet/lines/19.mp3"
+      },
+      {
+        "t": 58.25,
+        "end": 59.14,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "[Maniacal tickling laughter]",
+        "de": "[Wahnsinniges Kitzel-Lachen]",
+        "orig": "scenes/notmywallet/lines/20.mp3"
+      },
+      {
+        "t": 59.14,
+        "end": 61.73,
+        "chars": [
+          1
+        ],
+        "who": "Spongebob",
+        "text": "Good people don't rip other people's arms off!",
+        "de": "Gute Menschen reißen anderen Leuten nicht die Arme aus!",
+        "orig": "scenes/notmywallet/lines/21.mp3"
+      },
+      {
+        "t": 61.73,
+        "end": 64.63,
+        "chars": [
+          2
+        ],
+        "who": "Man Ray",
+        "text": "[Maniacal tickling laughter] oh- oh sto-op",
+        "de": "[Wahnsinniges Kitzel-Lachen] oh- oh hör au-uf",
+        "orig": "scenes/notmywallet/lines/22.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",
