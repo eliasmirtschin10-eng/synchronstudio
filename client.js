@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "5.5";
+const APP_VERSION = "5.6";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -236,12 +236,12 @@ async function buildMic() {
     if (!recDest) {
       recDest = ctx.createMediaStreamDestination();
       micHP = ctx.createBiquadFilter(); micHP.type = "highpass";
-      micGateNode = ctx.createGain();
+      micGateNode = ctx.createGain();   // wird NICHT mehr ins Signal eingebunden — nur noch Analyse-Wert fürs Lämpchen
       micGain = ctx.createGain();
       vizAn = ctx.createAnalyser(); vizAn.fftSize = 256;
       gateAn = ctx.createAnalyser(); gateAn.fftSize = 512;
-      micHP.connect(gateAn);                       // Pegel VOR dem Gate messen
-      micHP.connect(micGateNode); micGateNode.connect(micGain);
+      micHP.connect(gateAn);                       // Pegel-Analyse fürs Gate-Lämpchen (rein visuell)
+      micHP.connect(micGain);                       // Aufgenommenes Signal bleibt roh/ungegatet!
       micGain.connect(recDest); micGain.connect(vizAn);
       startGateLoop();
     }
@@ -871,7 +871,7 @@ function handleMsg(msg, conn) {
     case "ready": { const p = players.find(p => p.id === conn.peer); if (p && p.role != null) p.ready = true; broadcastState(); break; }
     case "progress": { const p = players.find(p => p.id === conn.peer); if (p) { p.done = msg.done; p.total = msg.total; } broadcastState(); break; }
     case "tracks": collectTracks(msg.role, msg.items); break;
-    case "trackUpdate": applyTrackUpdate(msg.role, msg.lineIdx, msg.startAt, msg.buf, msg.effect); break;
+    case "trackUpdate": applyTrackUpdate(msg.role, msg.lineIdx, msg.startAt, msg.buf, msg.effect, msg.gate); break;
     case "ttt": tttHandle(msg.a, conn.peer); break;
     case "rate": collectRating(conn.peer, msg.scores); break;
     case "mg":
@@ -893,7 +893,7 @@ function handleMsg(msg, conn) {
       show("scr-start"); break;
     case "state": players = msg.players; renderPlayers(); renderRoles(); renderBoothPlayers(); if (document.querySelector("#scr-playback.active")) renderPremStateGuest(); break;
     case "scene": scene = msg.scene; videoBlobUrl = null; voiceTrackBuf = null; voiceTrackTried = false; showScene(scene.videoUrl); break;
-    case "settings": match.rounds = msg.rounds; match.round = msg.round; match.autoRoulette = msg.autoRoulette; renderSettingsView(msg); break;
+    case "settings": match.mode = msg.mode; match.rounds = msg.rounds; match.round = msg.round; match.autoRoulette = msg.autoRoulette; renderSettingsView(msg); break;
     case "sceneReset":
       scene = null; videoBlobUrl = null;
       $("scene-card").style.display = "none";
@@ -993,6 +993,52 @@ const EFFECTS = {
 
 // ── Spieler kann pro Line seinen eigenen Effekt waehlen — ueberschreibt Rollen-/Szenen-Standard NUR fuer diese Line ──
 let myEffectOverrides = {};   // lineIdx -> Effekt-Key (nur gesetzt, wenn vom Standard abweichend)
+// ── Noise Gate NACHTRÄGLICH auf eine fertige Aufnahme anwenden (wie ein Effekt, nicht live eingebrannt) ──
+function applyGateToBuffer(ctx, buffer, gateAmount) {
+  if (!gateAmount || gateAmount <= 0) return buffer;   // Gate aus -> unverändert
+  const sr = buffer.sampleRate;
+  const winSize = Math.max(1, Math.round(sr * 0.01));      // 10ms-Analysefenster
+  const threshold = gateAmount * 0.16;                       // gleiche Formel wie früher live
+  const holdSamples = Math.round(sr * 0.2);                  // 200ms Hangover, bevor's zumacht
+  const attackSamples = Math.round(sr * 0.004);               // schnelles Öffnen
+  const releaseSamples = Math.round(sr * 0.05);               // sanftes Schließen
+
+  const out = ctx.createBuffer(buffer.numberOfChannels, buffer.length, sr);
+  const nWindows = Math.ceil(buffer.length / winSize);
+  const rms = new Float32Array(nWindows);
+  for (let w = 0; w < nWindows; w++) {
+    let sum = 0, count = 0;
+    for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+      const data = buffer.getChannelData(ch);
+      const start = w * winSize, end = Math.min(buffer.length, start + winSize);
+      for (let i = start; i < end; i++) { sum += data[i] * data[i]; count++; }
+    }
+    rms[w] = count ? Math.sqrt(sum / count) : 0;
+  }
+  const targetOpen = new Uint8Array(nWindows);
+  let lastLoudWin = -Infinity;
+  for (let w = 0; w < nWindows; w++) {
+    if (rms[w] > threshold) lastLoudWin = w;
+    targetOpen[w] = (w - lastLoudWin) * winSize <= holdSamples ? 1 : 0;
+  }
+  const gainCurve = new Float32Array(buffer.length);
+  let currentGain = targetOpen[0] ? 1 : 0;
+  for (let w = 0; w < nWindows; w++) {
+    const start = w * winSize, end = Math.min(buffer.length, start + winSize);
+    const target = targetOpen[w] ? 1 : 0;
+    const speed = target > currentGain ? attackSamples : releaseSamples;
+    for (let i = start; i < end; i++) {
+      currentGain += (target - currentGain) / Math.max(1, speed);
+      gainCurve[i] = currentGain;
+    }
+  }
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const src = buffer.getChannelData(ch), dst = out.getChannelData(ch);
+    for (let i = 0; i < buffer.length; i++) dst[i] = src[i] * gainCurve[i];
+  }
+  return out;
+}
+
 function myEffectiveRole(l) {
   // Reihenfolge: Spieler-Wahl > Szenen-Autor-Override (l.effect) > Rollen-Standard
   const base = roleOf(myRole()) || { pan: 0, effect: "none", gain: 1 };
@@ -1723,7 +1769,8 @@ $("btn-line-play").onclick = async () => {
   if (!takes[l.idx] || takes[l.idx] === "SKIP") return;
   if (previewSrc) { try { previewSrc.stop(); } catch {} previewSrc = null; }
   const ctx = getCtx();
-  const buf = await ctx.decodeAudioData(await toArrayBuffer(takes[l.idx]));
+  const rawBuf = await ctx.decodeAudioData(await toArrayBuffer(takes[l.idx]));
+  const buf = applyGateToBuffer(ctx, rawBuf, micSettings.gate);   // aktuelles Gate live auf den Take anwenden
   // Videobild läuft synchron mit (leise), kein Standbild mehr
   const v = $("booth-video");
   v.pause(); v.currentTime = l.t; v.volume = boothVol * 0.6; v.playbackRate = 1;
@@ -1781,7 +1828,7 @@ function finishBooth() {
   show("scr-wait");
   renderBoothPlayers();
   const items = myLines.filter(l => takes[l.idx] && takes[l.idx] !== "SKIP")
-    .map(l => ({ startAt: l.t, idx: l.idx, buf: takes[l.idx], effect: myEffectOverrides[l.idx] || undefined }));
+    .map(l => ({ startAt: l.t, idx: l.idx, buf: takes[l.idx], effect: myEffectOverrides[l.idx] || undefined, gate: micSettings.gate }));
   if (match.mode === "duell" && duelInfo) {
     if (isHost) collectDuelSubmit(myId, items);
     else hostConn.send({ t: "duelSubmit", playerId: myId, items });
@@ -2308,14 +2355,15 @@ function finishRedo() {
   const startAt = l.t;
   const lineIdx = l.idx;
   const effect = myEffectOverrides[l.idx] || undefined;
+  const gate = micSettings.gate;
   redoMode = null;
   cancelAnimationFrame(vizRAF);
   $("onair").classList.remove("live");
   const back = redoReturnScreen || "scr-wait";
   show(back);
   if (buf && buf !== "SKIP") {
-    if (isHost) applyTrackUpdate(myRole(), lineIdx, startAt, buf, effect);
-    else hostConn.send({ t: "trackUpdate", role: myRole(), lineIdx, startAt, buf, effect });
+    if (isHost) applyTrackUpdate(myRole(), lineIdx, startAt, buf, effect, gate);
+    else hostConn.send({ t: "trackUpdate", role: myRole(), lineIdx, startAt, buf, effect, gate });
   }
   status(back === "scr-playback" ? "play-status" : "wait-status", "✅ Line aktualisiert! Wird im Endergebnis berücksichtigt.");
   renderRedoPanel("redo-panel-wait");
@@ -2342,7 +2390,7 @@ function renderRedoPanel(containerId) {
 }
 
 // ── Host: patcht einen einzelnen Take in den bestehenden Mix und verteilt neu ──
-async function applyTrackUpdate(role, lineIdx, startAt, rawBuf, effect) {
+async function applyTrackUpdate(role, lineIdx, startAt, rawBuf, effect, gate) {
   if (!finalTracksData) return;
   try {
     const ctx = getCtx();
@@ -2350,10 +2398,10 @@ async function applyTrackUpdate(role, lineIdx, startAt, rawBuf, effect) {
     finalTracksData = finalTracksData.map(track => {
       if (track.role !== role) return track;
       const items = track.items.filter(it => it.idx !== lineIdx);
-      items.push({ startAt, idx: lineIdx, buf: ab, effect });
+      items.push({ startAt, idx: lineIdx, buf: ab, effect, gate });
       return { role, items };
     });
-    if (!finalTracksData.some(t => t.role === role)) finalTracksData.push({ role, items: [{ startAt, idx: lineIdx, buf: ab, effect }] });
+    if (!finalTracksData.some(t => t.role === role)) finalTracksData.push({ role, items: [{ startAt, idx: lineIdx, buf: ab, effect, gate }] });
     broadcast({ t: "mix", data: finalTracksData });
     loadMix(finalTracksData);
   } catch (e) { console.error("Track-Update fehlgeschlagen:", e); }
@@ -2381,7 +2429,7 @@ async function decodeDuelData(data) {
     for (const item of track.items) {
       try {
         const ab = await toArrayBuffer(item.buf);
-        items.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: await ctx.decodeAudioData(ab), effect: item.effect });
+        items.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: applyGateToBuffer(ctx, await ctx.decodeAudioData(ab), item.gate), effect: item.effect });
       } catch (e) { console.warn("Duell-Spur kaputt:", e); }
     }
   }
@@ -2528,7 +2576,7 @@ async function loadMix(data) {
     for (const item of track.items) {
       try {
         const ab = await toArrayBuffer(item.buf);
-        mixItems.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: await ctx.decodeAudioData(ab), effect: item.effect });
+        mixItems.push({ role: track.role, startAt: item.startAt, lineIdx: item.idx, buffer: applyGateToBuffer(ctx, await ctx.decodeAudioData(ab), item.gate), effect: item.effect });
         okCount++;
       } catch (e) { failCount++; console.warn("Spur kaputt:", track.role, e); }
     }
