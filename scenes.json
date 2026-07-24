@@ -5818,6 +5818,220 @@
     ]
   },
   {
+    "id": "turnedagainstme",
+    "title": "Star Wars — You Turned Her Against Me (2 Rollen)",
+    "videoUrl": "scenes/turnedagainstme.mp4",
+    "avatars": {
+      "1": "scenes/turnedagainstme/anakin.png",
+      "2": "scenes/turnedagainstme/obiwan.png"
+    },
+    "roles": [
+      {
+        "id": 1,
+        "name": "Anakin",
+        "pan": -0.5,
+        "effect": "none",
+        "gain": 1.0
+      },
+      {
+        "id": 2,
+        "name": "Obi-Wan",
+        "pan": 0.5,
+        "effect": "none",
+        "gain": 1.0
+      }
+    ],
+    "lines": [
+      {
+        "t": 9.8,
+        "end": 13.3,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "You turned her against me...!",
+        "de": "Du hast sie gegen mich aufgebracht...!",
+        "orig": "scenes/turnedagainstme/lines/01.mp3"
+      },
+      {
+        "t": 13.3,
+        "end": 20.44,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "You have done that yourself!",
+        "de": "Das hast du selbst getan!",
+        "orig": "scenes/turnedagainstme/lines/02.mp3"
+      },
+      {
+        "t": 20.44,
+        "end": 22.6,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "You will not take her from me!",
+        "de": "Du wirst sie mir nicht wegnehmen!",
+        "orig": "scenes/turnedagainstme/lines/03.mp3"
+      },
+      {
+        "t": 22.6,
+        "end": 30.32,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "Your anger and your lust for power have already done that.",
+        "de": "Dein Zorn und deine Machtgier haben das schon längst getan.",
+        "orig": "scenes/turnedagainstme/lines/04.mp3"
+      },
+      {
+        "t": 30.32,
+        "end": 36.28,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "You have allowed this... Dark Lord to twist your mind until now...",
+        "de": "Du hast zugelassen, dass dieser... Dunkle Lord deinen Geist verdreht, bis jetzt...",
+        "orig": "scenes/turnedagainstme/lines/05.mp3"
+      },
+      {
+        "t": 36.28,
+        "end": 39.79,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "...Until now you have become the very thing you swore to destroy.",
+        "de": "...bis jetzt bist du zu genau dem geworden, was du zu vernichten geschworen hast.",
+        "orig": "scenes/turnedagainstme/lines/06.mp3"
+      },
+      {
+        "t": 39.79,
+        "end": 45.21,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "Don't lecture me, Obi-Wan. I see through the lies of the Jedi...",
+        "de": "Erzähl mir nichts, Obi-Wan. Ich durchschau die Lügen der Jedi...",
+        "orig": "scenes/turnedagainstme/lines/07.mp3"
+      },
+      {
+        "t": 45.21,
+        "end": 49.34,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "I do not fear the dark side as you do!",
+        "de": "Ich fürchte die dunkle Seite nicht so wie du!",
+        "orig": "scenes/turnedagainstme/lines/08.mp3"
+      },
+      {
+        "t": 49.34,
+        "end": 53.84,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "I have brought peace... freedom... justice...",
+        "de": "Ich habe Frieden gebracht... Freiheit... Gerechtigkeit...",
+        "orig": "scenes/turnedagainstme/lines/09.mp3"
+      },
+      {
+        "t": 53.84,
+        "end": 57.31,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "...And security to my new empire.",
+        "de": "...und Sicherheit für mein neues Imperium.",
+        "orig": "scenes/turnedagainstme/lines/10.mp3"
+      },
+      {
+        "t": 57.31,
+        "end": 60.21,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "Your new empire?",
+        "de": "Dein neues Imperium?",
+        "orig": "scenes/turnedagainstme/lines/11.mp3"
+      },
+      {
+        "t": 60.21,
+        "end": 63.44,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "Don't make me kill you...",
+        "de": "Zwing mich nicht, dich zu töten...",
+        "orig": "scenes/turnedagainstme/lines/12.mp3"
+      },
+      {
+        "t": 63.44,
+        "end": 69.03,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "Anakin, my allegiance is to the Republic, to DEMOCRACY!",
+        "de": "Anakin, meine Treue gilt der Republik, der DEMOKRATIE!",
+        "orig": "scenes/turnedagainstme/lines/13.mp3"
+      },
+      {
+        "t": 69.03,
+        "end": 75.74,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "If you're not with me... then you're my enemy.",
+        "de": "Wenn du nicht für mich bist... dann bist du mein Feind.",
+        "orig": "scenes/turnedagainstme/lines/14.mp3"
+      },
+      {
+        "t": 75.74,
+        "end": 80.79,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "Only a Sith deals in absolutes.",
+        "de": "Nur ein Sith denkt in Absoluten.",
+        "orig": "scenes/turnedagainstme/lines/15.mp3"
+      },
+      {
+        "t": 80.79,
+        "end": 83.87,
+        "chars": [
+          2
+        ],
+        "who": "Obi-Wan",
+        "text": "I will do what I must.",
+        "de": "Ich werde tun, was ich tun muss.",
+        "orig": "scenes/turnedagainstme/lines/16.mp3"
+      },
+      {
+        "t": 83.87,
+        "end": 85.76,
+        "chars": [
+          1
+        ],
+        "who": "Anakin",
+        "text": "You will try...",
+        "de": "Du wirst es versuchen...",
+        "orig": "scenes/turnedagainstme/lines/17.mp3"
+      }
+    ]
+  },
+  {
     "id": "testplace",
     "title": "🧪 Test Place — Verbindungs- & Audio-Check (4 Rollen)",
     "videoUrl": "scenes/testplace.mp4",

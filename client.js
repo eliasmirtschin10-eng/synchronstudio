@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "6.2";
+const APP_VERSION = "6.3";
 const PEER_PREFIX = "syncstudio-emvw-";
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  TURN-RELAY — HIER DEINE EIGENEN ZUGANGSDATEN EINTRAGEN!          ║
@@ -132,6 +132,10 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "6.3", items: [
+    "🎨 Kritzel-Board jetzt auch in der Lobby (vorher nur beim Warten nach der Aufnahme)",
+    "🎬 Neue Szene: Star Wars — You Turned Her Against Me (Anakin & Obi-Wan)"
+  ]},
   { v: "6.2", items: [
     "🎨 Neues Kritzel-Board in der Warte-Arena — alle malen live zusammen auf derselben Leinwand",
     "🐛 Fix: „Original anhören“ konnte bei langsamem Netzwerk verspätet die Stimme der VORHERIGEN Line abspielen, wenn man währenddessen zur nächsten weitergeklickt hat"
@@ -243,6 +247,8 @@ const AVATAR_CHARS = [
   { img: "scenes/brresearch/clark.png", label: "Clark (Research)" },
   { img: "scenes/brresearch/kat.png", label: "Kat" },
   { img: "scenes/notmywallet/manray.png", label: "Man Ray" },
+  { img: "scenes/turnedagainstme/anakin.png", label: "Anakin" },
+  { img: "scenes/turnedagainstme/obiwan.png", label: "Obi-Wan" },
 ];
 // ── Schwebende Hintergrund-Punkte: Mix aus Farbverlauf-Kreisen und ganz dezenten Charakterbildern aus unseren Szenen ──
 (function buildFloaties() {
@@ -821,7 +827,7 @@ show = function(id) {
   _origShow(id);
   updateLobbyMusic();
   if (id === "scr-lobby" || id === "scr-wait") startTipRotation(); else clearInterval(tipTimer);
-  if (id === "scr-wait") setTimeout(renderDrawBoard, 30);   // Canvas hat gerade erst eine echte Größe bekommen -> neu zeichnen
+  if (id === "scr-wait" || id === "scr-lobby") setTimeout(renderDrawBoard, 30);   // Canvas hat gerade erst eine echte Größe bekommen -> neu zeichnen
   // Ingame (Booth/Aufnahme) ruhig halten: keine Ablenkung
   const calm = id === "scr-booth" || id === "scr-record";
   const f = document.getElementById("floaties");
@@ -2123,7 +2129,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btn-dice-join") && ($("btn-dice-join").onclick = () => diceAction({ k: "join" }));
   $("btn-dice-reset") && ($("btn-dice-reset").onclick = () => diceAction({ k: "reset" }));
   renderDice();
-  initDrawCanvas();
+  initDrawCanvas("draw-canvas", "draw-colors", "draw-size", "btn-draw-clear");
+  initDrawCanvas("draw-canvas-lobby", "draw-colors-lobby", "draw-size-lobby", "btn-draw-clear-lobby");
 });
 
 
@@ -2278,6 +2285,7 @@ let drawBoard = { strokes: [] };
 let drawColor = "#ffc95c", drawSize = 4;
 let drawing = false, curStroke = null, lastSentLen = 0, drawThrottle = null;
 const DRAW_COLORS = ["#ffc95c", "#ff5470", "#7c5cff", "#4ade80", "#4ac9e8", "#f5f5f5", "#1a1a22"];
+const DRAW_CANVAS_IDS = ["draw-canvas", "draw-canvas-lobby"];   // beide zeigen dieselbe geteilte Zeichnung
 
 function drawAction(a) { if (isHost) drawHandle(a, myId); else hostConn.send({ t: "draw", a }); }
 function drawHandle(a, pid) {
@@ -2290,18 +2298,18 @@ function drawHandle(a, pid) {
   broadcast({ t: "drawState", drawBoard });
   renderDrawBoard();
 }
-function drawCanvasCtx() {
-  const c = $("draw-canvas");
+function drawCanvasCtx(canvasId) {
+  const c = $(canvasId);
   if (!c) return null;
   const dpr = window.devicePixelRatio || 1;
   const w = c.clientWidth * dpr, h = c.clientHeight * dpr;
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
   return c.getContext("2d");
 }
-function renderDrawBoard() {
-  const g = drawCanvasCtx();
+function renderDrawBoardOn(canvasId) {
+  const g = drawCanvasCtx(canvasId);
   if (!g) return;
-  const c = $("draw-canvas");
+  const c = $(canvasId);
   g.clearRect(0, 0, c.width, c.height);
   for (const s of drawBoard.strokes) {
     if (!s.points.length) continue;
@@ -2315,18 +2323,23 @@ function renderDrawBoard() {
     g.stroke();
   }
 }
-function drawColorPicker() {
-  const wrap = $("draw-colors");
+function renderDrawBoard() { DRAW_CANVAS_IDS.forEach(renderDrawBoardOn); }
+function drawColorPicker(colorsId) {
+  const wrap = $(colorsId);
   if (!wrap) return;
   wrap.innerHTML = DRAW_COLORS.map(c => `<button class="colorbtn" data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};border:2px solid ${c === drawColor ? "var(--amber)" : "transparent"};padding:0"></button>`).join("");
-  wrap.querySelectorAll(".colorbtn").forEach(b => b.onclick = () => { drawColor = b.dataset.c; drawColorPicker(); });
+  wrap.querySelectorAll(".colorbtn").forEach(b => b.onclick = () => {
+    drawColor = b.dataset.c;
+    DRAW_CANVAS_COLOR_IDS.forEach(drawColorPicker);   // beide Farbwähler synchron halten
+  });
 }
-function initDrawCanvas() {
-  const c = $("draw-canvas");
+const DRAW_CANVAS_COLOR_IDS = ["draw-colors", "draw-colors-lobby"];
+function initDrawCanvas(canvasId, colorsId, sizeId, clearId) {
+  const c = $(canvasId);
   if (!c || c.__wired) return;
   c.__wired = true;
-  drawColorPicker();
-  renderDrawBoard();
+  drawColorPicker(colorsId);
+  renderDrawBoardOn(canvasId);
   const posOf = (e) => {
     const r = c.getBoundingClientRect();
     const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
@@ -2338,7 +2351,7 @@ function initDrawCanvas() {
     drawing = true;
     curStroke = { id: myId + "_" + Date.now(), color: drawColor, size: drawSize, points: [posOf(e)] };
     lastSentLen = 0;
-    renderDrawBoard(); drawLiveSegment();
+    renderDrawBoardOn(canvasId); drawLiveSegment();
   };
   const move = (e) => {
     if (!drawing) return;
@@ -2354,7 +2367,7 @@ function initDrawCanvas() {
     curStroke = null;
   };
   function drawLiveSegment() {
-    const g = drawCanvasCtx();
+    const g = drawCanvasCtx(canvasId);
     const pts = curStroke.points;
     if (pts.length < 2) return;
     g.strokeStyle = curStroke.color; g.lineWidth = curStroke.size * (window.devicePixelRatio || 1);
@@ -2371,9 +2384,9 @@ function initDrawCanvas() {
   window.addEventListener("mouseup", end);
   c.addEventListener("touchstart", start, { passive: false }); c.addEventListener("touchmove", move, { passive: false });
   c.addEventListener("touchend", end);
+  $(sizeId) && ($(sizeId).oninput = e => drawSize = parseInt(e.target.value));
+  $(clearId) && ($(clearId).onclick = () => drawAction({ k: "clear" }));
 }
-$("draw-size") && ($("draw-size").oninput = e => drawSize = parseInt(e.target.value));
-$("btn-draw-clear") && ($("btn-draw-clear").onclick = () => drawAction({ k: "clear" }));
 
 // ═════════════════════════════════════════════════════════════
 // BEWERTUNGS-SHOW: Nach der Premiere Sterne verteilen
