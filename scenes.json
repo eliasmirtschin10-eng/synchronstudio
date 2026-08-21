@@ -35305,5 +35305,313 @@
       }
     ],
     "difficultyOverride": "medium"
-  }
+  },
+  {
+  "id": "newscene",
+  "title": "New Scene (4 Rollen)",
+  "videoUrl":"newscene.mp4",
+  "avatars": {
+    "0": "scenes/newscene/peter_parker.png",
+    "1": "scenes/newscene/jean_grey.png",
+    "2": "scenes/newscene/frank_castle.png",
+    "3": "scenes/newscene/bruce_banner_hulk.png"
+  },
+  "roles": [
+    {
+      "id": 0,
+      "name": "Peter Parker",
+      "pan": -0.35,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 1,
+      "name": "Jean Grey",
+      "pan": -0.12,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 2,
+      "name": "Frank Castle",
+      "pan": 0.12,
+      "effect": "none",
+      "gain": 1
+    },
+    {
+      "id": 3,
+      "name": "Bruce Banner/Hulk",
+      "pan": 0.35,
+      "effect": "none",
+      "gain": 1
+    }
+  ],
+  "lines": [
+    {
+      "t": 1.265,
+      "end": 3,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "\"gasp\"",
+      "de": "\"gasp\"",
+      "orig": "scenes/newscene/lines/01.mp3"
+    },
+    {
+      "t": 3.025,
+      "end": 5.745,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "light grunting (ur getting shot but ur non chalant)",
+      "de": "light grunting (ur getting shot but ur non chalant)",
+      "orig": "scenes/newscene/lines/02.mp3"
+    },
+    {
+      "t": 5.765,
+      "end": 17.46,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "angry auraful yelling",
+      "de": "angry auraful yelling",
+      "orig": "scenes/newscene/lines/03.mp3"
+    },
+    {
+      "t": 20.165,
+      "end": 23.165,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "Frank, what are you doing here!",
+      "de": "Frank, what are you doing here!",
+      "orig": "scenes/newscene/lines/04.mp3"
+    },
+    {
+      "t": 22.985,
+      "end": 25.985,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "what do you think im doing im saving your ass",
+      "de": "what do you think im doing im saving your ass",
+      "orig": "scenes/newscene/lines/05.mp3"
+    },
+    {
+      "t": 24.645,
+      "end": 27.645,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "This is way above your paygrade dude, were fighting the hulk!",
+      "de": "This is way above your paygrade dude, were fighting the hulk!",
+      "orig": "scenes/newscene/lines/06.mp3"
+    },
+    {
+      "t": 27.489,
+      "end": 30.489,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "OH SHIT-",
+      "de": "OH SHIT-",
+      "orig": "scenes/newscene/lines/07.mp3"
+    },
+    {
+      "t": 28,
+      "end": 31,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "light exertion. (stomping yo big foot)",
+      "de": "light exertion. (stomping yo big foot)",
+      "orig": "scenes/newscene/lines/08.mp3"
+    },
+    {
+      "t": 31.525,
+      "end": 33.525,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "leaping vigourously",
+      "de": "leaping vigourously",
+      "orig": "scenes/newscene/lines/09.mp3"
+    },
+    {
+      "t": 33.525,
+      "end": 34.545,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "shoot webs",
+      "de": "shoot webs",
+      "orig": "scenes/newscene/lines/10.mp3"
+    },
+    {
+      "t": 34.565,
+      "end": 43.48,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "grunt (getting pulled) continued by slow mo screaming",
+      "de": "grunt (getting pulled) continued by slow mo screaming",
+      "orig": "scenes/newscene/lines/11.mp3"
+    },
+    {
+      "t": 43.48,
+      "end": 46.48,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "angry yell into less angry grunt",
+      "de": "angry yell into less angry grunt",
+      "orig": "scenes/newscene/lines/12.mp3"
+    },
+    {
+      "t": 48.5,
+      "end": 51,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "throwing sum",
+      "de": "throwing sum",
+      "orig": "scenes/newscene/lines/13.mp3"
+    },
+    {
+      "t": 51.005,
+      "end": 53.585,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "really?",
+      "de": "really?",
+      "orig": "scenes/newscene/lines/14.mp3"
+    },
+    {
+      "t": 54.338,
+      "end": 57.338,
+      "chars": [
+        1
+      ],
+      "who": "Jean Grey",
+      "text": "breathing heavily",
+      "de": "breathing heavily",
+      "orig": "scenes/newscene/lines/15.mp3"
+    },
+    {
+      "t": 57.505,
+      "end": 60.505,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "maoning and groaning like a bitch",
+      "de": "maoning and groaning like a bitch",
+      "orig": "scenes/newscene/lines/16.mp3"
+    },
+    {
+      "t": 62.505,
+      "end": 65.505,
+      "chars": [
+        3
+      ],
+      "who": "Bruce Banner/Hulk",
+      "text": "pained grunt.. GET OUT",
+      "de": "pained grunt.. GET OUT",
+      "orig": "scenes/newscene/lines/17.mp3"
+    },
+    {
+      "t": 65.76,
+      "end": 70.535,
+      "chars": [
+        1
+      ],
+      "who": "Jean Grey",
+      "text": "heavy breathing",
+      "de": "heavy breathing",
+      "orig": "scenes/newscene/lines/18.mp3"
+    },
+    {
+      "t": 71,
+      "end": 72.434,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "STOP shooting him",
+      "de": "STOP shooting him",
+      "orig": "scenes/newscene/lines/19.mp3"
+    },
+    {
+      "t": 72.975,
+      "end": 74,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "YOU OUT OF YOUR GODDAMN MIND?",
+      "de": "YOU OUT OF YOUR GODDAMN MIND?",
+      "orig": "scenes/newscene/lines/20.mp3"
+    },
+    {
+      "t": 72.975,
+      "end": 73.344,
+      "chars": [
+        1
+      ],
+      "who": "Jean Grey",
+      "text": "\"Auto-detected voice segment #2\"",
+      "de": "\"Auto-detected voice segment #2\"",
+      "orig": "scenes/newscene/lines/21.mp3"
+    },
+    {
+      "t": 72.975,
+      "end": 73.344,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "\"Auto-detected voice segment #3\"",
+      "de": "\"Auto-detected voice segment #3\"",
+      "orig": "scenes/newscene/lines/22.mp3"
+    },
+    {
+      "t": 74.037,
+      "end": 76,
+      "chars": [
+        0
+      ],
+      "who": "Peter Parker",
+      "text": "BANNER’S NOT THE PROBLEM, SHE IS",
+      "de": "BANNER’S NOT THE PROBLEM, SHE IS",
+      "orig": "scenes/newscene/lines/23.mp3"
+    },
+    {
+      "t": 86.209,
+      "end": 89,
+      "chars": [
+        2
+      ],
+      "who": "Frank Castle",
+      "text": "light grunt, and breathing",
+      "de": "light grunt, and breathing",
+      "orig": "scenes/newscene/lines/24.mp3"
+    }
+  ],
+  "difficultyOverride": "medium"
+}
 ]

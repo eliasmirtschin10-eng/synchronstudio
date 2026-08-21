@@ -1,0 +1,412 @@
+{
+  "packInfo": {
+    "title": "New Scene",
+    "sceneId": "newscene",
+    "iconFilename": "_icon.jpg",
+    "iconUrl": "blob:https://synchron-studio.github.io/362b5e09-645a-47d1-b82f-41a3b5dde1b9",
+    "fillerImageFilename": "_pack_filler_image.png",
+    "authors": [
+      "Synchronstudio"
+    ],
+    "readme": "Synchronstudio scene",
+    "preselectedDubCharacters": [],
+    "hasCustomIcon": true
+  },
+  "characters": [
+    {
+      "id": "char_1787324064833",
+      "name": "Peter Parker",
+      "avatarFilename": "peter_parker_avatar.png",
+      "avatarUrl": "https://api.dicebear.com/10.x/glyphs/svg?seed=Peter%20Parker&backgroundColor=ef4444",
+      "color": "#ef4444",
+      "autoScreenshot": false
+    },
+    {
+      "id": "char_1787324074862",
+      "name": "Jean Grey",
+      "avatarFilename": "jean_grey_avatar.png",
+      "avatarUrl": "https://api.dicebear.com/10.x/glyphs/svg?seed=Jean%20Grey&backgroundColor=f97316",
+      "color": "#f97316",
+      "autoScreenshot": false
+    },
+    {
+      "id": "char_1787324085166",
+      "name": "Frank Castle",
+      "avatarFilename": "frank_castle_avatar.png",
+      "avatarUrl": "https://api.dicebear.com/10.x/glyphs/svg?seed=Frank%20Castle&backgroundColor=8b5cf6",
+      "color": "#8b5cf6",
+      "autoScreenshot": false
+    },
+    {
+      "id": "char_1787324109328",
+      "name": "Bruce Banner/Hulk",
+      "avatarFilename": "bruce_banner_hulk_avatar.png",
+      "avatarUrl": "https://api.dicebear.com/10.x/glyphs/svg?seed=Bruce%20Banner%2FHulk&backgroundColor=22c55e",
+      "color": "#22c55e",
+      "autoScreenshot": false
+    }
+  ],
+  "clips": [
+    {
+      "id": "clip_1787324277883",
+      "filename": "01_peter_parker",
+      "startTime": 1.265,
+      "endTime": 3,
+      "dubTimestamps": [
+        1.265
+      ],
+      "dubCharacters": [
+        "Peter Parker"
+      ],
+      "caption": "“gasp”",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324319928",
+      "filename": "01_bruce_banner_hulk",
+      "startTime": 3.025,
+      "endTime": 5.745,
+      "dubTimestamps": [
+        3.025
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "light grunting (ur getting shot but ur non chalant)",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324372119",
+      "filename": "01_frank_castle",
+      "startTime": 5.765,
+      "endTime": 17.46,
+      "dubTimestamps": [
+        5.765
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "angry auraful yelling",
+      "imageFilename": "frank_castle_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324436875",
+      "filename": "02_peter_parker",
+      "startTime": 20.165,
+      "endTime": 23.165,
+      "dubTimestamps": [
+        20.165
+      ],
+      "dubCharacters": [
+        "Peter Parker"
+      ],
+      "caption": "Frank, what are you doing here!",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324466666",
+      "filename": "02_frank_castle",
+      "startTime": 22.985,
+      "endTime": 25.985,
+      "dubTimestamps": [
+        22.985
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "what do you think im doing im saving your ass",
+      "imageFilename": "frank_castle_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324512445",
+      "filename": "03_peter_parker",
+      "startTime": 24.645,
+      "endTime": 27.645,
+      "dubTimestamps": [
+        24.645
+      ],
+      "dubCharacters": [
+        "Peter Parker"
+      ],
+      "caption": "This is way above your paygrade dude, were fighting the hulk!",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324562815",
+      "filename": "03_frank_castle",
+      "startTime": 27.489,
+      "endTime": 30.489,
+      "dubTimestamps": [
+        27.489
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "OH SHIT-",
+      "imageFilename": "frank_castle_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324603722",
+      "filename": "02_bruce_banner_hulk",
+      "startTime": 28,
+      "endTime": 31,
+      "dubTimestamps": [
+        28
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "light exertion. (stomping yo big foot)",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324668708",
+      "filename": "03_bruce_banner_hulk",
+      "startTime": 31.525,
+      "endTime": 33.525,
+      "dubTimestamps": [
+        31.525
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "leaping vigourously",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324706475",
+      "filename": "04_peter_parker",
+      "startTime": 33.525,
+      "endTime": 34.545,
+      "dubTimestamps": [
+        33.525
+      ],
+      "dubCharacters": [
+        "Peter Parker"
+      ],
+      "caption": "shoot webs",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324729445",
+      "filename": "04_frank_castle",
+      "startTime": 34.565,
+      "endTime": 43.48,
+      "dubTimestamps": [
+        34.565
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "grunt (getting pulled) continued by slow mo screaming",
+      "imageFilename": "frank_castle_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324805589",
+      "filename": "04_bruce_banner_hulk",
+      "startTime": 43.48,
+      "endTime": 46.48,
+      "dubTimestamps": [
+        43.48
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "angry yell into less angry grunt",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324843388",
+      "filename": "05_peter_parker",
+      "startTime": 48.5,
+      "endTime": 51,
+      "dubTimestamps": [
+        48.5
+      ],
+      "dubCharacters": [
+        "Peter Parker",
+        "Frank Castle"
+      ],
+      "caption": "throwing sum",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324874939",
+      "filename": "05_bruce_banner_hulk",
+      "startTime": 51.005,
+      "endTime": 53.585,
+      "dubTimestamps": [
+        51.005
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "really?",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324896900",
+      "filename": "01_jean_grey",
+      "startTime": 54.338,
+      "endTime": 57.338,
+      "dubTimestamps": [
+        54.338
+      ],
+      "dubCharacters": [
+        "Jean Grey"
+      ],
+      "caption": "breathing heavily",
+      "imageFilename": "jean_grey_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324914455",
+      "filename": "06_bruce_banner_hulk",
+      "startTime": 57.505,
+      "endTime": 60.505,
+      "dubTimestamps": [
+        57.505
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "maoning and groaning like a bitch",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324939765",
+      "filename": "07_bruce_banner_hulk",
+      "startTime": 62.505,
+      "endTime": 65.505,
+      "dubTimestamps": [
+        62.505
+      ],
+      "dubCharacters": [
+        "Bruce Banner/Hulk"
+      ],
+      "caption": "pained grunt.. GET OUT",
+      "imageFilename": "bruce_banner_hulk_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787324985028",
+      "filename": "02_jean_grey",
+      "startTime": 65.76,
+      "endTime": 70.535,
+      "dubTimestamps": [
+        65.76
+      ],
+      "dubCharacters": [
+        "Jean Grey"
+      ],
+      "caption": "heavy breathing ",
+      "imageFilename": "jean_grey_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787325036169",
+      "filename": "06_peter_parker",
+      "startTime": 71,
+      "endTime": 72.434,
+      "dubTimestamps": [
+        71
+      ],
+      "dubCharacters": [
+        "Peter Parker"
+      ],
+      "caption": "STOP shooting him",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_auto_1_1787324164167",
+      "filename": "05_frank_castle",
+      "startTime": 72.434,
+      "endTime": 74,
+      "dubTimestamps": [
+        72.975
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "YOU OUT OF YOUR GODDAMN MIND?",
+      "imageFilename": "peter_parker.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_auto_2_1787324253180",
+      "filename": "03_jean_grey",
+      "startTime": 72.875,
+      "endTime": 73.344,
+      "dubTimestamps": [
+        72.975
+      ],
+      "dubCharacters": [
+        "Jean Grey"
+      ],
+      "caption": "“Auto-detected voice segment #2”",
+      "imageFilename": "jean_grey.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_auto_3_1787324255230",
+      "filename": "06_frank_castle",
+      "startTime": 72.875,
+      "endTime": 73.344,
+      "dubTimestamps": [
+        72.975
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "“Auto-detected voice segment #3”",
+      "imageFilename": "frank_castle.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787325152707",
+      "filename": "07_peter_parker",
+      "startTime": 74.037,
+      "endTime": 76,
+      "dubTimestamps": [
+        74.037
+      ],
+      "dubCharacters": [
+        "Peter Parker"
+      ],
+      "caption": "BANNER’S NOT THE PROBLEM, SHE IS",
+      "imageFilename": "peter_parker_avatar.png",
+      "volume": 1
+    },
+    {
+      "id": "clip_1787325189132",
+      "filename": "07_frank_castle",
+      "startTime": 86.209,
+      "endTime": 89,
+      "dubTimestamps": [
+        86.209
+      ],
+      "dubCharacters": [
+        "Frank Castle"
+      ],
+      "caption": "light grunt, and breathing",
+      "imageFilename": "frank_castle_avatar.png",
+      "volume": 1
+    }
+  ]
+}
