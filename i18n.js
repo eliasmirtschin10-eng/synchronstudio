@@ -71,6 +71,12 @@
       "duel.b": "Duelist B",
       "duel.start": "🥊 Start duel",
 
+      "pack.mode": "Play from a local pack",
+      "pack.mode.sub": "Everyone uploads the same ZIP",
+      "pack.h2": "Local pack",
+      "pack.hint": "Every player drops the same Choicer-Voicer ZIP. Only then can the host start — the files stay on your own device.",
+      "pack.drop": "📦 Drop the ZIP here",
+
       "scene.h2": "Pick a scene",
       "scene.search.ph": "🔍 Search — title or role",
       "scene.load": "Load",
@@ -296,6 +302,12 @@
       "duel.a": "Duellant A",
       "duel.b": "Duellant B",
       "duel.start": "🥊 Duell starten",
+
+      "pack.mode": "Aus lokalem Pack spielen",
+      "pack.mode.sub": "Alle laden dieselbe ZIP hoch",
+      "pack.h2": "Lokales Pack",
+      "pack.hint": "Jede Person zieht dieselbe Choicer-Voicer-ZIP hier rein. Erst dann kann der Host starten — die Dateien bleiben auf deinem Gerät.",
+      "pack.drop": "📦 ZIP hier ablegen",
 
       "scene.h2": "Szene wählen",
       "scene.search.ph": "🔍 Suchen — Titel oder Rolle",

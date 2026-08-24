@@ -1511,18 +1511,19 @@
       </div>
       <p class="status" id="duel-setup-status"></p>
     </div>
-    <div class="row" id="pack-mode-row" style="display:none;gap:10px;align-items:center;margin:10px 0">
-      <label class="row" style="gap:8px;align-items:center;cursor:pointer">
-        <input type="checkbox" id="pack-mode">
-        <span data-i18n="pack.mode">📦 Play from a local pack (everyone uploads it)</span>
-      </label>
+    <div id="pack-mode-row" style="display:none;margin:10px 0">
+      <button type="button" class="mode-btn" id="pack-mode" aria-pressed="false" style="width:100%">
+        <span class="mb-ico">📦</span>
+        <span class="mb-title" data-i18n="pack.mode">Play from a local pack</span>
+        <span class="mb-sub" data-i18n="pack.mode.sub">Everyone uploads the same ZIP</span>
+      </button>
     </div>
     <div class="card" id="pack-card" style="display:none">
       <h2 data-i18n="pack.h2">Local pack</h2>
       <p class="hint" data-i18n="pack.hint">Every player loads the same Choicer-Voicer ZIP. Only then can the host start — the files stay on your own device.</p>
       <div id="pack-drop" tabindex="0">
         <div class="pd-icon">⬇</div>
-        <div id="pack-drop-text">📦 Drop the ZIP here</div>
+        <div id="pack-drop-text" data-i18n="pack.drop">📦 Drop the ZIP here</div>
       </div>
       <input type="file" id="pack-file" accept=".zip" style="display:none">
       <p class="status" id="pack-status"></p>
@@ -2031,9 +2032,9 @@
 <!-- ?v= muss bei jeder Version mitgezählt werden (gleiche Zahl wie APP_VERSION in client.js).
      Ohne das liefert der Browser den alten, gespeicherten Code zu der neuen Seite aus —
      dann sieht man eine halb aktualisierte Version und muss von Hand neu laden. -->
-  <script src="i18n.js?v=9.13.1"></script>
+  <script src="i18n.js?v=9.13.2"></script>
   <script src="fix-webm-duration.js"></script>
-  <script src="client.js?v=9.13.1"></script>
+  <script src="client.js?v=9.13.2"></script>
   <!-- Besucherzähler (GoatCounter) — Stats: https://synchronstudio.goatcounter.com -->
   <script data-goatcounter="https://synchronstudio.goatcounter.com/count"
           async src="https://gc.zgo.at/count.js"></script>

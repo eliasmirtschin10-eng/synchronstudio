@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.13.1";
+const APP_VERSION = "9.13.2";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,10 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.13.2", items: [
+    "🔤 In der Lobby stand roh „pack.mode“ statt eines lesbaren Textes — die Übersetzungen für das Pack-Feature fehlten komplett",
+    "📦 Aus dem übersehbaren Häkchen ist ein richtiger Taster geworden, im gleichen Stil wie die Spielmodus-Karten"
+  ]},
   { v: "9.13.1", items: [
     "🎬 Drei neue Szenen: KonoSuba — Jackpot! (Klau-Duell), Chainsaw Man — Reze & das Feuerwerk, Angry German Guy im Österreich-Urlaub",
     "📥 Das Pack-Feld ist jetzt eine Ablage zum Reinziehen — der Host legt zuerst ab, dann sind die anderen dran",
@@ -6522,7 +6526,11 @@ function renderPackUi() {
   const karte = $("pack-card");
   if (karte) karte.style.display = (packMode && inLobby) ? "" : "none";
   const sw = $("pack-mode");
-  if (sw) { sw.checked = packMode; sw.disabled = !iAmLogicalHost(); }
+  if (sw) {
+    sw.classList.toggle("on", !!packMode);
+    sw.setAttribute("aria-pressed", packMode ? "true" : "false");
+    sw.disabled = !iAmLogicalHost();
+  }
   const zeile = $("pack-mode-row");
   if (zeile) zeile.style.display = (iAmLogicalHost() && inLobby) ? "" : "none";
   // Der Host legt zuerst ab — sein Pack gibt vor, welches das richtige ist.
@@ -6546,10 +6554,10 @@ function renderPackUi() {
   updateStartButton && updateStartButton();
 }
 
-// Schalter (nur Host): schaltet den lokalen Pack-Modus fuer alle an/aus
-if ($("pack-mode")) $("pack-mode").onchange = (e) => {
+// Taster (nur Host): schaltet den lokalen Pack-Modus fuer alle an/aus
+if ($("pack-mode")) $("pack-mode").onclick = () => {
   if (!iAmLogicalHost()) return;
-  packMode = !!e.target.checked;
+  packMode = !packMode;
   if (!packMode) {
     releasePack(); packRefFp = null;
     Object.keys(packPeers).forEach(k => delete packPeers[k]);
