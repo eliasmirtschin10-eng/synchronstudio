@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.13.0";
+const APP_VERSION = "9.13.1";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,11 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.13.1", items: [
+    "🎬 Drei neue Szenen: KonoSuba — Jackpot! (Klau-Duell), Chainsaw Man — Reze & das Feuerwerk, Angry German Guy im Österreich-Urlaub",
+    "📥 Das Pack-Feld ist jetzt eine Ablage zum Reinziehen — der Host legt zuerst ab, dann sind die anderen dran",
+    "🔧 Die Pack-Karte war in der Lobby gar nicht aufgetaucht"
+  ]},
   { v: "9.13.0", items: [
     "📦 NEU: Lokale Packs — ihr könnt jetzt jedes Choicer-Voicer-Pack direkt spielen, ohne dass es ins Spiel eingebaut sein muss. Jede Person lädt dieselbe ZIP, erst dann kann der Host starten",
     "🔍 Wer ein anderes oder kaputtes Pack geladen hat, wird namentlich angezeigt — kein halb gestartetes Spiel mehr",
@@ -1375,6 +1380,13 @@ function saveMic() { try { localStorage.setItem("ss_mic", JSON.stringify(micSett
 // ═════════════════════════════════════════════════════════════
 const AVATAR_EMOJIS = ["😎","🔥","💀","🎭","🐻","🤖","👻","🦈","🐸","🎃","👑","🥷","🧛","🦊","🐵","⚡"];
 const AVATAR_CHARS = [
+  { img: "scenes/jackpot_konosuba/chris.png", label: "Chris" },
+  { img: "scenes/jackpot_konosuba/kazuma.png", label: "Kazuma" },
+  { img: "scenes/reze_fireworks/reze.png", label: "Reze" },
+  { img: "scenes/reze_fireworks/denji.png", label: "Denji" },
+  { img: "scenes/reze_fireworks/announcer.png", label: "Announcer" },
+  { img: "scenes/angrygerman_urlaub/interviewer.png", label: "Interviewer" },
+  { img: "scenes/angrygerman_urlaub/angrygermanguy.png", label: "Angry German Guy" },
   { img: "scenes/dexter/dexter.png", label: "Dexter" },
   { img: "scenes/dexter/doakes.png", label: "Doakes" },
   { img: "scenes/dexter/random_dude.png", label: "Random Dude" },
@@ -3952,6 +3964,7 @@ function syncHostUi() {
   if ($("duel-setup")) $("duel-setup").style.display = (hostUi && inLobby && duell) ? "" : "none";
   if ($("rounds-opts")) $("rounds-opts").style.display = (hostUi && inLobby && match.mode === "rounds") ? "" : "none";
   if ($("btn-roulette")) $("btn-roulette").style.display = (hostUi && scene) ? "" : "none";
+  renderPackUi();
   if (hostUi && inLobby) {
     // DOM an Match-Stand anpassen, OHNE hostSettingsChanged (das würde die Szene resetten)
     if ($("set-mode")) $("set-mode").value = match.mode;
@@ -4680,7 +4693,7 @@ function handleMsg(msg, conn) {
       packRefFp = msg.ref || null;
       Object.keys(packPeers).forEach(k => delete packPeers[k]);
       (msg.list || []).forEach(e => { if (e && e.id) packPeers[e.id] = { fp: e.fp || null, title: e.title, lines: e.lines | 0, roles: e.roles | 0 }; });
-      renderPackList();
+      renderPackUi();
       break;
     case "packScene": adoptPackScene(msg); break;
     case "duelSetupInfo": duelInfo = msg.duelInfo; break;
@@ -6402,6 +6415,7 @@ async function onPackFile(file) {
     }
     announceMyPack();
     if (isHost) applyPackSceneIfReady();
+    renderPackUi();
   } catch (e) {
     releasePack();
     const txt = (e && e.name === "PackError") ? e.message : (tt("Pack couldn't be read: ", "Pack konnte nicht gelesen werden: ") + (e && e.message ? e.message : e));
@@ -6504,12 +6518,30 @@ function renderPackList() {
 
 /** Schalter + Sichtbarkeit der Pack-Karte. */
 function renderPackUi() {
+  const inLobby = !!document.querySelector("#scr-lobby.active");
   const karte = $("pack-card");
-  if (karte) karte.style.display = packMode && document.querySelector("#scr-lobby.active") ? "" : "none";
+  if (karte) karte.style.display = (packMode && inLobby) ? "" : "none";
   const sw = $("pack-mode");
   if (sw) { sw.checked = packMode; sw.disabled = !iAmLogicalHost(); }
   const zeile = $("pack-mode-row");
-  if (zeile) zeile.style.display = iAmLogicalHost() ? "" : "none";
+  if (zeile) zeile.style.display = (iAmLogicalHost() && inLobby) ? "" : "none";
+  // Der Host legt zuerst ab — sein Pack gibt vor, welches das richtige ist.
+  // Vorher bleibt die Ablage für Gäste gesperrt, sonst laden alle wild durcheinander.
+  const frei = iAmLogicalHost() || !!packRefFp;
+  const zone = $("pack-drop");
+  if (zone) {
+    zone.classList.toggle("locked", !frei);
+    const t = $("pack-drop-text");
+    if (t) {
+      t.innerHTML = !frei
+        ? tt("⏳ Waiting for the host's pack …", "⏳ Warten auf das Pack des Hosts …")
+        : (myPack
+          ? "✅ " + esc(myPack.title)
+          : (iAmLogicalHost()
+            ? tt("📦 Drop the ZIP here — you go first", "📦 ZIP hier ablegen — du machst den Anfang")
+            : tt("📦 Drop the same ZIP here", "📦 Dieselbe ZIP hier ablegen")));
+    }
+  }
   renderPackList();
   updateStartButton && updateStartButton();
 }
@@ -6532,6 +6564,36 @@ if ($("pack-file")) $("pack-file").onchange = (e) => {
   e.target.value = "";
   onPackFile(f);
 };
+// ── Ablagefeld: klicken oder ZIP hineinziehen ──
+(function () {
+  const zone = $("pack-drop");
+  if (!zone) return;
+  const gesperrt = () => !(iAmLogicalHost() || packRefFp);
+  zone.onclick = () => { if (!gesperrt() && $("pack-file")) $("pack-file").click(); };
+  const stop = e => { e.preventDefault(); e.stopPropagation(); };
+  ["dragenter", "dragover"].forEach(ev => zone.addEventListener(ev, e => {
+    stop(e);
+    if (gesperrt()) { e.dataTransfer.dropEffect = "none"; return; }
+    e.dataTransfer.dropEffect = "copy";
+    zone.classList.add("over");
+  }));
+  ["dragleave", "dragend"].forEach(ev => zone.addEventListener(ev, e => { stop(e); zone.classList.remove("over"); }));
+  zone.addEventListener("drop", e => {
+    stop(e);
+    zone.classList.remove("over");
+    if (gesperrt()) {
+      packStatus(tt("The host has to drop their pack first.", "Erst muss der Host sein Pack ablegen."), "warn");
+      return;
+    }
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) onPackFile(f);
+  });
+})();
+// Das ganze Fenster abfangen, damit ein danebengegangenes ZIP nicht den Browser
+// dazu bringt, die Datei einfach anzuzeigen und das Spiel zu verlassen.
+["dragover", "drop"].forEach(ev => window.addEventListener(ev, e => {
+  if (packMode && document.querySelector("#scr-lobby.active")) e.preventDefault();
+}));
 
 // ═════════════════════════════════════════════════════════════
 // 6) LINE-BOOTH — Zeile für Zeile, unendlich Versuche
