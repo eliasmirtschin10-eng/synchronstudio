@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.12.2";
+const APP_VERSION = "9.13.0";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,12 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.13.0", items: [
+    "📦 NEU: Lokale Packs — ihr könnt jetzt jedes Choicer-Voicer-Pack direkt spielen, ohne dass es ins Spiel eingebaut sein muss. Jede Person lädt dieselbe ZIP, erst dann kann der Host starten",
+    "🔍 Wer ein anderes oder kaputtes Pack geladen hat, wird namentlich angezeigt — kein halb gestartetes Spiel mehr",
+    "🔇 Bei lokalen Packs läuft nur der Backing-Track, die Originalstimmen im dub_video werden stummgeschaltet",
+    "🎭 Packs, die denselben Charakter mal groß und mal klein schreiben, ergeben nicht mehr doppelte Rollen"
+  ]},
   { v: "9.12.2", items: [
     "🔪 Battle Royale konnte endlos weiterlaufen: bekamen in einer Runde weniger als zwei Sprecher Sterne (z.B. weil jemand die Verbindung verloren hatte), flog niemand raus und „Champion küren“ tauchte nie auf. Jetzt scheidet garantiert jemand aus — notfalls nach Gesamtpunkten",
     "🎭 Wer gerade offline ist, bekommt keine Rolle mehr zugeteilt. Vorher schnappten Abwesende den Anwesenden die Plätze weg, weil sie die meiste Bank-Zeit gesammelt hatten — im schlimmsten Fall startete die Runde ohne einen einzigen Sprecher",
@@ -4050,6 +4056,7 @@ function handleHostCmd(msg, sender) {
       if (match.mode !== prevMode) {
         scene = null; clearSceneVideoState();
         scenePool = []; duelInfo = null; duelStagedScene = null;
+        packMode = false; packRefFp = null; releasePack(); Object.keys(packPeers).forEach(k => delete packPeers[k]);
         players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
         if ($("scene-card")) $("scene-card").style.display = "none";
         broadcast({ t: "sceneReset" });
@@ -4138,6 +4145,13 @@ function handleHostCmd(msg, sender) {
       broadcast({ t: "again" });
       resetForNewRound();
       if ($("scene-card")) $("scene-card").style.display = "none";
+      break;
+    case "packOn":
+    case "packOff":
+      packMode = (msg.cmd === "packOn");
+      if (!packMode) { releasePack(); packRefFp = null; Object.keys(packPeers).forEach(k => delete packPeers[k]); }
+      broadcast({ t: "packMode", on: packMode });
+      renderPackUi();
       break;
     case "matchLobby":
       broadcast({ t: "matchLobby" });
@@ -4251,7 +4265,7 @@ function broadcastState(opts) {
 const HOST_IN = new Set([
   "hello", "bye", "pickRole", "ready", "progress", "loadProg", "tracks", "trackUpdate",
   "ttt", "rps", "dice", "draw", "rate", "mg", "emoji", "premReady", "premProg", "cb",
-  "duelSubmit", "duelVote", "hostCmd"
+  "duelSubmit", "duelVote", "hostCmd", "packInfo"
 ]);
 // Nachrichten, die Gäste vom Host annehmen dürfen
 const GUEST_IN = new Set([
@@ -4261,7 +4275,8 @@ const GUEST_IN = new Set([
   "duelResult", "wins", "nextRound", "matchEnd", "matchLobby", "videoMeta", "videoChunk",
   "goLines", "go", "mix", "outtakesPool", "playOuttakes", "tttState", "rpsState", "diceState",
   "drawState", "premGo", "premReplay", "premOrig", "premPlayerVol", "premAutoBal", "premPause", "premResume", "emojiShow", "rateResult",
-  "rxGo", "tpGo", "mgResult", "cbGo", "cbResult", "again"
+  "rxGo", "tpGo", "mgResult", "cbGo", "cbResult", "again",
+  "packState", "packScene", "packMode"
 ]);
 
 let pendingPhaseRestore = null;
@@ -4559,6 +4574,7 @@ function handleMsg(msg, conn) {
       if (msg.a && msg.a.k === "start") { broadcast({ t: "cbGo" }); cbRun(); }
       if (msg.a && msg.a.k === "score") cbScore(conn.peer, msg.a.n);
       break;
+    case "packInfo": collectPackInfo(conn.peer, msg); break;
     case "duelSubmit": collectDuelSubmit(conn.peer, attachTrackMeta(msg.items, msg)); break;
     case "duelVote": collectDuelVote(conn.peer, msg.choice); break;
 
@@ -4655,6 +4671,18 @@ function handleMsg(msg, conn) {
       renderPlayers();
       break;
     }
+    case "packMode":
+      packMode = !!msg.on;
+      if (!packMode) { releasePack(); Object.keys(packPeers).forEach(k => delete packPeers[k]); }
+      renderPackUi();
+      break;
+    case "packState":
+      packRefFp = msg.ref || null;
+      Object.keys(packPeers).forEach(k => delete packPeers[k]);
+      (msg.list || []).forEach(e => { if (e && e.id) packPeers[e.id] = { fp: e.fp || null, title: e.title, lines: e.lines | 0, roles: e.roles | 0 }; });
+      renderPackList();
+      break;
+    case "packScene": adoptPackScene(msg); break;
     case "duelSetupInfo": duelInfo = msg.duelInfo; break;
     case "duelReady":
       attachMetaToTracks(msg.dataA, msg.metaA || msg);
@@ -5632,6 +5660,10 @@ function showScene(src) {
   $("scene-title").innerHTML = esc(scene.title) + (diff ? ` <span class="difftag diff-${diff.label.toLowerCase().replace(/[^a-z]/g,"")}">${diff.emoji} ${diff.label}</span>` : "");
   renderRoles();
   beginSceneVideoLoad(src);
+  // Bei lokalen Packs steckt im dub_video der Originalton — deshalb stumm schalten
+  // und stattdessen den Backing-Track im Gleichschritt mitlaufen lassen.
+  if (scene && scene.localPack && myPack) attachPackBacking($("preview"), myPack.backingUrl);
+  else detachPackBacking();
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -5929,10 +5961,13 @@ function checkStartable() {
   const weg = speakers.filter(p => p.offline);
   const stillLoading = anwesend.filter(p => !p.videoReady);
   const notReady = anwesend.filter(p => p.videoReady && !p.ready);
-  const ok = anwesend.length >= 1 && anwesend.every(p => p.ready && p.videoReady);
+  const tor = packGate();
+  const ok = anwesend.length >= 1 && anwesend.every(p => p.ready && p.videoReady) && tor.ok;
   const spectators = players.length - speakers.length;
   $("btn-start").disabled = !ok;
-  if (ok) {
+  if (!tor.ok) {
+    $("start-hint").textContent = "📦 " + tor.grund;
+  } else if (ok) {
     $("start-hint").textContent = tt("Let's go! ", "Los geht's! ") + (spectators ? spectators + tt(" spectators watching. ", " Zuschauer gucken zu. ") : tt("Unfilled roles speak original. ", "Unbesetzte Rollen sprechen original. "))
       + (weg.length ? "⚠ " + weg.map(p => p.name).join(", ") + tt(" has no connection right now — seat stays free.", " hat gerade keine Verbindung — Platz bleibt frei.") : "");
   } else if (stillLoading.length) {
@@ -6069,6 +6104,8 @@ $("btn-go-round").onclick = () => {
 };
 function startSession() {
   if (!isHost) return;
+  const tor = packGate();
+  if (!tor.ok) { status("lobby-status", "📦 " + tor.grund, true); SFX.err(); return; }
   const speakers = players.filter(p => p.role != null);
   const anwesend = speakers.filter(p => !p.offline);
   if (!anwesend.length || !anwesend.every(p => p.ready && p.videoReady)) {
@@ -6082,6 +6119,419 @@ function startSession() {
   if (scene.lines?.length) { broadcast({ t: "goLines" }); startBooth(); }
   else { broadcast({ t: "go" }); startRealtime(); }
 }
+
+
+// ═════════════════════════════════════════════════════════════
+// LOKALE PACKS (Choicer-Voicer-Format)
+// Jede Person lädt dasselbe Pack selbst hoch. Grund: die Dateien landen als
+// blob:-Adressen im Browser und die gelten nur dort — verschicken bringt nichts.
+// Deshalb baut jeder seine eigene Szene und wir vergleichen nur einen Fingerabdruck.
+// Erst wenn ALLE dasselbe Pack haben, darf der Host starten.
+// ═════════════════════════════════════════════════════════════
+let packMode = false;          // Lobby-Schalter: spielen wir aus einem lokalen Pack?
+let myPack = null;             // { fp, title, scene, backingUrl, urls: [] }
+const packPeers = {};          // Host: playerId -> { fp, title, lines, roles, error }
+let packRefFp = null;          // Fingerabdruck, auf den sich alle einigen müssen
+
+/** Liest ein ZIP komplett im Browser — Zentralverzeichnis + DecompressionStream.
+ *  Bewusst ohne fremde Bibliothek, passt zum Rest des Projekts. */
+async function readZipEntries(buf) {
+  const dv = new DataView(buf), u8 = new Uint8Array(buf);
+  // "End of central directory" von hinten suchen (Kommentar am Ende möglich)
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new PackError(tt("Not a valid ZIP file.", "Das ist keine gültige ZIP-Datei."));
+  let count = dv.getUint16(eocd + 10, true);
+  let cdOff = dv.getUint32(eocd + 16, true);
+  // ZIP64: Werte stehen dann woanders
+  if (cdOff === 0xffffffff || count === 0xffff) {
+    throw new PackError(tt("ZIP64 archives aren't supported — please re-zip the folder.",
+      "ZIP64-Archive werden nicht unterstützt — bitte den Ordner neu zippen."));
+  }
+  const out = new Map();
+  let p = cdOff;
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const rawSize = dv.getUint32(p + 24, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const cmtLen = dv.getUint16(p + 32, true);
+    const lfhOff = dv.getUint32(p + 42, true);
+    const name = new TextDecoder("utf-8").decode(u8.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + cmtLen;
+    if (name.endsWith("/")) continue;                      // Ordnereintrag
+    if (/(^|\/)__MACOSX\//.test(name) || /(^|\/)\._/.test(name)) continue;  // macOS-Beiwerk
+    // Lokaler Kopf: dort stehen die echten Längen der Namens-/Extrafelder
+    const lnLen = dv.getUint16(lfhOff + 26, true);
+    const leLen = dv.getUint16(lfhOff + 28, true);
+    const dataStart = lfhOff + 30 + lnLen + leLen;
+    const comp = u8.subarray(dataStart, dataStart + compSize);
+    let bytes;
+    if (method === 0) bytes = comp.slice();
+    else if (method === 8) {
+      if (typeof DecompressionStream !== "function") {
+        throw new PackError(tt("Your browser is too old to unpack ZIP files.",
+          "Dein Browser ist zu alt, um ZIP-Dateien zu entpacken."));
+      }
+      const ds = new DecompressionStream("deflate-raw");
+      const stream = new Blob([comp]).stream().pipeThrough(ds);
+      bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    } else {
+      throw new PackError(tt("Unsupported compression in: ", "Nicht unterstützte Komprimierung in: ") + name);
+    }
+    if (rawSize && bytes.length !== rawSize) {
+      throw new PackError(tt("Damaged file in the pack: ", "Beschädigte Datei im Pack: ") + name);
+    }
+    out.set(name, bytes);
+  }
+  if (!out.size) throw new PackError(tt("The ZIP is empty.", "Die ZIP-Datei ist leer."));
+  return out;
+}
+
+/** Eigener Fehlertyp: damit im UI die Klartext-Meldung landet und nicht ein Stacktrace. */
+function PackError(msg) { this.name = "PackError"; this.message = msg; }
+PackError.prototype = Object.create(Error.prototype);
+
+const packText = (bytes) => new TextDecoder("utf-8").decode(bytes);
+/** Winziger INI-Leser für das Choicer-Voicer-Format (key="wert" / key=[1.5] / key=["a","b"]). */
+function parseIniish(txt) {
+  const o = {};
+  txt.split(/\r?\n/).forEach(line => {
+    const m = line.match(/^\s*([A-Za-z_]+)\s*=\s*(.+?)\s*$/);
+    if (!m) return;
+    let v = m[2];
+    if (v.startsWith("[")) {
+      try { o[m[1]] = JSON.parse(v.replace(/'/g, '"')); return; } catch { }
+      o[m[1]] = v.slice(1, -1).split(",").map(s => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+      return;
+    }
+    o[m[1]] = v.replace(/^"|"$/g, "");
+  });
+  return o;
+}
+
+/** Fingerabdruck über Dateinamen + Größen. Bewusst NICHT über die Rohbytes des ZIPs:
+ *  wer denselben Ordner neu zippt, bekommt andere Bytes, aber dasselbe Pack. */
+async function packFingerprint(files) {
+  const list = [...files.keys()].map(n => n.split("/").pop().toLowerCase() + ":" + files.get(n).length)
+    .sort().join("|");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(list));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+}
+
+/** Baut aus den Pack-Dateien eine Szene im Format des Spiels. Wirft PackError mit
+ *  Klartext, sobald etwas fehlt — lieber sauber abbrechen als halb starten. */
+async function buildSceneFromPack(files, packName) {
+  const urls = [];
+  const kurz = new Map();   // Dateiname ohne Ordner, klein geschrieben -> Bytes
+  files.forEach((v, k) => kurz.set(k.split("/").pop().toLowerCase(), v));
+  const hol = (name) => name ? kurz.get(String(name).split("/").pop().toLowerCase()) : null;
+  const blobFor = (bytes, mime) => { const u = URL.createObjectURL(new Blob([bytes], { type: mime })); urls.push(u); return u; };
+
+  // ── Video + Backing-Track ──
+  let videoName = null, backingName = null;
+  kurz.forEach((_, n) => {
+    if (/^dub_video\.(mp4|ogv|webm|ogg|mov)$/.test(n)) videoName = n;
+    if (/^_backing_track\.(mp3|wav|ogg|m4a|opus)$/.test(n)) backingName = n;
+  });
+  if (!videoName) throw new PackError(tt("No dub_video found in the pack.", "Im Pack fehlt das dub_video."));
+  const vExt = videoName.split(".").pop();
+  const vMime = vExt === "mp4" ? "video/mp4" : vExt === "webm" ? "video/webm" : "video/ogg";
+  const videoUrl = blobFor(kurz.get(videoName), vMime);
+  const backingUrl = backingName ? blobFor(kurz.get(backingName), "audio/mpeg") : null;
+
+  // ── Zeilen einsammeln ──
+  const zeilen = [];
+  const AUDIO_EXT = ["mp3", "wav", "ogg", "m4a", "opus"];
+  kurz.forEach((bytes, n) => {
+    if (!n.endsWith(".txt") || n.startsWith("_")) return;
+    const meta = parseIniish(packText(bytes));
+    if (!meta.caption && !meta.dub_characters) return;
+    const basis = n.replace(/\.txt$/, "");
+    let audio = null;
+    for (const e of AUDIO_EXT) { if (kurz.has(basis + "." + e)) { audio = kurz.get(basis + "." + e); break; } }
+    const ts = Array.isArray(meta.dub_timestamps) ? parseFloat(meta.dub_timestamps[0]) : NaN;
+    const wer = Array.isArray(meta.dub_characters) ? String(meta.dub_characters[0] || "").trim() : "";
+    if (!wer) return;
+    zeilen.push({
+      basis,
+      t: isFinite(ts) ? ts : 0,
+      who: wer,
+      // Die typografischen Anführungszeichen aus den Packs stören später beim Anzeigen
+      text: String(meta.caption || "").replace(/^[“"']+|[”"']+$/g, "").trim(),
+      bild: meta.image ? hol(meta.image) : null,
+      audio
+    });
+  });
+  if (!zeilen.length) throw new PackError(tt("No usable lines found in the pack.", "Im Pack wurden keine brauchbaren Zeilen gefunden."));
+  zeilen.sort((a, b) => a.t - b.t || a.basis.localeCompare(b.basis));
+
+  // ── Rollen: Reihenfolge des ersten Auftretens, damit sie bei allen gleich ist ──
+  // Achtung: manche Packs schreiben denselben Namen mal "Chris", mal "chris", mal
+  // "CHRIS" (echter Fall: JACKPOOOOT ergab sonst 5 Rollen statt 2). Deshalb wird
+  // klein geschrieben verglichen und als Anzeige die schönste Schreibweise genommen.
+  const varianten = new Map();   // klein -> Liste der vorgefundenen Schreibweisen
+  zeilen.forEach(z => {
+    const k = z.who.toLowerCase();
+    if (!varianten.has(k)) varianten.set(k, []);
+    varianten.get(k).push(z.who);
+  });
+  const huebsch = (liste) => {
+    const gemischt = liste.find(v => v !== v.toUpperCase() && v !== v.toLowerCase());
+    if (gemischt) return gemischt;
+    return liste[0].toLowerCase().replace(/(^|[\s_-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+  };
+  const rollenNamen = [...varianten.keys()].map(k => huebsch(varianten.get(k)));
+  const roleId = {};
+  // Zuordnung ebenfalls über die Kleinschreibung
+  const idFuer = (name) => roleId[name.toLowerCase()];
+  const roles = rollenNamen.map((name, i) => {
+    roleId[name.toLowerCase()] = i + 1;
+    // Stimmen leicht im Raum verteilen, damit man sie auseinanderhält
+    const pan = rollenNamen.length < 2 ? 0 : Math.round((-0.6 + (1.2 * i) / (rollenNamen.length - 1)) * 100) / 100;
+    return { id: i + 1, name, pan, effect: "none", gain: 1 };
+  });
+
+  // ── Avatare: pro Rolle das erste Bild, das dazu auftaucht ──
+  const avatars = {};
+  zeilen.forEach(z => { const id = idFuer(z.who); if (z.bild && !avatars[id]) avatars[id] = blobFor(z.bild, "image/png"); });
+
+  // ── Endzeiten: bis zur nächsten Zeile; die letzte über ihre Tonlänge ──
+  const lines = zeilen.map((z, i) => ({
+    t: z.t,
+    end: i + 1 < zeilen.length ? zeilen[i + 1].t : z.t + 4,
+    chars: [idFuer(z.who)],
+    who: rollenNamen[idFuer(z.who) - 1],
+    text: z.text,
+    de: z.text,
+    orig: z.audio ? blobFor(z.audio, "audio/mpeg") : null
+  }));
+  const letzte = zeilen[zeilen.length - 1];
+  if (letzte.audio) {
+    try {
+      const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100);
+      const ab = await ctx.decodeAudioData(letzte.audio.buffer.slice(letzte.audio.byteOffset, letzte.audio.byteOffset + letzte.audio.byteLength));
+      lines[lines.length - 1].end = letzte.t + ab.duration;
+    } catch { /* Schätzung von oben reicht */ }
+  }
+
+  // ── Titel aus _pack_info.ini, sonst Dateiname ──
+  let title = packName.replace(/\.(zip|rar)$/i, "").replace(/[_-]+/g, " ").trim();
+  const ini = kurz.get("_pack_info.ini");
+  if (ini) { const m = parseIniish(packText(ini)); if (m.title) title = m.title; }
+  if (title.length > 90) title = title.slice(0, 87) + "…";
+
+  return {
+    scene: {
+      id: "localpack",
+      title: "📦 " + title + " (" + roles.length + (roles.length === 1 ? " Rolle)" : " Rollen)"),
+      videoUrl, avatars, roles, lines,
+      localPack: true,
+      mutedVideo: true            // Originalton aus, nur der Backing-Track läuft
+    },
+    backingUrl, urls
+  };
+}
+
+/** Alte blob:-Adressen freigeben, damit der Speicher nicht vollläuft. */
+function releasePack() {
+  if (myPack && myPack.urls) myPack.urls.forEach(u => { try { URL.revokeObjectURL(u); } catch { } });
+  detachPackBacking();
+  myPack = null;
+}
+
+// ── Backing-Track: läuft als eigenes Audio-Element im Gleichschritt mit dem Video ──
+// Das Video wird stumm geschaltet, weil in dub_video die ORIGINALSTIMMEN stecken.
+let packBackingEl = null, packBackingHandlers = null;
+function detachPackBacking() {
+  if (packBackingEl) { try { packBackingEl.pause(); } catch { } }
+  if (packBackingHandlers) {
+    const { el, map } = packBackingHandlers;
+    Object.keys(map).forEach(ev => { try { el.removeEventListener(ev, map[ev]); } catch { } });
+  }
+  packBackingHandlers = null; packBackingEl = null;
+}
+function attachPackBacking(videoEl, url) {
+  detachPackBacking();
+  if (!videoEl || !url) return;
+  const a = new Audio(); a.src = url; a.preload = "auto";
+  packBackingEl = a;
+  try { videoEl.muted = true; } catch { }
+  const sync = (hart) => {
+    const soll = videoEl.currentTime;
+    if (hart || Math.abs(a.currentTime - soll) > 0.15) { try { a.currentTime = soll; } catch { } }
+  };
+  const map = {
+    play: () => { sync(true); a.play().catch(() => { }); },
+    pause: () => { try { a.pause(); } catch { } },
+    seeking: () => sync(true),
+    seeked: () => sync(true),
+    timeupdate: () => sync(false),
+    ratechange: () => { try { a.playbackRate = videoEl.playbackRate; } catch { } },
+    ended: () => { try { a.pause(); } catch { } }
+  };
+  Object.keys(map).forEach(ev => videoEl.addEventListener(ev, map[ev]));
+  packBackingHandlers = { el: videoEl, map };
+}
+
+// ── Was passiert, wenn jemand eine Datei auswählt ──
+async function onPackFile(file) {
+  if (!file) return;
+  packStatus(tt("📦 Reading pack …", "📦 Pack wird gelesen …"), "");
+  if (/\.rar$/i.test(file.name)) {
+    packStatus(tt("RAR can't be read in the browser — please repack the folder as ZIP.",
+      "RAR kann der Browser nicht lesen — bitte den Ordner als ZIP neu packen."), "err");
+    return;
+  }
+  try {
+    const buf = await file.arrayBuffer();
+    const files = await readZipEntries(buf);
+    const fp = await packFingerprint(files);
+    const built = await buildSceneFromPack(files, file.name);
+    releasePack();
+    myPack = { fp, title: built.scene.title, scene: built.scene, backingUrl: built.backingUrl, urls: built.urls };
+    packStatus(tt("✅ Pack loaded: ", "✅ Pack geladen: ") + built.scene.title + " — " +
+      built.scene.lines.length + tt(" lines, ", " Zeilen, ") + built.scene.roles.length + tt(" roles", " Rollen"), "ok");
+    if (!built.backingUrl) {
+      packStatus(tt("⚠ No _backing_track in the pack — the scene will play silent.",
+        "⚠ Kein _backing_track im Pack — die Szene läuft ohne Hintergrundton."), "warn", true);
+    }
+    announceMyPack();
+    if (isHost) applyPackSceneIfReady();
+  } catch (e) {
+    releasePack();
+    const txt = (e && e.name === "PackError") ? e.message : (tt("Pack couldn't be read: ", "Pack konnte nicht gelesen werden: ") + (e && e.message ? e.message : e));
+    packStatus("❌ " + txt, "err");
+    console.warn("Pack-Fehler:", e);
+    announceMyPack();
+  }
+  renderPackList();
+}
+
+function announceMyPack() {
+  const info = myPack ? { fp: myPack.fp, title: myPack.title, lines: myPack.scene.lines.length, roles: myPack.scene.roles.length }
+    : { fp: null, title: null, lines: 0, roles: 0 };
+  if (isHost) { packPeers[myId] = info; broadcastPackState(); updateStartButton && updateStartButton(); }
+  else sendHost({ t: "packInfo", ...info });
+}
+
+function collectPackInfo(pid, msg) {
+  if (!isHost) return;
+  packPeers[pid] = { fp: msg.fp || null, title: msg.title || null, lines: msg.lines | 0, roles: msg.roles | 0 };
+  applyPackSceneIfReady();
+  broadcastPackState();
+  renderPackList();
+  updateStartButton && updateStartButton();
+}
+
+/** Host übernimmt seine eigene Pack-Szene als aktuelle Szene, sobald sie da ist. */
+function applyPackSceneIfReady() {
+  if (!isHost || !packMode || !myPack) return;
+  packRefFp = myPack.fp;
+  scene = myPack.scene;
+  clearSceneVideoState && clearSceneVideoState();
+  rouletteRoles();
+  showScene(sceneVideoSrc());
+  // Bewusst NUR die Rollen/Namen verschicken, nicht die blob:-Adressen — die
+  // sind bei jedem anders. Alle bauen ihre Szene selbst aus ihrem eigenen Pack.
+  broadcast({ t: "packScene", fp: myPack.fp, roles: scene.roles, title: scene.title });
+  broadcastState && broadcastState();
+}
+
+/** Gast: eigene Pack-Szene übernehmen, Rollenzuschnitt kommt vom Host. */
+function adoptPackScene(msg) {
+  if (!myPack) return;
+  if (msg.fp && msg.fp !== myPack.fp) return;   // anderes Pack — Gate schlägt sowieso an
+  scene = myPack.scene;
+  if (Array.isArray(msg.roles) && msg.roles.length === scene.roles.length) {
+    // Namen/Pan vom Host übernehmen, damit alle dieselbe Beschriftung sehen
+    msg.roles.forEach((r, i) => { if (scene.roles[i]) Object.assign(scene.roles[i], { name: r.name, pan: r.pan, effect: r.effect, gain: r.gain }); });
+  }
+  clearSceneVideoState && clearSceneVideoState();
+  showScene(sceneVideoSrc());
+}
+
+function broadcastPackState() {
+  if (!isHost) return;
+  const list = players.map(p => ({ id: p.id, name: p.name, ...(packPeers[p.id] || { fp: null }) }));
+  broadcast({ t: "packState", list, ref: packRefFp });
+}
+
+/** Kern des Tors: erst wenn jeder Anwesende dasselbe Pack hat, darf es losgehen. */
+function packGate() {
+  if (!packMode) return { ok: true };
+  const anwesend = players.filter(p => !p.offline);
+  if (!myPack) return { ok: false, grund: tt("You still need to load the pack.", "Du musst das Pack noch laden.") };
+  const ref = packRefFp || myPack.fp;
+  const fehlt = [], anders = [];
+  anwesend.forEach(p => {
+    const e = packPeers[p.id];
+    if (!e || !e.fp) fehlt.push(p.name);
+    else if (e.fp !== ref) anders.push(p.name);
+  });
+  if (anders.length) return { ok: false, grund: tt("Different pack: ", "Anderes Pack: ") + anders.join(", ") };
+  if (fehlt.length) return { ok: false, grund: tt("Still missing the pack: ", "Pack fehlt noch bei: ") + fehlt.join(", ") };
+  return { ok: true };
+}
+
+function packStatus(txt, art, anhaengen) {
+  const el = $("pack-status");
+  if (!el) return;
+  const farbe = art === "err" ? "var(--hot)" : art === "ok" ? "var(--vu)" : art === "warn" ? "var(--amber)" : "";
+  const html = `<div style="color:${farbe}">${esc(txt)}</div>`;
+  if (anhaengen) el.innerHTML += html; else el.innerHTML = html;
+}
+
+function renderPackList() {
+  const el = $("pack-list");
+  if (!el) return;
+  if (!packMode) { el.innerHTML = ""; return; }
+  const ref = packRefFp || (myPack && myPack.fp);
+  el.innerHTML = players.map(p => {
+    const e = packPeers[p.id] || {};
+    let sym = "⏳", farbe = "var(--amber)", zus = tt("waiting", "wartet");
+    if (p.offline) { sym = "🔌"; farbe = "#888"; zus = tt("offline", "offline"); }
+    else if (e.fp && ref && e.fp === ref) { sym = "✅"; farbe = "var(--vu)"; zus = e.lines + tt(" lines", " Zeilen"); }
+    else if (e.fp) { sym = "❌"; farbe = "var(--hot)"; zus = tt("different pack!", "anderes Pack!"); }
+    return `<div class="raterow" style="border-color:${farbe}"><span>${sym} ${esc(p.name)}</span><span class="mono" style="opacity:.7">${esc(zus)}</span></div>`;
+  }).join("");
+}
+
+
+/** Schalter + Sichtbarkeit der Pack-Karte. */
+function renderPackUi() {
+  const karte = $("pack-card");
+  if (karte) karte.style.display = packMode && document.querySelector("#scr-lobby.active") ? "" : "none";
+  const sw = $("pack-mode");
+  if (sw) { sw.checked = packMode; sw.disabled = !iAmLogicalHost(); }
+  const zeile = $("pack-mode-row");
+  if (zeile) zeile.style.display = iAmLogicalHost() ? "" : "none";
+  renderPackList();
+  updateStartButton && updateStartButton();
+}
+
+// Schalter (nur Host): schaltet den lokalen Pack-Modus fuer alle an/aus
+if ($("pack-mode")) $("pack-mode").onchange = (e) => {
+  if (!iAmLogicalHost()) return;
+  packMode = !!e.target.checked;
+  if (!packMode) {
+    releasePack(); packRefFp = null;
+    Object.keys(packPeers).forEach(k => delete packPeers[k]);
+    packStatus("", "");
+  }
+  if (isHost) broadcast({ t: "packMode", on: packMode });
+  else sendHost({ t: "hostCmd", cmd: packMode ? "packOn" : "packOff" });
+  renderPackUi();
+};
+if ($("pack-file")) $("pack-file").onchange = (e) => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  onPackFile(f);
+};
 
 // ═════════════════════════════════════════════════════════════
 // 6) LINE-BOOTH — Zeile für Zeile, unendlich Versuche
