@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.13.2";
+const APP_VERSION = "9.13.3";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,11 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.13.3", items: [
+    "🛠 Pack-Laden brach sofort mit „updateStartButton is not defined“ ab — ein falscher Funktionsname von mir",
+    "💬 Packs, die den Sprecher in die Bildunterschrift schreiben („[Isagi] „Text““), zeigen jetzt nur noch den Text",
+    "⏱ Zwei Zeilen auf demselben Zeitstempel hatten kein Zeitfenster — jetzt mindestens 0,8 Sekunden"
+  ]},
   { v: "9.13.2", items: [
     "🔤 In der Lobby stand roh „pack.mode“ statt eines lesbaren Textes — die Übersetzungen für das Pack-Feature fehlten komplett",
     "📦 Aus dem übersehbaren Häkchen ist ein richtiger Taster geworden, im gleichen Stil wie die Spielmodus-Karten"
@@ -6214,6 +6219,15 @@ function PackError(msg) { this.name = "PackError"; this.message = msg; }
 PackError.prototype = Object.create(Error.prototype);
 
 const packText = (bytes) => new TextDecoder("utf-8").decode(bytes);
+/** Räumt eine Bildunterschrift auf. Manche Packs schreiben den Sprecher voran
+ *  ("[Okuhito] “Text…”") — der Name steht bei uns schon an der Rolle, also weg damit.
+ *  Danach die Anführungszeichen abziehen, auch die typografischen. */
+function saeubereBildunterschrift(roh) {
+  let t = String(roh || "").trim();
+  t = t.replace(/^\[[^\]]{1,40}\]\s*/, "");        // führendes [Name]
+  t = t.replace(/^[“”"'«»\s]+|[“”"'«»\s]+$/g, "");  // Anführungszeichen außen
+  return t.trim();
+}
 /** Winziger INI-Leser für das Choicer-Voicer-Format (key="wert" / key=[1.5] / key=["a","b"]). */
 function parseIniish(txt) {
   const o = {};
@@ -6278,8 +6292,7 @@ async function buildSceneFromPack(files, packName) {
       basis,
       t: isFinite(ts) ? ts : 0,
       who: wer,
-      // Die typografischen Anführungszeichen aus den Packs stören später beim Anzeigen
-      text: String(meta.caption || "").replace(/^[“"']+|[”"']+$/g, "").trim(),
+      text: saeubereBildunterschrift(meta.caption),
       bild: meta.image ? hol(meta.image) : null,
       audio
     });
@@ -6318,9 +6331,13 @@ async function buildSceneFromPack(files, packName) {
   zeilen.forEach(z => { const id = idFuer(z.who); if (z.bild && !avatars[id]) avatars[id] = blobFor(z.bild, "image/png"); });
 
   // ── Endzeiten: bis zur nächsten Zeile; die letzte über ihre Tonlänge ──
+  // Achtung: Packs können mehrere Zeilen auf DENSELBEN Zeitstempel legen (zwei
+  // Leute reden gleichzeitig). Dann wäre end == t und die Zeile hätte kein
+  // Zeitfenster — Teleprompter und Aufnahme kämen durcheinander. Mindestens 0,8 s.
+  const MIN_FENSTER = 0.8;
   const lines = zeilen.map((z, i) => ({
     t: z.t,
-    end: i + 1 < zeilen.length ? zeilen[i + 1].t : z.t + 4,
+    end: Math.max((i + 1 < zeilen.length ? zeilen[i + 1].t : z.t + 4), z.t + MIN_FENSTER),
     chars: [idFuer(z.who)],
     who: rollenNamen[idFuer(z.who) - 1],
     text: z.text,
@@ -6332,7 +6349,7 @@ async function buildSceneFromPack(files, packName) {
     try {
       const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100);
       const ab = await ctx.decodeAudioData(letzte.audio.buffer.slice(letzte.audio.byteOffset, letzte.audio.byteOffset + letzte.audio.byteLength));
-      lines[lines.length - 1].end = letzte.t + ab.duration;
+      lines[lines.length - 1].end = Math.max(letzte.t + ab.duration, letzte.t + MIN_FENSTER);
     } catch { /* Schätzung von oben reicht */ }
   }
 
@@ -6433,7 +6450,7 @@ async function onPackFile(file) {
 function announceMyPack() {
   const info = myPack ? { fp: myPack.fp, title: myPack.title, lines: myPack.scene.lines.length, roles: myPack.scene.roles.length }
     : { fp: null, title: null, lines: 0, roles: 0 };
-  if (isHost) { packPeers[myId] = info; broadcastPackState(); updateStartButton && updateStartButton(); }
+  if (isHost) { packPeers[myId] = info; broadcastPackState(); checkStartable(); }
   else sendHost({ t: "packInfo", ...info });
 }
 
@@ -6443,7 +6460,7 @@ function collectPackInfo(pid, msg) {
   applyPackSceneIfReady();
   broadcastPackState();
   renderPackList();
-  updateStartButton && updateStartButton();
+  checkStartable();
 }
 
 /** Host übernimmt seine eigene Pack-Szene als aktuelle Szene, sobald sie da ist. */
@@ -6551,7 +6568,7 @@ function renderPackUi() {
     }
   }
   renderPackList();
-  updateStartButton && updateStartButton();
+  checkStartable();
 }
 
 // Taster (nur Host): schaltet den lokalen Pack-Modus fuer alle an/aus
