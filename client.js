@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.13.3";
+const APP_VERSION = "9.14.0";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,12 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.14.0", items: [
+    "🎭 NEU: Mehrere Rollen pro Person — bei einer 4-Rollen-Szene zu dritt nimmt einfach jemand eine zweite Rolle dazu. Freie Rollen antippen, nochmal antippen gibt sie wieder ab",
+    "👥 Auch Gäste dürfen dazunehmen, nicht nur der Host",
+    "🎚 Die Premiere bekommt pro Rolle einen eigenen Lautstärkeregler — auch bei zwei Rollen derselben Person",
+    "🎬 Premiere, Outtakes und Download zählen jetzt Rollen statt Spieler und warten damit auf das Richtige"
+  ]},
   { v: "9.13.3", items: [
     "🛠 Pack-Laden brach sofort mit „updateStartButton is not defined“ ab — ein falscher Funktionsname von mir",
     "💬 Packs, die den Sprecher in die Bildunterschrift schreiben („[Isagi] „Text““), zeigen jetzt nur noch den Text",
@@ -3883,6 +3889,7 @@ function setupHostConn(conn) {
     const twin = players.find(p => p !== gone && p.key === gone.key);
     if (twin) {
       if (twin.role == null && gone.role != null) twin.role = gone.role;
+      if ((!twin.extraRoles || !twin.extraRoles.length) && gone.extraRoles && gone.extraRoles.length) twin.extraRoles = gone.extraRoles.slice();
       if ((twin.done || 0) < (gone.done || 0)) { twin.done = gone.done; twin.total = gone.total; }
       if (!twin.ready && gone.ready) twin.ready = true;
       if (!twin.prem && gone.prem) twin.prem = true;
@@ -4079,7 +4086,7 @@ function handleHostCmd(msg, sender) {
         scene = null; clearSceneVideoState();
         scenePool = []; duelInfo = null; duelStagedScene = null;
         packMode = false; packRefFp = null; releasePack(); Object.keys(packPeers).forEach(k => delete packPeers[k]);
-        players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
+        players.forEach(p => { p.role = null; p.extraRoles = []; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
         if ($("scene-card")) $("scene-card").style.display = "none";
         broadcast({ t: "sceneReset" });
       }
@@ -4114,7 +4121,7 @@ function handleHostCmd(msg, sender) {
       const shuffledPlayers = mischen(players);
       const roleIds = mischen(scene.roles.map(r => r.id));
       const n = Math.min(roleIds.length, shuffledPlayers.length);
-      players.forEach(p => { p.role = null; p.ready = false; });
+      players.forEach(p => { p.role = null; p.extraRoles = []; p.ready = false; });
       for (let i = 0; i < n; i++) shuffledPlayers[i].role = roleIds[i];
       broadcastState();
       renderRoles();
@@ -4139,7 +4146,7 @@ function handleHostCmd(msg, sender) {
       scene = JSON.parse(JSON.stringify(duelStagedScene));
       clearSceneVideoState();
       players.forEach(p => {
-        p.role = (p.id === msg.aId || p.id === msg.bId) ? duelInfo.roleId : null;
+        p.role = (p.id === msg.aId || p.id === msg.bId) ? duelInfo.roleId : null; p.extraRoles = [];
         p.ready = true;
         p.loadPct = 0;
         p.videoReady = false;
@@ -4524,19 +4531,25 @@ function handleMsg(msg, conn) {
       break;
     }
     case "pickRole": {
-      const taken = players.some(p => p.role === msg.role && p.id !== conn.peer);
+      if (msg.drop) {
+      const p0 = players.find(p => p.id === conn.peer);
+      if (p0) { rolleAbgeben(p0, msg.role); p0.ready = false; }
+      broadcastState(); renderRoles(); checkStartable();
+      break;
+    }
+    const taken = players.some(p => p.id !== conn.peer && rolesOfPlayer(p).includes(msg.role));
       if (!taken) {
         const p = players.find(p => p.id === conn.peer);
-        if (p) { p.role = msg.role; p.ready = false; }
+        if (p) { rolleUebernehmen(p, msg.role); p.ready = false; }
       }
-      broadcastState(); break;
+      broadcastState(); renderRoles(); checkStartable(); break;
     }
     case "ready": {
       const p = players.find(p => p.id === conn.peer);
       if (p) {
         // Rolle ggf. mit dem Ready-Request mitschicken — Roundtrip von pickRole kann sonst noch fehlen
-        if (msg.role != null && !players.some(o => o.role === msg.role && o.id !== p.id)) {
-          p.role = msg.role;
+        if (msg.role != null && !players.some(o => o.id !== p.id && rolesOfPlayer(o).includes(msg.role))) {
+          rolleUebernehmen(p, msg.role);
         }
         if (p.role != null) p.ready = true;
       }
@@ -4615,6 +4628,7 @@ function handleMsg(msg, conn) {
         if (_stuck.includes(_cur)) { try { resetForNewRound(); } catch (e) { show("scr-lobby"); } }
       }
       if (msg.logicalHostKey) logicalHostKey = msg.logicalHostKey;
+      try { if (scene) renderRoles(); } catch {}
       // Eigenen Lade-Stand nicht durch veralteten Host-Snapshot überschreiben
       {
         const me = players.find(p => p.id === myId);
@@ -5548,7 +5562,7 @@ function applyGateToBuffer(ctx, buffer, gateAmount) {
 function myEffectiveRole(l) {
   // Reihenfolge: Spieler-Wahl > (optional Strip) > Szenen-Autor-Override (l.effect) > Rollen-Standard
   // Pan: immer Mitte, außer in den Line-Einstellungen anders gewählt (kein Auto/Rollen-Pan mehr)
-  const base = roleOf(myRole()) || { pan: 0, effect: "none", gain: 1 };
+  const base = roleOf(roleOfLine(l) ?? myRole()) || { pan: 0, effect: "none", gain: 1 };
   const amt = myEffectAmounts[l.idx];
   const boost = myLineGains[l.idx];
   const panOv = myLinePans[l.idx];
@@ -5626,7 +5640,7 @@ $("btn-use-local").onclick = () => {
 
 function resetRoles() {
   players.forEach(p => {
-    p.role = null; p.ready = false; p.done = 0; p.total = 0;
+    p.role = null; p.extraRoles = []; p.ready = false; p.done = 0; p.total = 0;
     p.loadPct = 0; p.videoReady = false;
   });
 }
@@ -5696,7 +5710,8 @@ function avatarColor(name) {
   return `hsl(${Math.abs(h) % 360}, 70%, 55%)`;
 }
 function playerCard(p) {
-  const role = p.role != null && scene ? (scene.roles.find(r => r.id === p.role)?.name || "?") : null;
+  const rs = rolesOfPlayer(p);
+  const role = rs.length && scene ? rs.map(x => scene.roles.find(r => r.id === x)?.name || "?").join(" + ") : null;
   const prog = p.total > 0 ? `<div class="pbar"><i style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span class="tag">${p.done}/${p.total} Lines</span>` : "";
   let loadHtml = "";
   if (scene && scene.videoUrl) {
@@ -5761,13 +5776,17 @@ function renderBoothPlayers() {
 function renderRoles() {
   if (!scene) return;
   const lineCount = (rid) => scene.lines ? scene.lines.filter(l => l.chars.includes(rid)).length : null;
+  const meineRollen = myRoles();
   $("role-list").innerHTML = scene.roles.map(r => {
-    const owner = players.find(p => p.role === r.id);
-    const mine = owner && owner.id === myId;
+    const owner = besitzerVon(r.id);
+    const mine = meineRollen.includes(r.id);
     const lc = lineCount(r.id);
+    // Wer eine Rolle hat, darf freie Rollen zusätzlich übernehmen — dann sprechen
+    // z.B. drei Leute eine Szene mit vier Rollen. Besetzte Rollen bleiben gesperrt.
+    const zusatz = mine && meineRollen[0] !== r.id;
     return `<button class="rolebtn ${mine ? "mine" : owner ? "taken" : ""}" data-r="${r.id}" ${owner && !mine ? "disabled" : ""}>
-      <span>${esc(r.name)}${lc != null ? ` <span class="meta">· ${lc} Lines</span>` : ""}</span>
-      <span class="meta">${owner ? esc(owner.name) : tt("free", "frei")} · Pan ${r.pan > 0 ? "R" : r.pan < 0 ? "L" : tt("Center", "Mitte")} · ${esc(effectLabel(r.effect))}</span>
+      <span>${zusatz ? "➕ " : ""}${esc(r.name)}${lc != null ? ` <span class="meta">· ${lc} Lines</span>` : ""}</span>
+      <span class="meta">${owner ? esc(owner.name) + (mine && meineRollen.length > 1 ? tt(" (also others)", " (spricht mehrere)") : "") : tt("free — tap to add", "frei — antippen zum Dazunehmen")} · Pan ${r.pan > 0 ? "R" : r.pan < 0 ? "L" : tt("Center", "Mitte")} · ${esc(effectLabel(r.effect))}</span>
     </button>`;
   }).join("");
   $("role-list").querySelectorAll(".rolebtn").forEach(b => b.onclick = () => pickRole(parseInt(b.dataset.r)));
@@ -5775,25 +5794,20 @@ function renderRoles() {
 
 function pickRole(roleId) {
   if (match.mode === "rounds") { status("lobby-status", tt("🎲 In a match roles are assigned randomly — you can't pick yourself.", "🎲 Im Match werden Rollen zufällig verteilt — du kannst nicht selbst wählen."), true); return; }
-  if (isHost) {
-    const taken = players.some(p => p.role === roleId && p.id !== myId);
-    if (taken) return;
-    const me = players.find(p => p.id === myId);
-    if (!me) return;
-    me.role = roleId; me.ready = false;
-    broadcastState(); renderRoles();
-  } else {
-    // Sofort lokal setzen — sonst sagt „Bin bereit“ oft „keine Rolle“, obwohl Host sie schon hat
-    const taken = players.some(p => p.role === roleId && p.id !== myId);
-    if (taken) return;
-    let me = players.find(p => p.id === myId);
-    if (!me) me = seedLocalPlayer(roleId);
-    else { me.role = roleId; me.ready = false; }
-    players.forEach(p => { if (p.id !== myId && p.role === roleId) p.role = null; });
-    renderRoles();
-    renderPlayers();
-    sendHost({ t: "pickRole", role: roleId });
-  }
+  // Fremd besetzte Rollen bleiben tabu
+  const fremd = players.some(p => p.id !== myId && rolesOfPlayer(p).includes(roleId));
+  if (fremd) return;
+  let me = players.find(p => p.id === myId);
+  if (!me) { if (isHost) return; me = seedLocalPlayer(roleId); me.extraRoles = []; renderRoles(); renderPlayers(); sendHost({ t: "pickRole", role: roleId }); return; }
+  const hatSie = rolesOfPlayer(me).includes(roleId);
+  if (hatSie) rolleAbgeben(me, roleId);   // nochmal antippen = wieder abgeben
+  else rolleUebernehmen(me, roleId);
+  me.ready = false;
+  if (isHost) broadcastState();
+  else sendHost({ t: "pickRole", role: roleId, drop: hatSie, extraRoles: me.extraRoles || [], primary: me.role });
+  renderRoles();
+  renderPlayers();
+  checkStartable();
 }
 
 
@@ -5821,7 +5835,7 @@ $("btn-roulette").onclick = () => {
   // immer nur Rolle 1–4 („die obersten“), nie die weiter hinten.
   const roleIds = mischen(scene.roles.map(r => r.id));
   const n = Math.min(roleIds.length, shuffledPlayers.length);
-  players.forEach(p => { p.role = null; p.ready = false; });
+  players.forEach(p => { p.role = null; p.extraRoles = []; p.ready = false; });
   for (let i = 0; i < n; i++) shuffledPlayers[i].role = roleIds[i];
   broadcastState(); renderRoles();
   status("lobby-status", tt("🎲 Roles rolled! No role = spectator. Everyone press “I'm ready”.", "🎲 Rollen ausgewürfelt! Wer keine hat, ist Zuschauer. Jetzt alle „Bin bereit“."));
@@ -5858,7 +5872,7 @@ function hostSettingsChanged() {
     if (match.mode !== prevMode) {
       scene = null; clearSceneVideoState();
       scenePool = []; duelInfo = null; duelStagedScene = null;
-      players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
+      players.forEach(p => { p.role = null; p.extraRoles = []; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
       $("scene-card").style.display = "none";
       $("btn-go-round").style.display = "none";
       $("btn-start").style.display = "";
@@ -5887,7 +5901,7 @@ function hostSettingsChanged() {
   if (match.mode !== prevMode) {
     scene = null; clearSceneVideoState();
     scenePool = []; duelInfo = null; duelStagedScene = null;
-    players.forEach(p => { p.role = null; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
+    players.forEach(p => { p.role = null; p.extraRoles = []; p.ready = false; p.timesSpectated = 0; p.timesPlayed = 0; p.eliminated = false; });
     $("scene-card").style.display = "none";
     $("btn-go-round").style.display = "none";
     $("btn-start").style.display = "";
@@ -6084,7 +6098,7 @@ function rouletteRoles() {
   const playing = ranked.slice(0, n).map(x => x.p);
   const spectating = ranked.slice(n).map(x => x.p);
 
-  players.forEach(p => { p.role = null; p.ready = false; });
+  players.forEach(p => { p.role = null; p.extraRoles = []; p.ready = false; });
   const shuffledPlaying = mischen(playing);
   shuffledPlaying.forEach((p, i) => { p.role = roleIds[i]; });
 
@@ -6662,6 +6676,46 @@ let recPrepCancel = false;     // Countdown/Vorbereitung abbrechen
 
 
 function myRole() { return players.find(p => p.id === myId)?.role; }
+
+// ── Mehrfachrollen ───────────────────────────────────────────────
+// p.role bleibt die Hauptrolle (alles Bestehende arbeitet weiter damit),
+// p.extraRoles sind zusätzlich übernommene Rollen. Aufnahme, Premiere,
+// Outtakes und Download sind ohnehin NACH ROLLE sortiert, nicht nach Spieler —
+// deshalb reicht es, beim Abschicken sauber pro Rolle aufzuteilen.
+function rolesOfPlayer(p) {
+  if (!p) return [];
+  const out = [];
+  if (p.role != null) out.push(p.role);
+  (p.extraRoles || []).forEach(r => { if (r != null && !out.includes(r)) out.push(r); });
+  return out;
+}
+function myRoles() { return rolesOfPlayer(players.find(p => p.id === myId)); }
+/** Wem gehört diese Zeile? Zeilen haben in der Praxis genau eine Rolle. */
+function roleOfLine(l) { return l && l.chars && l.chars.length ? l.chars[0] : null; }
+/** Alle Rollen, die gerade gesprochen werden. nurOnline blendet Abwesende aus. */
+function besetzteRollen(nurOnline) {
+  const s = new Set();
+  players.forEach(p => { if (!nurOnline || !p.offline) rolesOfPlayer(p).forEach(r => s.add(r)); });
+  return s;
+}
+function besitzerVon(roleId) { return players.find(p => rolesOfPlayer(p).includes(roleId)); }
+/** Rolle freigeben — egal ob Haupt- oder Zusatzrolle. */
+function rolleAbgeben(p, roleId) {
+  if (!p) return;
+  if (p.extraRoles) p.extraRoles = p.extraRoles.filter(r => r !== roleId);
+  if (p.role === roleId) {
+    // Eine Zusatzrolle rückt nach, damit der Spieler Sprecher bleibt
+    p.role = (p.extraRoles && p.extraRoles.length) ? p.extraRoles.shift() : null;
+  }
+}
+/** Rolle übernehmen. Die erste wird Hauptrolle, weitere landen in extraRoles. */
+function rolleUebernehmen(p, roleId) {
+  if (!p || roleId == null) return;
+  if (!p.extraRoles) p.extraRoles = [];
+  if (rolesOfPlayer(p).includes(roleId)) return;
+  if (p.role == null) p.role = roleId;
+  else p.extraRoles.push(roleId);
+}
 function roleOf(id) { return scene?.roles?.find(r => r.id === id); }
 
 // Findet den frühesten Startzeitpunkt, an dem DIESELBE Rolle danach wieder spricht —
@@ -6715,7 +6769,7 @@ $("btn-duel-start").onclick = () => {
   scene = JSON.parse(JSON.stringify(duelStagedScene));
   clearSceneVideoState();
   players.forEach(p => {
-    p.role = (p.id === aId || p.id === bId) ? roleId : null;
+    p.role = (p.id === aId || p.id === bId) ? roleId : null; p.extraRoles = [];
     p.ready = true;
     p.loadPct = 0;
     p.videoReady = false;
@@ -6745,10 +6799,15 @@ function startBooth() {
       : tt("🍿 You’re watching — the premiere starts automatically when everyone’s done.", "🍿 Du bist Zuschauer — die Premiere startet automatisch, wenn alle fertig sind.") + (match.mode === "rounds" ? tt(" (Next round you’re guaranteed a preferred slot, banked ", " (Nächste Runde bist du garantiert bevorzugt dran, ") + bench + tt("× so far.)", "x gebankt bisher.)") : ""));
     return;
   }
-  myLines = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.includes(rid));
+  // Alle Zeilen ALLER eigenen Rollen — wer zwei Rollen übernommen hat, spricht
+  // sie in einem Durchgang nacheinander ab. Die Zuordnung steckt in l.chars.
+  const meineRollen = myRoles();
+  myLines = scene.lines.map((l, i) => ({ ...l, idx: i })).filter(l => l.chars.some(c => meineRollen.includes(c)));
   curLine = 0; takes = {}; outtakes = []; myEffectOverrides = {}; myEffectAmounts = {}; myLineGains = {}; myLinePans = {};
   const r = roleOf(rid);
-  $("booth-rolename").textContent = r.name;
+  $("booth-rolename").textContent = meineRollen.length > 1
+    ? meineRollen.map(x => (roleOf(x) || {}).name || "?").join(" + ")
+    : r.name;
   const av = scene.avatars?.[String(rid)];
   $("booth-avatar").style.display = av ? "" : "none";
   if (av) $("booth-avatar").src = assetUrl(av);
@@ -6814,7 +6873,7 @@ function renderLine() {
   if (cueWrap) cueWrap.style.display = (lineHasOrig(l) && !scene.blind) ? "" : "none";
   const efSel = $("my-effect-select");
   if (efSel) {
-    const baseRole = roleOf(myRole()) || { effect: "none" };
+    const baseRole = roleOf(roleOfLine(l) ?? myRole()) || { effect: "none" };
     const sceneDefault = effectiveRole(baseRole, l).effect;
     const stdLabel = stripRoleFx
       ? tt("Normal (role FX off)", "Normal (Rollen-Effekt aus)")
@@ -7628,10 +7687,10 @@ function attachMetaToTracks(tracks, msg) {
 }
 /** Eigene Booth-Einstellungen nachziehen, falls PeerJS Meta unterwegs verloren hat. */
 function applyLocalLineMeta(tracks) {
-  const rid = myRole();
-  if (rid == null || !tracks) return;
+  const meine = myRoles();
+  if (!meine.length || !tracks) return;
   for (const tr of tracks) {
-    if (!tr || tr.role !== rid || !tr.items) continue;
+    if (!tr || !meine.includes(tr.role) || !tr.items) continue;
     for (const it of tr.items) {
       if (it.boost == null && myLineGains[it.idx] != null) it.boost = myLineGains[it.idx];
       if (it.pan == null && myLinePans[it.idx] != null) it.pan = myLinePans[it.idx];
@@ -7664,8 +7723,27 @@ function finishBooth() {
     status("wait-status", tt("🥊 Your take is in the can! Waiting for the other duelist …", "🥊 Dein Take ist im Kasten! Warte auf den anderen Duellanten …"));
     return;
   }
-  if (isHost) collectTracks(myRole(), items, ots, myId);
-  else sendHost({ t: "tracks", role: myRole(), items, boostByIdx, panByIdx, outtakes: ots });
+  // Die gesamte Nachbearbeitung (Premiere, Outtakes, Download) ist nach ROLLE
+  // sortiert, nicht nach Spieler. Wer mehrere Rollen hatte, schickt deshalb pro
+  // Rolle ein eigenes Paket — danach ist alles Weitere blind für Mehrfachrollen.
+  const proRolle = new Map();
+  for (const it of items) {
+    const l = scene.lines[it.idx];
+    const rid = roleOfLine(l);
+    if (rid == null) continue;
+    if (!proRolle.has(rid)) proRolle.set(rid, []);
+    proRolle.get(rid).push(it);
+  }
+  // Auch Rollen ohne brauchbare Aufnahme melden, sonst wartet die Premiere ewig
+  myRoles().forEach(r => { if (!proRolle.has(r)) proRolle.set(r, []); });
+  let ersteRolle = true;
+  for (const [rid, teil] of proRolle) {
+    // Outtakes nur EINMAL mitschicken, sonst landet jeder Versprecher mehrfach im Topf
+    const otsFuerDiese = ersteRolle ? ots : [];
+    if (isHost) collectTracks(rid, teil, otsFuerDiese, myId);
+    else sendHost({ t: "tracks", role: rid, items: teil, boostByIdx: boostMapFromItems(teil), panByIdx: panMapFromItems(teil), outtakes: otsFuerDiese });
+    ersteRolle = false;
+  }
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -7687,7 +7765,7 @@ async function startRealtime() {
   $("rec-role").textContent = tt("🎭 You are: ", "🎭 Du bist: ") + role.name;
   const v = $("rec-video");
   v.src = sceneVideoSrc();
-  attachPrompter(v, $("rec-prompter"), myRole());
+  attachPrompter(v, $("rec-prompter"), myRoles());
   show("scr-record");
   await countdown();
   $("onair").classList.add("live");
@@ -8158,7 +8236,7 @@ function showRateCard() {
       ${avatarHTML(p)}
       <div class="rateinfo">
         <span class="ratename">${esc(p.name)}</span>
-        <span class="tag">🎭 ${esc(scene.roles.find(r => r.id === p.role)?.name || "")}</span>
+        <span class="tag">🎭 ${esc(rolesOfPlayer(p).map(x => scene.roles.find(r => r.id === x)?.name || "").filter(Boolean).join(" + "))}</span>
       </div>
       <div class="starrow" role="group" aria-label="${esc(tt("Stars for ", "Sterne für ") + p.name)}">${[1,2,3,4,5].map(n => `<button type="button" class="starbtn" data-n="${n}" title="${n} ${n > 1 ? tt("stars", "Sterne") : tt("star", "Stern")}">★</button>`).join("")}</div>
       ${canBuddy ? `<button type="button" class="buddy-btn" data-buddy="${p.id}" title="${esc(tt("Give SynchroBuddy (1× per match)", "SynchroBuddy geben (1× pro Match)"))}">Buddy</button>` : ""}
@@ -9504,10 +9582,10 @@ function finishRedo() {
   const ots = serializeOuttakes(true);
   if (buf && buf !== "SKIP") {
     if (isHost) {
-      applyTrackUpdate(myRole(), lineIdx, startAt, buf, effect, gate, boost, fxAmount, pan);
+      applyTrackUpdate(roleOfLine(scene.lines[lineIdx]) ?? myRole(), lineIdx, startAt, buf, effect, gate, boost, fxAmount, pan);
       ingestOuttakesFromPlayer(myId, myName, ots);
     } else sendHost({
-      t: "trackUpdate", role: myRole(), lineIdx, startAt, buf,
+      t: "trackUpdate", role: roleOfLine(scene.lines[lineIdx]) ?? myRole(), lineIdx, startAt, buf,
       effect, gate, boost, fxAmount, pan,
       // Meta ohne Audio-Buffer — PeerJS streicht Nebenfelder neben buf manchmal
       trackMeta: { effect, gate, boost, fxAmount, pan },
@@ -9516,7 +9594,7 @@ function finishRedo() {
     });
   } else if (ots.length) {
     if (isHost) ingestOuttakesFromPlayer(myId, myName, ots);
-    else sendHost({ t: "trackUpdate", role: myRole(), lineIdx, startAt, buf: null, outtakes: ots, name: myName });
+    else sendHost({ t: "trackUpdate", role: roleOfLine(scene.lines[lineIdx]) ?? myRole(), lineIdx, startAt, buf: null, outtakes: ots, name: myName });
   }
   status(back === "scr-playback" ? "play-status" : "wait-status", tt("✅ Line updated! It’ll be in the final mix.", "✅ Line aktualisiert! Wird im Endergebnis berücksichtigt."));
   renderRedoPanel("redo-panel-wait");
@@ -9781,7 +9859,7 @@ let forceMixTimer = null;
 function maybeFinishTracks(force) {
   if (!isHost || !collected.size) return;
   // Offline-Plätze nicht mitzählen — sonst wartet die Premiere ewig auf Rausgeflogene
-  const neededRoles = new Set(players.filter(p => p.role != null && !p.offline).map(p => p.role));
+  const neededRoles = besetzteRollen(true);
   if (!force && collected.size < neededRoles.size) {
     clearTimeout(forceMixTimer);
     forceMixTimer = setTimeout(syncForceMixBtn, 45000);   // Notausgang erst anbieten, wenn es wirklich hängt
@@ -9803,7 +9881,7 @@ function syncForceMixBtn() {
   if (!btn) return;
   // Button nur beim logischen Host; collected.size kennt nur der Raum-Besitzer —
   // deshalb zusätzlich State-Hinweis über wait-screen + Host-UI.
-  const needed = new Set(players.filter(p => p.role != null && !p.offline).map(p => p.role)).size;
+  const needed = besetzteRollen(true).size;
   const waiting = iAmLogicalHost() && isHost && collected.size > 0 &&
     collected.size < needed &&
     !!document.querySelector("#scr-wait.active");
@@ -11808,6 +11886,8 @@ function shaper(ctx, amount) {
 
 // ── Teleprompter (Premiere-Untertitel + Realtime-Cues) ───────
 function attachPrompter(videoEl, promptEl, myRoleId) {
+  // myRoleId darf eine einzelne Rolle ODER eine Liste sein (Mehrfachrollen)
+  const meine = Array.isArray(myRoleId) ? myRoleId : (myRoleId == null ? [] : [myRoleId]);
   promptEl.innerHTML = "";
   if (!scene?.lines?.length) return;
   const lines = scene.lines;
@@ -11820,7 +11900,7 @@ function attachPrompter(videoEl, promptEl, myRoleId) {
     lastIdx = idx;
     const cur = idx >= 0 ? lines[idx] : null;
     const next = lines.find(l => l.t > t);
-    const mine = cur && myRoleId != null && cur.chars.includes(myRoleId);
+    const mine = !!(cur && cur.chars.some(c => meine.includes(c)));
     const av = cur && scene.avatars ? scene.avatars[String(cur.chars[0])] : null;
     promptEl.innerHTML =
       (cur ? `<div class="pline ${mine ? "mine" : ""}">
