@@ -265,7 +265,7 @@ export const PackMetadataModal: React.FC<PackMetadataModalProps> = ({
               <Check className="w-3 h-3 stroke-[3]" />
             </div>
             <span className="text-zinc-300 font-medium text-xs">
-              Exclude <code className="text-amber-400">dub_video.ogv</code> video from ZIP export (for manual upload)
+              Exclude <code className="text-amber-400">dub_video.mp4</code> video from ZIP export (for manual upload)
             </span>
           </div>
 

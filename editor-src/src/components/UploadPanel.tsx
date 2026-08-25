@@ -119,7 +119,7 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({
             />
             <Film className="w-5 h-5 mx-auto text-zinc-500 mb-1" />
             <p className="text-zinc-300 font-medium">Upload Video Clip</p>
-            <p className="text-[10px] text-zinc-400 font-sans">.mp4 format only (exports to .ogv)</p>
+            <p className="text-[10px] text-zinc-400 font-sans">.mp4 — exported as MP4, scaled to max 720p</p>
           </div>
         )}
       </div>

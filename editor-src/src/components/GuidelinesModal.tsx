@@ -136,10 +136,10 @@ export const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ isOpen, onClos
                 <strong>Recommended Source Video:</strong> For the most stable conversion, always upload a standard MP4 file (<code className="text-amber-300">H.264</code>) as your source video. It is highly recommended to use common framerates (24, 30, 60fps) and standard resolutions (like 1280x720 or 1920x1080). Ensure your video has an audio track, even if it's silent.
               </li>
               <li>
-                <strong>Conversion Memory Limits:</strong> The <code className="text-amber-300">.ogv</code> conversion happens entirely inside your browser using WebAssembly. Trying to convert extremely large, long, or 4K videos may crash your browser tab due to memory limits. If possible, compress or downscale your MP4 before importing it into the app.
+                <strong>Video handling:</strong> Your MP4 is packed as <code className="text-amber-300">dub_video.mp4</code>. If it is already 720p or smaller, it is copied straight into the ZIP and the export takes seconds. Taller videos are scaled down to 720p in your browser, which needs a little more time on long clips.
               </li>
               <li>
-                <strong>Automatic Fallback:</strong> If the in-browser conversion engine fails or runs out of memory, the app will safely skip the broken video, package the rest of your Modpack ZIP successfully, and give you a link to manually convert your MP4 to OGV.
+                <strong>Automatic Fallback:</strong> If scaling fails or runs out of memory, your original MP4 is packed unchanged instead of dropping it — Synchronstudio plays MP4 at any resolution.
               </li>
             </ul>
           </div>

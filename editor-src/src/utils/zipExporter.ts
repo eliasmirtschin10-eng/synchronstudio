@@ -132,17 +132,54 @@ export const captureFrameAtTime = (
   });
 };
 
-async function convertMp4ToOgv(
+/** Maße eines Videos lesen, ohne FFmpeg anzuwerfen. */
+function videoMasse(blob: Blob): Promise<{ w: number; h: number }> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob);
+    const v = document.createElement('video');
+    const fertig = (w: number, h: number) => {
+      try { URL.revokeObjectURL(url); } catch { /* egal */ }
+      resolve({ w, h });
+    };
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => fertig(v.videoWidth || 0, v.videoHeight || 0);
+    v.onerror = () => fertig(0, 0);
+    setTimeout(() => fertig(0, 0), 8000);   // nicht ewig hängen bleiben
+    v.src = url;
+  });
+}
+
+const ZIEL_HOEHE = 720;
+
+/**
+ * Bereitet das Video fürs Pack auf: MP4 bleibt MP4, maximal 720p hoch.
+ *
+ * Früher wurde hier nach OGV (Theora/Vorbis) umgerechnet. Theora-Kodierung in
+ * WebAssembly läuft einkernig und ist um ein Vielfaches langsamer als natives
+ * FFmpeg — bei längeren oder hochauflösenden Videos dauerte das viele Minuten
+ * oder der Worker starb still am Speicherlimit. Von außen sah beides aus, als
+ * hinge der Export.
+ *
+ * Jetzt: Ist das Video schon MP4 und nicht höher als 720p, wird es unverändert
+ * durchgereicht — FFmpeg wird dann gar nicht erst geladen und der Export ist in
+ * Sekunden fertig. Nur wenn wirklich verkleinert oder umgewandelt werden muss,
+ * läuft H.264 an, und das ist deutlich schneller als Theora.
+ */
+async function prepareVideoForPack(
   videoBlob: Blob,
   onProgress?: (progressPercent: number, statusMsg?: string) => void,
   abortSignal?: AbortSignal
 ): Promise<Blob> {
-  if (videoBlob.type === 'video/ogg' || videoBlob.type === 'video/ogv') {
-    return videoBlob;
-  }
+  if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
 
-  if (abortSignal?.aborted) {
-    throw new Error('EXPORT_CANCELLED');
+  const istMp4 = videoBlob.type.includes('mp4') || videoBlob.type === '';
+  const { h } = await videoMasse(videoBlob);
+  if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
+
+  // Der schnelle Weg: nichts zu tun
+  if (istMp4 && h > 0 && h <= ZIEL_HOEHE) {
+    onProgress?.(100, 'Video is already MP4 at 720p or below — using it as is');
+    return videoBlob;
   }
 
   let ffmpeg: FFmpeg | null = null;
@@ -151,103 +188,84 @@ async function convertMp4ToOgv(
 
   try {
     onProgress?.(2, 'Initializing video engine...');
-    ffmpeg = await getFFmpeg((msg) => onProgress?.(5, 'Loading video engine...'));
-
+    ffmpeg = await getFFmpeg(() => onProgress?.(5, 'Loading video engine...'));
     if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
 
-    // If export is cancelled during ffmpeg operations, terminate worker immediately so it doesn't hang
     abortListener = () => {
-      try {
-        ffmpeg?.terminate();
-      } catch {
-        // ignore termination error
-      }
+      try { ffmpeg?.terminate(); } catch { /* egal */ }
       ffmpegInstance = null;
     };
     abortSignal?.addEventListener('abort', abortListener, { once: true });
 
     progressHandler = ({ progress }: { progress: number }) => {
-      if (abortSignal?.aborted) return; // Do not throw inside event listener to prevent uncaught worker exceptions
-      const safeProgress = Number.isFinite(progress) ? progress : 0;
-      const progressPercent = Math.min(100, Math.max(0, Math.round(safeProgress * 100)));
-      const p = 10 + Math.min(89, Math.max(0, Math.round(safeProgress * 89)));
-      onProgress?.(p, `Converting MP4 to OGV... ${progressPercent}%`);
+      if (abortSignal?.aborted) return;
+      const safe = Number.isFinite(progress) ? progress : 0;
+      const pct = Math.min(100, Math.max(0, Math.round(safe * 100)));
+      onProgress?.(10 + Math.min(89, Math.round(safe * 89)), `Scaling video to 720p... ${pct}%`);
     };
-
     ffmpeg.on('progress', progressHandler);
 
-    onProgress?.(8, 'Reading video...');
-    
-    // Read input video data directly into Uint8Array with cancellation check
+    const quellExt = videoBlob.type.includes('ogg') ? 'ogv'
+      : videoBlob.type.includes('webm') ? 'webm'
+        : videoBlob.type.includes('quicktime') ? 'mov'
+          : 'mp4';
+    const inName = `input.${quellExt}`;
+
     const arrayBuffer = await videoBlob.arrayBuffer();
-    if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
     const inputData = new Uint8Array(arrayBuffer);
-
+    await ffmpeg.writeFile(inName, inputData);
     if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
 
-    await ffmpeg.writeFile('input.mp4', inputData);
+    onProgress?.(10, 'Scaling video to 720p... 0%');
 
-    if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
-
-    onProgress?.(10, 'Converting MP4 to OGV... 0%');
-
-    // Convert MP4 to true OGV format (Theora video + Vorbis audio)
-    const execResult = await ffmpeg.exec([
-      '-i', 'input.mp4',
-      '-c:v', 'libtheora',
-      '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+    // Nur verkleinern, nie vergrößern. Breite auf gerade Zahl runden, sonst mag H.264 nicht.
+    const args = [
+      '-i', inName,
+      '-vf', `scale=-2:'min(${ZIEL_HOEHE},ih)'`,
+      '-c:v', 'libx264',
+      '-preset', 'veryfast',
+      '-crf', '26',
       '-pix_fmt', 'yuv420p',
-      '-q:v', '6',
-      '-c:a', 'libvorbis',
-      '-ar', '44100',
-      '-q:a', '4',
-      'dub_video.ogv'
-    ]);
-    
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-ac', '2',
+      '-movflags', '+faststart',
+      'dub_video.mp4'
+    ];
+    const execResult = await ffmpeg.exec(args);
     if (abortSignal?.aborted) throw new Error('EXPORT_CANCELLED');
-
     if (execResult !== 0 && (execResult as any).code !== 0) {
-      throw new Error('OGV_CONVERSION_FAILED');
+      throw new Error('VIDEO_PREP_FAILED');
     }
 
-    const data = await ffmpeg.readFile('dub_video.ogv');
-    
+    const data = await ffmpeg.readFile('dub_video.mp4');
     try {
-      await ffmpeg.deleteFile('input.mp4');
-      await ffmpeg.deleteFile('dub_video.ogv');
-    } catch {
-      // Ignore file cleanup errors
-    }
+      await ffmpeg.deleteFile(inName);
+      await ffmpeg.deleteFile('dub_video.mp4');
+    } catch { /* egal */ }
 
-    onProgress?.(100, 'Video conversion complete!');
-    return new Blob([data as Uint8Array], { type: 'video/ogg' });
+    const bytes = data instanceof Uint8Array ? data : new Uint8Array(data as any);
+    return new Blob([bytes], { type: 'video/mp4' });
   } catch (err: any) {
-    // If cancelled or failed, terminate FFmpeg instance and reset to null
-    try {
-      ffmpeg?.terminate();
-    } catch {
-      // ignore
-    }
-    ffmpegInstance = null;
-
-    if (err.message === 'EXPORT_CANCELLED' || abortSignal?.aborted) {
+    if (err?.message === 'EXPORT_CANCELLED' || abortSignal?.aborted) {
+      try { ffmpeg?.terminate(); } catch { /* egal */ }
+      ffmpegInstance = null;
       throw new Error('EXPORT_CANCELLED');
     }
-    console.error('FFmpeg transcoding to .ogv failed:', err);
-    throw new Error('OGV_CONVERSION_FAILED');
+    console.error('Video preparation failed:', err);
+    // Lieber das Originalvideo mitgeben als den ganzen Export scheitern lassen —
+    // das Spiel kommt mit MP4 in jeder Auflösung zurecht.
+    if (istMp4) {
+      onProgress?.(100, 'Scaling failed — packing the original MP4 instead');
+      return videoBlob;
+    }
+    throw new Error('VIDEO_PREP_FAILED');
   } finally {
-    if (abortListener && abortSignal) {
-      abortSignal.removeEventListener('abort', abortListener);
-    }
-    if (ffmpeg && progressHandler) {
-      try {
-        ffmpeg.off('progress', progressHandler);
-      } catch {
-        // ignore
-      }
-    }
+    try { if (ffmpeg && progressHandler) ffmpeg.off('progress', progressHandler); } catch { /* egal */ }
+    if (abortSignal && abortListener) abortSignal.removeEventListener('abort', abortListener);
   }
 }
+
 
 const DEFAULT_AVATAR_IMAGE_URL = 'https://i.ibb.co/qMLtgW2g/faviconcv.png';
 let cachedDefaultAvatarBlob: Blob | null = null;
@@ -332,7 +350,7 @@ export async function exportModpackZip(
   const packIniContent = generatePackInfoIni(fullPackInfo);
   zip.file('_pack_info.ini', packIniContent);
 
-  // 2. Add Main Video file (transcode MP4 to true OGV unless excluded)
+  // 2. Videodatei (MP4, höchstens 720p) — außer sie wurde abgewählt
   checkAbort();
   if (fullPackInfo.excludeVideo) {
     updateProgress('Skipping video file...', 80);
@@ -352,23 +370,24 @@ export async function exportModpackZip(
     if (rawVideoBlob) {
       updateProgress('Preparing video engine...', 10);
       try {
-        const ogvBlob = await convertMp4ToOgv(
+        const videoBlobOut = await prepareVideoForPack(
           rawVideoBlob,
           (p, statusMsg) => {
             checkAbort();
             const targetOverallPercent = 10 + ((p / 100) * 70);
-            updateProgress(statusMsg || 'Converting MP4 to OGV...', targetOverallPercent);
+            updateProgress(statusMsg || 'Preparing video...', targetOverallPercent);
           },
           abortSignal
         );
         checkAbort();
-        const ext = ogvBlob.type === 'video/mp4' || ogvBlob.type.includes('mp4') ? 'mp4' : 'ogv';
-        zip.file(`dub_video.${ext}`, ogvBlob);
+        // Immer als dub_video.mp4 ablegen — genau das erwartet das Spiel beim
+        // Laden eines lokalen Packs, und es spart die Theora-Umrechnung.
+        zip.file('dub_video.mp4', videoBlobOut);
       } catch (err: any) {
         if (err.message === 'EXPORT_CANCELLED' || abortSignal?.aborted) {
           throw new Error('EXPORT_CANCELLED');
         }
-        console.warn('OGV conversion failed, skipping video export.');
+        console.warn('Video preparation failed, skipping video export.');
         ogvFailed = true;
       }
     }
