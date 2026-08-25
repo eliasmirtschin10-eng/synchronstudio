@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.14.2";
+const APP_VERSION = "9.15.1";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,9 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.15.1", items: [
+    "🎬 Zwei neue Szenen: Cause I like high school girls thats why (Nichijou) und Death Note — L, Misa und Lights Wortgefecht"
+  ]},
   { v: "9.14.2", items: [
     "🗣 „Original anhören“ scheiterte bei einzelnen Lines: die Antwort des CDN wurde ungeprüft weitergereicht. Jetzt wird sie geprüft und notfalls direkt von GitHub geholt"
   ]},
