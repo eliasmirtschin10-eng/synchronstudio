@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.14.0";
+const APP_VERSION = "9.14.1";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,11 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.14.1", items: [
+    "🎬 Premiere startete zu früh, wenn jemand mitten in der Aufnahme rausging: verglichen wurde nur die ANZAHL der Spuren, nicht WELCHE fehlen. Jetzt wartet sie, bis jede besetzte Rolle wirklich abgegeben hat",
+    "🔌 Ein kurzer Verbindungsabriss wirft niemanden mehr sofort aus der Warteliste — 30 Sekunden Schonzeit, danach läuft es ohne die Person weiter",
+    "➕ Mehrfachrollen sind jetzt zu erkennen: Hinweiszeile über der Rollenliste und eine Meldung beim Dazunehmen/Abgeben"
+  ]},
   { v: "9.14.0", items: [
     "🎭 NEU: Mehrere Rollen pro Person — bei einer 4-Rollen-Szene zu dritt nimmt einfach jemand eine zweite Rolle dazu. Freie Rollen antippen, nochmal antippen gibt sie wieder ab",
     "👥 Auch Gäste dürfen dazunehmen, nicht nur der Host",
@@ -3907,6 +3912,7 @@ function setupHostConn(conn) {
     // Spieler von vorne anzufangen.
     const frist = gnadenfristMs();
     gone.offline = true;
+    gone.offlineSeit = Date.now();
     gone.offlineBis = Date.now() + frist;
     showToast("📴 " + gone.name + tt(" dropped — seat stays free for ", " ist rausgeflogen — Platz bleibt ") + Math.round(frist / 60000) + tt(" min", " Min. frei"), "leave");
     SFX.leave();
@@ -4458,7 +4464,7 @@ function handleMsg(msg, conn) {
         const alteId = rueck.id;
         clearTimeout(rueckkehrTimer.get(msg.key)); rueckkehrTimer.delete(msg.key);
         rueck.id = conn.peer;
-        rueck.offline = false; delete rueck.offlineBis;
+        rueck.offline = false; delete rueck.offlineBis; delete rueck.offlineSeit;
         if (msg.name) rueck.name = stripHostTag(msg.name);
         if (msg.avatar) rueck.avatar = msg.avatar;
         if (msg.accessory) rueck.accessory = msg.accessory;
@@ -5790,6 +5796,18 @@ function renderRoles() {
     </button>`;
   }).join("");
   $("role-list").querySelectorAll(".rolebtn").forEach(b => b.onclick = () => pickRole(parseInt(b.dataset.r)));
+  // Deutlicher Hinweis, wenn Rollen übrig sind und weniger Leute als Rollen da sind
+  const hinweis = $("role-hint");
+  if (hinweis) {
+    const frei = scene.roles.filter(r => !besitzerVon(r.id));
+    const zeigen = frei.length > 0 && meineRollen.length > 0 && match.mode !== "rounds";
+    hinweis.style.display = zeigen ? "" : "none";
+    if (zeigen) {
+      hinweis.textContent = "➕ " + tt(
+        frei.length + " role(s) still free — tap one to speak it as well. Tap again to give it back.",
+        frei.length + (frei.length === 1 ? " Rolle ist" : " Rollen sind") + " noch frei — antippen und du sprichst sie mit. Nochmal antippen gibt sie zurück.");
+    }
+  }
 }
 
 function pickRole(roleId) {
@@ -5800,9 +5818,20 @@ function pickRole(roleId) {
   let me = players.find(p => p.id === myId);
   if (!me) { if (isHost) return; me = seedLocalPlayer(roleId); me.extraRoles = []; renderRoles(); renderPlayers(); sendHost({ t: "pickRole", role: roleId }); return; }
   const hatSie = rolesOfPlayer(me).includes(roleId);
+  const vorher = rolesOfPlayer(me).length;
   if (hatSie) rolleAbgeben(me, roleId);   // nochmal antippen = wieder abgeben
   else rolleUebernehmen(me, roleId);
   me.ready = false;
+  // Ohne Rückmeldung merkt man nicht, dass eine ZWEITE Rolle dazugekommen ist —
+  // die Liste allein ist zu unauffällig.
+  const rname = (roleOf(roleId) || {}).name || "?";
+  const jetzt = rolesOfPlayer(me).length;
+  if (hatSie) {
+    showToast("➖ " + rname + tt(" given back", " wieder abgegeben") + (jetzt ? tt(" — you still have ", " — du hast noch ") + jetzt : ""), "leave");
+  } else if (vorher >= 1) {
+    showToast("➕ " + rname + tt(" added — you now speak ", " dazugenommen — du sprichst jetzt ") + jetzt + tt(" roles", " Rollen"), "join");
+    SFX.click && SFX.click();
+  }
   if (isHost) broadcastState();
   else sendHost({ t: "pickRole", role: roleId, drop: hatSie, extraRoles: me.extraRoles || [], primary: me.role });
   renderRoles();
@@ -6699,6 +6728,37 @@ function besetzteRollen(nurOnline) {
   return s;
 }
 function besitzerVon(roleId) { return players.find(p => rolesOfPlayer(p).includes(roleId)); }
+
+// Wie lange eine Rolle nach einem Verbindungsabriss noch mitgezählt wird.
+// Ohne diese Schonzeit reichte ein kurzes WLAN-Zucken beim Aufnehmenden, damit
+// seine Rolle sofort aus dem Soll fiel und die Premiere ohne ihn losging.
+const OFFLINE_SCHONZEIT_MS = 30000;
+function nochInSchonzeit(p) {
+  if (!p || !p.offline) return false;
+  if (!p.offlineSeit) return true;               // Zeitpunkt unbekannt → lieber warten
+  return (Date.now() - p.offlineSeit) < OFFLINE_SCHONZEIT_MS;
+}
+/** Rollen, auf deren Aufnahme die Premiere warten muss. */
+function benoetigteRollen() {
+  const s = new Set();
+  players.forEach(p => {
+    if (p.offline && !nochInSchonzeit(p)) return;   // lange weg → nicht mehr warten
+    rolesOfPlayer(p).forEach(r => s.add(r));
+  });
+  return s;
+}
+/** Läuft die Schonzeit von jemandem noch, später nochmal prüfen — sonst
+ *  bliebe die Premiere hängen, bis zufällig eine andere Nachricht eintrudelt. */
+let offlineNachpruefTimer = null;
+function planeOfflineNachpruefung() {
+  const wartende = players.filter(p => p.offline && nochInSchonzeit(p));
+  if (!wartende.length) return;
+  const rest = Math.max(...wartende.map(p => OFFLINE_SCHONZEIT_MS - (Date.now() - (p.offlineSeit || Date.now()))));
+  clearTimeout(offlineNachpruefTimer);
+  offlineNachpruefTimer = setTimeout(() => {
+    try { maybeFinishTracks(); syncForceMixBtn(); } catch (e) { console.warn("Nachprüfung:", e); }
+  }, Math.max(1000, rest + 250));
+}
 /** Rolle freigeben — egal ob Haupt- oder Zusatzrolle. */
 function rolleAbgeben(p, roleId) {
   if (!p) return;
@@ -9858,11 +9918,16 @@ function publishOuttakesPool() {
 let forceMixTimer = null;
 function maybeFinishTracks(force) {
   if (!isHost || !collected.size) return;
-  // Offline-Plätze nicht mitzählen — sonst wartet die Premiere ewig auf Rausgeflogene
-  const neededRoles = besetzteRollen(true);
-  if (!force && collected.size < neededRoles.size) {
+  const neededRoles = benoetigteRollen();
+  // FRÜHER wurden nur die ANZAHLEN verglichen. Ging jemand mitten in der Aufnahme
+  // raus, fiel seine Rolle aus dem Soll — und weil zufällig genauso viele fremde
+  // Spuren schon dalagen, sprang die Premiere los, während andere noch sprachen.
+  // Jetzt zählt, ob JEDE benötigte Rolle wirklich abgegeben hat.
+  const fehlende = [...neededRoles].filter(r => !collected.has(r));
+  if (!force && fehlende.length) {
     clearTimeout(forceMixTimer);
     forceMixTimer = setTimeout(syncForceMixBtn, 45000);   // Notausgang erst anbieten, wenn es wirklich hängt
+    planeOfflineNachpruefung();
     return;
   }
   clearTimeout(forceMixTimer);
@@ -9881,9 +9946,9 @@ function syncForceMixBtn() {
   if (!btn) return;
   // Button nur beim logischen Host; collected.size kennt nur der Raum-Besitzer —
   // deshalb zusätzlich State-Hinweis über wait-screen + Host-UI.
-  const needed = besetzteRollen(true).size;
+  const fehlen = [...benoetigteRollen()].filter(r => !collected.has(r));
   const waiting = iAmLogicalHost() && isHost && collected.size > 0 &&
-    collected.size < needed &&
+    fehlen.length > 0 &&
     !!document.querySelector("#scr-wait.active");
   btn.style.display = waiting ? "" : "none";
 }
@@ -10241,7 +10306,7 @@ async function loadMix(data, metaMsg) {
     const alreadyPlaying = premiereLocked && document.querySelector("#scr-playback.active")
       && $("play-video") && !$("play-video").paused && !$("play-video").ended;
     pendingPremGo = false;
-    if (!alreadyPlaying) premStart({ skipCountdown: true });
+    if (!alreadyPlaying) premStart({ skipCountdown: true, grund: "Mix fertig geladen, premGo lag vor" });
   }
 }
 
@@ -10770,6 +10835,18 @@ function premResumeAll(fromHostClick, syncT) {
 }
 
 function premStart(opts) {
+  // Diagnose: Connor startete einmal, waehrend alle anderen noch luden. Der Weg
+  // dorthin laesst sich nur am lebenden System unterscheiden — deshalb festhalten,
+  // WER wodurch gestartet ist. Steht in der Browser-Konsole (F12).
+  try {
+    console.info("[Premiere-Start]", {
+      weg: (opts && opts.grund) || "premGo",
+      istHost: !!isHost,
+      spuren: mixItems.length,
+      andereNochAmLaden: onlinePlayers().filter(p => !p.prem).map(p => p.name),
+      zeit: new Date().toISOString()
+    });
+  } catch {}
   pendingPremGo = false;
   myPremLocalReady = myPremLocalReady || mixItems.length > 0;
   premiereLocked = true;
@@ -10817,7 +10894,7 @@ function tryFollowHostPremiere(paused) {
     premiereLocked = true; // merken, bis loadMix fertig
     return;
   }
-  premStart({ skipCountdown: true });
+  premStart({ skipCountdown: true, grund: "Host-Zustand (premiereLocked)" });
   if (paused) setTimeout(() => premPauseAll(false), 50);
 }
 
