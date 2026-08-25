@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.14.1";
+const APP_VERSION = "9.14.2";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -679,6 +679,9 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.14.2", items: [
+    "🗣 „Original anhören“ scheiterte bei einzelnen Lines: die Antwort des CDN wurde ungeprüft weitergereicht. Jetzt wird sie geprüft und notfalls direkt von GitHub geholt"
+  ]},
   { v: "9.14.1", items: [
     "🎬 Premiere startete zu früh, wenn jemand mitten in der Aufnahme rausging: verglichen wurde nur die ANZAHL der Spuren, nicht WELCHE fehlen. Jetzt wartet sie, bis jede besetzte Rolle wirklich abgegeben hat",
     "🔌 Ein kurzer Verbindungsabriss wirft niemanden mehr sofort aus der Warteliste — 30 Sekunden Schonzeit, danach läuft es ohne die Person weiter",
@@ -7003,8 +7006,28 @@ async function getLineOrigBuffer(l) {
     const ctx = getCtx();
     const url = assetUrl(l.orig);
     if (!origCache.has(url)) {
-      const buf = await (await fetch(url)).arrayBuffer();
-      origCache.set(url, await ctx.decodeAudioData(buf));
+      // Früher: await (await fetch(url)).arrayBuffer() — ohne jede Prüfung.
+      // Antwortete das CDN mit 403/404, wurden die Fehlerseiten-Bytes an
+      // decodeAudioData weitergereicht, das warf, und im Booth stand nur
+      // "Original nicht ladbar". Genau das trat bei einzelnen Lines auf.
+      // Jetzt: Antwort prüfen und wie beim Video auf GitHub Raw ausweichen.
+      const laden = async (u) => {
+        const res = await fetch(u, { mode: "cors" });
+        if (!res.ok) throw new Error("HTTP " + res.status + " für " + u);
+        const ab = await res.arrayBuffer();
+        if (!ab || ab.byteLength < 256) throw new Error("Datei zu klein/leer: " + u);
+        return await ctx.decodeAudioData(ab);
+      };
+      let dec = null;
+      try {
+        dec = await laden(url);
+      } catch (e1) {
+        const raw = rawUrlFor(url);
+        if (!raw) throw e1;
+        console.warn("Original-Ton über CDN fehlgeschlagen (" + e1.message + ") → Notfallweg GitHub Raw");
+        dec = await laden(raw);
+      }
+      origCache.set(url, dec);
     }
     return origCache.get(url);
   }
