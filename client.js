@@ -5,7 +5,7 @@
    Modus B: Realtime (eigene Videos ohne Timings)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = "9.15.1";
+const APP_VERSION = "9.15.2";
 /* i18n helpers — provided by i18n.js; tiny fallback if script missing */
 if (typeof tt !== "function") {
   window.getLang = () => { try { return localStorage.getItem("ss-lang") === "de" ? "de" : "en"; } catch { return "en"; } };
@@ -32,6 +32,7 @@ const GH_RAW_BASE = "https://raw.githubusercontent.com/synchron-studio/synchrons
 const OVERSIZE_MP4 = new Set([
   "scenes/zenitsukaigaku.mp4",   // 23,3 MB
   "scenes/kawaimarin.mp4",       // 21,3 MB
+  "scenes/akazafullfight.mp4",   // ~55 MB (~24 min FULL FIGHT)
 ]);
 function useCdnAssets() {
   try { return /\.github\.io$/i.test(location.hostname); } catch { return false; }
@@ -679,6 +680,9 @@ document.body.insertAdjacentHTML("beforeend",
    </div>`);
 
 const PATCH_NOTES = [
+  { v: "9.15.2", items: [
+    "🎬 Neue Szene: Demon Slayer — Akaza vs Giyu & Tanjiro FULL FIGHT (~24 Min, 5 Rollen, 286 Zeilen)"
+  ]},
   { v: "9.15.1", items: [
     "🎬 Zwei neue Szenen: Cause I like high school girls thats why (Nichijou) und Death Note — L, Misa und Lights Wortgefecht"
   ]},
@@ -1717,6 +1721,11 @@ const AVATAR_CHARS = [
   { img: "scenes/sbzerhacker/gruenerguy.png", label: "Grüner Guy" },
   { img: "scenes/sbzerhacker/thaddeus.png", label: "Thaddeus (Zerhacker)" },
   { img: "scenes/sbzerhacker/spongebob.png", label: "Spongebob (Zerhacker)" },
+  { img: "scenes/akazafullfight/akaza.png", label: "Akaza (FULL FIGHT)" },
+  { img: "scenes/akazafullfight/giyu.png", label: "Giyu (FULL FIGHT)" },
+  { img: "scenes/akazafullfight/tanjiro.png", label: "Tanjiro (FULL FIGHT)" },
+  { img: "scenes/akazafullfight/keizo.png", label: "Keizo" },
+  { img: "scenes/akazafullfight/tanjirosdad.png", label: "Tanjiro's Dad" },
 ];
 // ── Schwebende Hintergrund-Punkte: Mix aus Farbverlauf-Kreisen und ganz dezenten Charakterbildern aus unseren Szenen ──
 (function buildFloaties() {
